@@ -4,6 +4,9 @@ Get data from sensors and post it to specified url in json-format
 
 Requires:
     Requests - pip install requests
+
+Call:
+     python3 scripts/ruuvi.py --macs "mac1,mac2,mac3"
 """
 
 import requests
@@ -23,7 +26,7 @@ if args.macs:
     print("MAC addresses:", macs)
 else:
     print("No MAC addresses provided.")
-    
+
 # This should be enough that we find at least one result for each
 timeout_in_sec = 60
 
