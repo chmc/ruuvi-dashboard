@@ -45,9 +45,9 @@ const App = () => {
                 {mac}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                <div>Temp: {Math.round(ruuviData[mac].temperature * 100) / 100}c</div>
-                <div>Humidity: {Math.round(ruuviData[mac].humidity)}%</div>
-                <div>Pressure: {Math.round(ruuviData[mac].pressure)}p</div>
+                Temp: {Math.round(ruuviData[mac].temperature * 100) / 100}c<br/>
+                Humidity: {Math.round(ruuviData[mac].humidity)}%<br/>
+                Pressure: {Math.round(ruuviData[mac].pressure)}p
               </Typography>
             </CardContent>
           </Card>
