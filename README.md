@@ -22,6 +22,11 @@ In GUI OS
 - Enable `VNC` for RealVNC Viewer connection
 - Enable `SSH` for terminal connection
 
+Tip. If you need to shutdown raspberry pi
+```
+$ sudo shutdown -h now
+```
+
 ### Update Node.js on Raspberry Pi Through Node Module
 
 Install npm
