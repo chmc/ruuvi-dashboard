@@ -35,6 +35,6 @@ url = 'http://localhost:3001/api/ruuvi'
 datas = RuuviTagSensor.get_data_for_sensors(macs, timeout_in_sec)
 
 # Use Requests to POST datas in json-format
-#requests.post(url,json=datas)
-print (datas)
+requests.post(url,json=datas)
+#print (datas)
 exit()

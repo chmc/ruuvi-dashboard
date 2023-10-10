@@ -1,5 +1,6 @@
 const express = require('express');
 const { exec } = require('child_process');
+const utils = require('./utils')
 require('dotenv').config()
 const app = express();
 const port = process.env.PORT || 3001;
@@ -21,28 +22,42 @@ app.post('/api/ruuvi', (req, res) => {
     console.log(data)
 })
 
-const macs = process.env.RUUVITAG_MACS
-console.log('macs: ', macs)
-const ruuviScript = './scripts/ruuvi.py'
-const command = `python3 ${ruuviScript} --macs "${macs}"`
-console.log('command: ', command)
+if (!process.env.TEST) {
+    // Get real Ruuvi Tags data
+    const macs = process.env.RUUVITAG_MACS
+    console.log('macs: ', macs)
+    const ruuviScript = './scripts/ruuvi.py'
+    const command = `python3 ${ruuviScript} --macs "${macs}"`
+    console.log('command: ', command)
 
-function execRuuviScript() {
-    exec(command, (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Error: ${error.message}`)
-            return;
-        }
-        console.log(`Python script output:\n${stdout}`)
-    })
+    function execRuuviScript() {
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`Error: ${error.message}`)
+                return;
+            }
+            console.log(`Python script output:\n${stdout}`)
+        })
+    }
+
+    console.log('Wait 3sec before first ruuvi script run')
+    setTimeout(() => {
+        console.log('Call ruuvi script')
+        execRuuviScript();
+    }, 3000);
+
+    // Run every 10sec
+    console.log('Run ruuvi script every 35sec')
+    const interval = setInterval(execRuuviScript, 35000)
 }
+else {
+    // Run in test mode
+    console.log('Run in TEST MODE')
+    console.log('Do not run python script')
+    const jsonData = utils.initSimulator()
 
-console.log('Wait 3sec before first ruuvi script run')
-setTimeout(() => {
-    console.log('Call ruuvi script')
-    execRuuviScript();
-}, 3000);
-
-// Run every 10sec
-console.log('Run ruuvi script every 35sec')
-const interval = setInterval(execRuuviScript, 35000)
+    setInterval(() => {
+        utils.modifyDataWithWave(jsonData);
+        console.log(jsonData); 
+    }, 1000);
+}
