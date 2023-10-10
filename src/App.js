@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import Grid from '@mui/material/Grid';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box'
 
 const App = () => {
   const [data, setData] = useState(null);
@@ -25,7 +28,7 @@ const App = () => {
       console.log(macs[0], json[macs[0]])
     }
 
-    const intervalId = setInterval(fetchRuuviData, 5000);  
+    const intervalId = setInterval(fetchRuuviData, 5000);
 
     return () => clearInterval(intervalId)
   }, []);
@@ -35,25 +38,33 @@ const App = () => {
   const showRuuviData = (mac) => {
     if (ruuviData) {
       return (
-        <div key={mac}>
-          <strong>{mac}</strong>
-          <div>Temp: {Math.round(ruuviData[mac].temperature * 100) / 100}c</div>
-          <div>Humidity: {Math.round(ruuviData[mac].humidity)}%</div>
-          <div>Pressure: {Math.round(ruuviData[mac].pressure)}p</div>
-        </div>
-        )
+        <Grid item xs={4} key={mac}>
+          <Card>
+            <CardContent>
+              <Typography variant='h5' component='div'>
+                {mac}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <div>Temp: {Math.round(ruuviData[mac].temperature * 100) / 100}c</div>
+                <div>Humidity: {Math.round(ruuviData[mac].humidity)}%</div>
+                <div>Pressure: {Math.round(ruuviData[mac].pressure)}p</div>
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      )
     }
   }
 
   return (
-    <div className="App">
-      <header className="App-header">
-        {/* <img src={logo} className="App-logo" alt="logo" /> */}
-        <div>Macs: {process.env.REACT_APP_RUUVITAG_MACS}</div>
+    <Box m={2}>
+      <Grid container spacing={2}>
         {macs.map((mac) => showRuuviData(mac))}
-        <p><strong>{data?.express}</strong></p>
-      </header>
-    </div>
+        <Grid item>
+          <p><strong>{data?.express}</strong></p>
+        </Grid>
+      </Grid>
+    </Box>
   );
 }
 
