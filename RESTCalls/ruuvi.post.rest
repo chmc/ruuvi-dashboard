@@ -2,6 +2,49 @@ POST http://localhost:3001/api/ruuvi
 content-type: application/json
 
 {
-    "temperature": 1.5,
-    "humidity": 0.6
+   "mac1": {
+     "data_format": 5,
+     "humidity": 41.89,
+     "temperature": 24.38,
+     "pressure": 1012.74,
+     "acceleration": 992.0806418835114,
+     "acceleration_x": -12,
+     "acceleration_y": 4,
+     "acceleration_z": 992,
+     "tx_power": 4,
+     "battery": 1873,
+     "movement_counter": 0,
+     "measurement_sequence_number": 111,
+     "mac": "mac1"
+   },
+   "mac2": {
+     "data_format": 5,
+     "humidity": 41.6,
+     "temperature": 22.35,
+     "pressure": 1012.23,
+     "acceleration": 1001.7185233387671,
+     "acceleration_x": -700,
+     "acceleration_y": -716,
+     "acceleration_z": -28,
+     "tx_power": 4,
+     "battery": 2173,
+     "movement_counter": 21,
+     "measurement_sequence_number": 10683,
+     "mac": "mac2"
+   },
+   "mac3": {
+     "data_format": 5,
+     "humidity": 69.44,
+     "temperature": 9.51,
+     "pressure": 1014.34,
+     "acceleration": 1022.3893583170748,
+     "acceleration_x": -636,
+     "acceleration_y": -800,
+     "acceleration_z": -28,
+     "tx_power": 4,
+     "battery": 2653,
+     "movement_counter": 182,
+     "measurement_sequence_number": 49620,
+     "mac": "mac3"
+   }
 }
