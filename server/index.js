@@ -23,7 +23,7 @@ app.post('/api/ruuvi', (req, res) => {
 
 const macs = process.env.RUUVITAG_MACS
 console.log('macs: ', macs)
-const ruuviScript = '../scripts/ruuvi.py'
+const ruuviScript = './scripts/ruuvi.py'
 const command = `python3 ${ruuviScript} --macs "${macs}"`
 console.log('command: ', command)
 
