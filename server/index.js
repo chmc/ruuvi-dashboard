@@ -1,9 +1,12 @@
 const express = require('express');
 const { exec } = require('child_process');
+const NodeCache = require('node-cache')
 const utils = require('./utils')
 require('dotenv').config()
+
 const app = express();
 const port = process.env.PORT || 3001;
+const cache = new NodeCache({ stdTTL: 60 })
 
 app.use(express.json())
 
@@ -16,9 +19,15 @@ app.get('/api/express_backend', (req, res) => {
     res.send({ express: 'YOUR EXPRESS BACKEND IS CONNECTED TO REACT' }); //Line 10
 });
 
+app.get('/api/ruuvi', (req, res) => {
+    console.log('api get ruuvi received')
+    res.send(cache.get('ruuvi'))
+})
+
 app.post('/api/ruuvi', (req, res) => {
     console.log('post call received')
     const data = req.body
+    cache.set('ruuvi', data)
     console.log(data)
 })
 
@@ -58,6 +67,7 @@ else {
 
     setInterval(() => {
         utils.modifyDataWithWave(jsonData);
-        console.log(jsonData); 
+        cache.set('ruuvi', jsonData)
+        //console.log(jsonData); 
     }, 1000);
 }
