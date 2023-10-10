@@ -17,6 +17,7 @@
     "start:frontend": "react-scripts start",
     "start:backend": "nodemon server/index.js",
     "start": "concurrently \"npm run start:frontend\" \"npm run start:backend\"",
+    "startall": "concurrently \"npm run start:frontend\" \"npm run start:backend\" \"python3 ruuvitest.py\"",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
