@@ -1,0 +1,7 @@
+POST http://localhost:3001/api/ruuvi
+content-type: application/json
+
+{
+    "temperature": 1.5,
+    "humidity": 0.6
+}
