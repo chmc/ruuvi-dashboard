@@ -10,6 +10,8 @@ https://github.com/ttu/ruuvitag-sensor/blob/master/install_guide_pi.md
 Example how to run React web app on Raspberry Pi and start it when machine starts  
 https://blog.cloudboost.io/how-to-run-a-nodejs-web-server-on-a-raspberry-pi-for-development-3ef9ac0fc02c
 
+Example to connect React and Express backend
+https://blog.logrocket.com/running-react-express-concurrently/
 
 # Steps
 
