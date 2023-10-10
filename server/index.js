@@ -33,7 +33,7 @@ app.post('/api/ruuvi', (req, res) => {
 
 if (!process.env.TEST) {
     // Get real Ruuvi Tags data
-    const macs = process.env.RUUVITAG_MACS
+    const macs = process.env.REACT_APP_RUUVITAG_MACS
     console.log('macs: ', macs)
     const ruuviScript = './scripts/ruuvi.py'
     const command = `python3 ${ruuviScript} --macs "${macs}"`
