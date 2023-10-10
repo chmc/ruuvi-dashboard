@@ -43,37 +43,53 @@ Tip. If you have troubles running npx command, make install npm globally
 $ npm install -g npm
 ```
 
-### Add backend and Express server
+### Setting up the Express.js backend
 Browse to root directory
 ```
 $ mkdir server
 $ touch server/index.js
 ```
-Run to generate `package.json` file
+
+Next install the `express` and `nodemon` packages
 ```
-$ npm init -y
+$ npm install express --save
+$ npm install nodemon --save-dev
 ```
 
-Install Express
+Update `server/index.js` file
+
+### Integrate the React with API
+Update `package.json` file
 ```
-$npm install express --save
+{
+    ...
+    "scripts": {
+        ...
+        "start:frontend": "react-scripts start",
+        "start:backend": "nodemon server/index.js"
+    },
+    "proxy": "http://localhost:3001"
+}
 ```
 
-Add `server.js` file to root folder  
-Add following code to `server.js`
-``` 
-const express = require('express'); //Line 1
-const app = express(); //Line 2
-const port = process.env.PORT || 5000; //Line 3
+The `proxy` field specifies the proxy server that will be used in development. It is set to http://localhost:3001, meaning any API requests made from the React frontend to endpoints starting with `/api` will be automatically proxied to the Express backend server running on port 3001.
 
-// This displays message that the server running and listening to specified port
-app.listen(port, () => console.log(`Listening on port ${port}`)); //Line 6
-
-// create a GET route
-app.get('/express_backend', (req, res) => { //Line 9
-  res.send({ express: 'YOUR EXPRESS BACKEND IS CONNECTED TO REACT' }); //Line 10
-}); //Line 11
+### Install and configure concurrently
+With concurrently it is possible to start frontend and backend at the same time
 ```
+$ npm install concurrently
+```
+
+Update `package.json`
+```
+"scripts": {
+    ...
+    "start:frontend": ...,
+    "start:backend": ...,
+    "start": "concurrently \"npm run start:frontend\" \"npm run start:backend\""
+}
+```
+
 
 ### Clone React app repo to Raspberry Pi
 
@@ -82,9 +98,9 @@ Install dependencies
 $ npm install
 ```
 
-Start app
+Start app (frontend and backend)
 ```
-$ ./client/npm start
+$ npm start
 ```
 
 You can now browse app with browser on localhost or by accessing local network IP
