@@ -1,5 +1,5 @@
 // Wave height and frequency
-const amplitude = 5;
+const amplitude = 0.5;
 const frequency = 0.1;
 
 const initSimulator = () => {

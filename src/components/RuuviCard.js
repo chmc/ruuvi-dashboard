@@ -4,13 +4,13 @@ import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import uiFormatter from '../utils/formatters'
 
-const RuuviCard = ({ mac, ruuviData }) => {
+const RuuviCard = ({ ruuvi, ruuviData }) => {
     return (
         <Grid item xs={4}>
             <Card>
                 <CardContent>
                     <Typography variant='h5' component='div'>
-                        {mac}
+                        {ruuvi.name}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                         Temp: {uiFormatter.toTemperatureUI(ruuviData.temperature)}c<br />

@@ -41,7 +41,7 @@ const App = () => {
     <Box m={2}>
       <Grid container spacing={2}>
         {ruuviDatas && configs.ruuviTags.map((macItem) =>
-          <RuuviCard key={macItem.mac} mac={macItem.mac} ruuviData={ruuviDatas[macItem.mac]} />
+          <RuuviCard key={macItem.mac} ruuvi={macItem} ruuviData={ruuviDatas[macItem.mac]} />
         )}
         <InOutCard ruuviDatas={ruuviDatas} />
         <Grid item xs={12}>
