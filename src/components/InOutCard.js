@@ -3,6 +3,7 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import configs from '../configs'
+import uiFormatter from '../utils/formatters'
 
 const InOutCard = ({ ruuviDatas }) => {
     if (!ruuviDatas) {
@@ -21,7 +22,7 @@ const InOutCard = ({ ruuviDatas }) => {
                                 Indoor
                             </Typography>
                             <Typography variant="h5" color="text.secondary">
-                                {Math.round(indoorRuuvi.temperature * 100) / 100}c
+                                {uiFormatter.toTemperatureUI(indoorRuuvi.temperature)}c
                             </Typography>
                         </CardContent>
                     </Card>
@@ -34,7 +35,7 @@ const InOutCard = ({ ruuviDatas }) => {
                                 Outdoor
                             </Typography>
                             <Typography variant="h5" color="text.secondary">
-                                {Math.round(outdoorRuuvi.temperature * 100) / 100}c
+                                {uiFormatter.toTemperatureUI(outdoorRuuvi.temperature)}c
                             </Typography>
                         </CardContent>
                     </Card>

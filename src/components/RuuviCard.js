@@ -2,6 +2,7 @@ import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
+import uiFormatter from '../utils/formatters'
 
 const RuuviCard = ({ mac, ruuviData }) => {
     return (
@@ -12,9 +13,9 @@ const RuuviCard = ({ mac, ruuviData }) => {
                         {mac}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                        Temp: {Math.round(ruuviData.temperature * 100) / 100}c<br />
-                        Humidity: {Math.round(ruuviData.humidity)}%<br />
-                        Pressure: {Math.round(ruuviData.pressure)}p
+                        Temp: {uiFormatter.toTemperatureUI(ruuviData.temperature)}c<br />
+                        Humidity: {uiFormatter.toHumidityUI(ruuviData.humidity)}%<br />
+                        Pressure: {uiFormatter.toPressureUI(ruuviData.pressure)}p
                     </Typography>
                 </CardContent>
             </Card>
