@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import Grid from '@mui/material/Grid';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box'
+import RuuviCard from './components/RuuviCard'
+import configs from './configs'
 
 const App = () => {
   const [data, setData] = useState(null);
   const [ruuviData, setRuuviData] = useState(null)
+  console.log('macs: ', configs.macs)
+  const daa = configs.macs.map((mac) => mac.name)
+  console.log('names: ', daa)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -25,7 +27,7 @@ const App = () => {
       const json = await response.json()
       setRuuviData(json)
       console.log('app data: ', json)
-      console.log(macs[0], json[macs[0]])
+      console.log(configs.macs[0], json[configs.macs[0].mac])
     }
 
     const intervalId = setInterval(fetchRuuviData, 5000);
@@ -33,24 +35,12 @@ const App = () => {
     return () => clearInterval(intervalId)
   }, []);
 
-  const macs = process.env.REACT_APP_RUUVITAG_MACS.split(',')
-
   const showRuuviData = (mac) => {
+    console.log('show ruuvi', mac)
     if (ruuviData) {
       return (
         <Grid item xs={4} key={mac}>
-          <Card>
-            <CardContent>
-              <Typography variant='h5' component='div'>
-                {mac}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Temp: {Math.round(ruuviData[mac].temperature * 100) / 100}c<br/>
-                Humidity: {Math.round(ruuviData[mac].humidity)}%<br/>
-                Pressure: {Math.round(ruuviData[mac].pressure)}p
-              </Typography>
-            </CardContent>
-          </Card>
+          <RuuviCard mac={mac} ruuviData={ruuviData[mac]} />
         </Grid>
       )
     }
@@ -59,7 +49,7 @@ const App = () => {
   return (
     <Box m={2}>
       <Grid container spacing={2}>
-        {macs.map((mac) => showRuuviData(mac))}
+        {configs.macs.map((macItem) => showRuuviData(macItem.mac))}
         <Grid item>
           <p><strong>{data?.express}</strong></p>
         </Grid>
