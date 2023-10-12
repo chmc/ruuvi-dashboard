@@ -7,11 +7,13 @@ import Box from '@mui/material/Box'
 import RuuviCard from './components/RuuviCard'
 import InOutCard from './components/InOutCard'
 import configs from './configs'
+import formatters from './utils/formatters'
+import WeatherForecastCard from './components/WeatherForecastCard'
 
 const App = () => {
   const [data, setData] = useState(null)
   const [ruuviDatas, setRuuviDatas] = useState(null)
-  console.log('configs: ', configs)
+  const [dailyWeatherList, setDailyWeatherList] = useState(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -20,19 +22,36 @@ const App = () => {
       setData(json)
     }
 
+    // eslint-disable-next-line no-console
     fetchData().catch(console.error)
 
     const fetchRuuviData = async () => {
-      console.log('call api')
       const response = await fetch('/api/ruuvi')
       const json = await response.json()
       setRuuviDatas(json)
-      console.log('app data: ', json)
-      console.log(configs.ruuviTags[0], json[configs.ruuviTags[0].mac])
     }
 
-    const intervalId = setInterval(fetchRuuviData, 5000)
+    const fetchWeatherData = async () => {
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/forecast?lat=60.1695&lon=24.9355&units=metric&appid=${configs.openweatherApiKey}`
+      )
+      const json = await response.json()
+      const weather = json.list
+        .filter((item) => item.dt_txt.includes('12:00:00'))
+        .map((daily) => ({
+          date: daily.dt_txt,
+          weekDay: formatters.toDayOfWeek(daily.dt_txt),
+          temp: daily.main.temp,
+          wind: daily.wind.speed,
+          iconUrl: `https://openweathermap.org/img/wn/${daily.weather[0].icon}@2x.png`,
+        }))
+      setDailyWeatherList(weather)
+      console.log(weather)
+    }
+    fetchWeatherData()
+    fetchRuuviData()
 
+    const intervalId = setInterval(fetchRuuviData, 10000)
     return () => clearInterval(intervalId)
   }, [])
 
@@ -48,6 +67,7 @@ const App = () => {
             />
           ))}
         <InOutCard ruuviDatas={ruuviDatas} />
+        <WeatherForecastCard dailyWeatherList={dailyWeatherList} />
         <Grid item xs={12}>
           <p>
             <strong>{data?.express}</strong>

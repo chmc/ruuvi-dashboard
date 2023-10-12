@@ -10,6 +10,7 @@ const configs = {
   ruuviTags,
   mainIndoorMac: process.env.REACT_APP_MAIN_INDOOR_RUUVITAG_MAC,
   mainOutdoorMac: process.env.REACT_APP_MAIN_OUTDOOR_RUUVITAG_MAC,
+  openweatherApiKey: process.env.REACT_APP_OPENWEATHERMAP_APIKEY,
 }
 
 export default configs
