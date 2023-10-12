@@ -1,6 +1,8 @@
 {
     "recommendations": [
         "humao.rest-client",
-        "dsznajder.es7-react-js-snippets"
+        "dsznajder.es7-react-js-snippets",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
     ]
 }

@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react';
-import Grid from '@mui/material/Grid';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Typography from '@mui/material/Typography';
+import { useEffect, useState } from 'react'
+import Grid from '@mui/material/Grid'
+import Card from '@mui/material/Card'
+import CardContent from '@mui/material/CardContent'
+import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 import RuuviCard from './components/RuuviCard'
 import InOutCard from './components/InOutCard'
 import configs from './configs'
 
 const App = () => {
-  const [data, setData] = useState(null);
+  const [data, setData] = useState(null)
   const [ruuviDatas, setRuuviDatas] = useState(null)
   console.log('configs: ', configs)
 
@@ -20,8 +20,7 @@ const App = () => {
       setData(json)
     }
 
-    fetchData()
-      .catch(console.error)
+    fetchData().catch(console.error)
 
     const fetchRuuviData = async () => {
       console.log('call api')
@@ -32,24 +31,31 @@ const App = () => {
       console.log(configs.ruuviTags[0], json[configs.ruuviTags[0].mac])
     }
 
-    const intervalId = setInterval(fetchRuuviData, 5000);
+    const intervalId = setInterval(fetchRuuviData, 5000)
 
     return () => clearInterval(intervalId)
-  }, []);
+  }, [])
 
   return (
     <Box m={2}>
       <Grid container spacing={2}>
-        {ruuviDatas && configs.ruuviTags.map((macItem) =>
-          <RuuviCard key={macItem.mac} ruuvi={macItem} ruuviData={ruuviDatas[macItem.mac]} />
-        )}
+        {ruuviDatas &&
+          configs.ruuviTags.map((macItem) => (
+            <RuuviCard
+              key={macItem.mac}
+              ruuvi={macItem}
+              ruuviData={ruuviDatas[macItem.mac]}
+            />
+          ))}
         <InOutCard ruuviDatas={ruuviDatas} />
         <Grid item xs={12}>
-          <p><strong>{data?.express}</strong></p>
+          <p>
+            <strong>{data?.express}</strong>
+          </p>
         </Grid>
       </Grid>
     </Box>
-  );
+  )
 }
 
-export default App;
+export default App

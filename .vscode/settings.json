@@ -1,0 +1,8 @@
+{
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "editor.formatOnSave": true,
+  "files.eol": "\n",
+  "eslint.lintTask.enable": true
+}
