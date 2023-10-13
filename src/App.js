@@ -11,20 +11,10 @@ import formatters from './utils/formatters'
 import WeatherForecastCard from './components/WeatherForecastCard'
 
 const App = () => {
-  const [data, setData] = useState(null)
   const [ruuviDatas, setRuuviDatas] = useState(null)
   const [dailyWeatherList, setDailyWeatherList] = useState(null)
 
   useEffect(() => {
-    const fetchData = async () => {
-      const response = await fetch('/api/express_backend')
-      const json = await response.json()
-      setData(json)
-    }
-
-    // eslint-disable-next-line no-console
-    fetchData().catch(console.error)
-
     const fetchRuuviData = async () => {
       const response = await fetch('/api/ruuvi')
       const json = await response.json()
@@ -46,10 +36,12 @@ const App = () => {
           iconUrl: `https://openweathermap.org/img/wn/${daily.weather[0].icon}@2x.png`,
         }))
       setDailyWeatherList(weather)
-      console.log(weather)
     }
-    fetchWeatherData()
-    fetchRuuviData()
+
+    // eslint-disable-next-line no-console
+    fetchWeatherData().catch(console.error)
+    // eslint-disable-next-line no-console
+    fetchRuuviData().catch(console.error)
 
     const intervalId = setInterval(fetchRuuviData, 10000)
     return () => clearInterval(intervalId)
@@ -68,11 +60,6 @@ const App = () => {
           ))}
         <InOutCard ruuviDatas={ruuviDatas} />
         <WeatherForecastCard dailyWeatherList={dailyWeatherList} />
-        <Grid item xs={12}>
-          <p>
-            <strong>{data?.express}</strong>
-          </p>
-        </Grid>
       </Grid>
     </Box>
   )
