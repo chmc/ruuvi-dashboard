@@ -4,6 +4,9 @@ import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
+import ThermostatIcon from '@mui/icons-material/Thermostat'
+import AirIcon from '@mui/icons-material/Air'
+import Chip from '@mui/material/Chip'
 import formatters from '../utils/formatters'
 
 const WeatherForecastCard = ({ dailyWeatherList }) => {
@@ -18,20 +21,32 @@ const WeatherForecastCard = ({ dailyWeatherList }) => {
           {dailyWeatherList.map((dailyWeather) => (
             <Box
               component="div"
-              ml={2.7}
-              mr={2.7}
+              ml={1.25}
+              mr={1.25}
               sx={{ display: 'inline-block' }}
               key={dailyWeather.weekDay}
             >
-              <Box display="flex" justifyContent="center">
+              <Box display="flex" justifyContent="center" mb={-2}>
                 {dailyWeather.weekDay}
               </Box>
-              <div>
-                <img src={dailyWeather.iconUrl} />
-              </div>
               <Box display="flex" justifyContent="center">
-                {formatters.toTemperatureUI(dailyWeather.temp)}c /{' '}
-                {dailyWeather.wind}ms
+                <img src={dailyWeather.iconUrl} />
+              </Box>
+              <Box display="flex" justifyContent="center" mt={-1.5}>
+                <Box mr={1}>
+                  <Chip
+                    size="small"
+                    icon={<ThermostatIcon fontSize="small" color="primary" />}
+                    label={formatters.toTemperatureUI(dailyWeather.temp)}
+                  />
+                </Box>
+                <Box>
+                  <Chip
+                    size="small"
+                    icon={<AirIcon fontSize="small" color="primary" />}
+                    label={dailyWeather.wind}
+                  />
+                </Box>
               </Box>
             </Box>
           ))}
