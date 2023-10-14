@@ -15,8 +15,18 @@ const EnergyPricesCard = ({ energyPrices }) => {
     return null
   }
 
-  const dataset = energyPrices.map((energyPrice) => energyPrice.hinta)
-  const labels = energyPrices.map((energyPrice) => energyPrice.aikaleima_suomi)
+  const sortedEnergyPrices = energyPrices
+    .map((energyPrice) => {
+      const date = new Date(energyPrice.aikaleima_suomi)
+      return {
+        price: energyPrice.hinta,
+        hour: date.getHours(),
+      }
+    })
+    .sort((a, b) => a.hour - b.hour)
+
+  const dataset = sortedEnergyPrices.map((energyPrice) => energyPrice.price)
+  const labels = sortedEnergyPrices.map((energyPrice) => energyPrice.hour)
 
   return (
     <Grid item xs={12}>

@@ -30,7 +30,7 @@ const VerticalBarChart = ({ dataset, labels }) => {
       },
       title: {
         display: true,
-        text: 'Chart.js Bar Chart',
+        text: 'Energy price',
       },
       tooltips: {
         callbacks: {
@@ -71,6 +71,6 @@ const VerticalBarChart = ({ dataset, labels }) => {
     ],
   }
 
-  return <Bar options={options} data={data2} />
+  return <Bar options={options} data={data2} height={50} />
 }
 export default VerticalBarChart
