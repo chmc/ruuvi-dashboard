@@ -9,6 +9,7 @@ import InOutCard from './components/InOutCard'
 import configs from './configs'
 import formatters from './utils/formatters'
 import WeatherForecastCard from './components/WeatherForecastCard'
+import EnergyPricesCard from './components/EnergyPricesCard'
 
 const App = () => {
   const [ruuviDatas, setRuuviDatas] = useState(null)
@@ -38,6 +39,13 @@ const App = () => {
       setDailyWeatherList(weather)
     }
 
+    const fetchEnergyPrices = async () => {
+      const response = await fetch(
+        'https://api.porssisahko.net/v1/latest-prices.json'
+      )
+      const json = await response.json()
+    }
+
     // eslint-disable-next-line no-console
     fetchWeatherData().catch(console.error)
     // eslint-disable-next-line no-console
@@ -60,6 +68,7 @@ const App = () => {
           ))}
         <InOutCard ruuviDatas={ruuviDatas} />
         <WeatherForecastCard dailyWeatherList={dailyWeatherList} />
+        <EnergyPricesCard />
       </Grid>
     </Box>
   )

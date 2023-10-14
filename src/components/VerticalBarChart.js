@@ -1,0 +1,76 @@
+import React from 'react'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js'
+import { Bar } from 'react-chartjs-2'
+
+// https://www.chartjs.org/docs/latest/charts/bar.html
+const VerticalBarChart = ({ data }) => {
+  ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend
+  )
+
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        // position: 'top',
+        display: false,
+      },
+      title: {
+        display: true,
+        text: 'Chart.js Bar Chart',
+      },
+      tooltips: {
+        callbacks: {
+          label: (tooltipItem) => tooltipItem.yLabel,
+        },
+      },
+    },
+  }
+
+  const labels = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+  ]
+
+  const dataset = [100, 300, 600, 83, 400, 900]
+  const getBackgroundColor = (value) => {
+    if (value <= 300) {
+      return 'rgba(55, 252, 52, 0.3)'
+    }
+    if (value > 300 && value <= 600) {
+      return 'rgba(255, 205, 66, 0.3)'
+    }
+    return 'rgba(255, 50, 50, 0.3)'
+  }
+
+  const data2 = {
+    labels,
+    datasets: [
+      {
+        data: dataset,
+        backgroundColor: dataset.map((value) => getBackgroundColor(value)),
+      },
+    ],
+  }
+
+  return <Bar options={options} data={data2} />
+}
+export default VerticalBarChart
