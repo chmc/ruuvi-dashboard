@@ -11,7 +11,7 @@ import {
 import { Bar } from 'react-chartjs-2'
 
 // https://www.chartjs.org/docs/latest/charts/bar.html
-const VerticalBarChart = ({ data }) => {
+const VerticalBarChart = ({ dataset, labels }) => {
   ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -40,22 +40,22 @@ const VerticalBarChart = ({ data }) => {
     },
   }
 
-  const labels = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-  ]
+  // const labels = [
+  //   'January',
+  //   'February',
+  //   'March',
+  //   'April',
+  //   'May',
+  //   'June',
+  //   'July',
+  // ]
 
-  const dataset = [100, 300, 600, 83, 400, 900]
+  // const dataset = [100, 300, 600, 83, 400, 900]
   const getBackgroundColor = (value) => {
-    if (value <= 300) {
+    if (value <= 5) {
       return 'rgba(55, 252, 52, 0.3)'
     }
-    if (value > 300 && value <= 600) {
+    if (value > 5 && value <= 10) {
       return 'rgba(255, 205, 66, 0.3)'
     }
     return 'rgba(255, 50, 50, 0.3)'

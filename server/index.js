@@ -16,7 +16,7 @@ app.listen(port, () => console.log(`Listening on port ${port}`))
 // create a GET route
 app.get('/api/express_backend', (req, res) => {
   console.log('api call received')
-  res.send({ express: 'YOUR EXPRESS BACKEND IS CONNECTED TO REACT' }) //Line 10
+  res.send({ express: 'YOUR EXPRESS BACKEND IS CONNECTED TO REACT' }) // Line 10
 })
 
 app.get('/api/ruuvi', (req, res) => {
@@ -31,6 +31,21 @@ app.post('/api/ruuvi', (req, res) => {
   console.log(data)
 })
 
+app.get('/api/energyprices', async (req, res) => {
+  console.log('energy prices called')
+  try {
+    const response = await fetch(
+      'https://www.sahkohinta-api.fi/api/v1/halpa?tunnit=12&tulos=haja&aikaraja=2023-10-14'
+    )
+    console.log('api called')
+    const json = await response.text()
+    console.log(json)
+    res.send(json)
+  } catch (error) {
+    console.error(error)
+  }
+})
+
 if (!process.env.TEST) {
   // Get real Ruuvi Tags data
   const macs = process.env.REACT_APP_RUUVITAG_MACS
@@ -39,6 +54,7 @@ if (!process.env.TEST) {
   const command = `python3 ${ruuviScript} --macs "${macs}"`
   console.log('command: ', command)
 
+  // eslint-disable-next-line no-inner-declarations
   function execRuuviScript() {
     exec(command, (error, stdout, stderr) => {
       if (error) {
@@ -67,6 +83,6 @@ if (!process.env.TEST) {
   setInterval(() => {
     utils.modifyDataWithWave(jsonData)
     cache.set('ruuvi', jsonData)
-    //console.log(jsonData);
+    // console.log(jsonData);
   }, 1000)
 }
