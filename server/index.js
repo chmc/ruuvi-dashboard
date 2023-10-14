@@ -35,7 +35,7 @@ app.get('/api/energyprices', async (req, res) => {
   console.log('energy prices called')
   try {
     const response = await fetch(
-      'https://www.sahkohinta-api.fi/api/v1/halpa?tunnit=12&tulos=haja&aikaraja=2023-10-14'
+      'https://www.sahkohinta-api.fi/api/v1/halpa?tunnit=24&tulos=haja&aikaraja=2023-10-14'
     )
     console.log('api called')
     const json = await response.text()
