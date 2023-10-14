@@ -21,6 +21,7 @@ const EnergyPricesCard = ({ energyPrices }) => {
       return {
         price: energyPrice.hinta,
         hour: date.getHours(),
+        date,
       }
     })
     .sort((a, b) => a.hour - b.hour)
@@ -32,7 +33,11 @@ const EnergyPricesCard = ({ energyPrices }) => {
     <Grid item xs={12}>
       <Card>
         <CardContent>
-          <VerticalBarChart dataset={dataset} labels={labels} />
+          <VerticalBarChart
+            dataset={dataset}
+            labels={labels}
+            fullData={sortedEnergyPrices}
+          />
         </CardContent>
       </Card>
     </Grid>
