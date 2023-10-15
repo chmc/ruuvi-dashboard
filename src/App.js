@@ -32,7 +32,7 @@ const App = () => {
         .filter((item) => item.dt_txt.includes('12:00:00'))
         .map((daily) => ({
           date: daily.dt_txt,
-          weekDay: formatters.toDayOfWeek(daily.dt_txt),
+          weekDay: formatters.toDayOfWeekUI(daily.dt_txt),
           temp: daily.main.temp,
           wind: daily.wind.speed,
           iconUrl: `https://openweathermap.org/img/wn/${daily.weather[0].icon}@2x.png`,

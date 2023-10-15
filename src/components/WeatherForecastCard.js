@@ -44,7 +44,7 @@ const WeatherForecastCard = ({ dailyWeatherList }) => {
                   <Chip
                     size="small"
                     icon={<AirIcon fontSize="small" color="primary" />}
-                    label={dailyWeather.wind}
+                    label={formatters.toWindUI(dailyWeather.wind)}
                   />
                 </Box>
               </Box>

@@ -20,7 +20,7 @@ const toPressureUI = (pressure) => Math.round(pressure.toFixed(0)).toString()
  * @param {string} dateString
  * @returns {string}
  */
-const toDayOfWeek = (dateString) => {
+const toDayOfWeekUI = (dateString) => {
   const date = new Date(dateString)
   const dayOfWeek = date.getDay()
   switch (dayOfWeek) {
@@ -43,11 +43,18 @@ const toDayOfWeek = (dateString) => {
   }
 }
 
+/**
+ * @param {number} wind
+ * @returns {string}
+ */
+const toWindUI = (wind) => wind.toFixed(1)
+
 const uiFormatter = {
   toTemperatureUI,
   toHumidityUI,
   toPressureUI,
-  toDayOfWeek,
+  toDayOfWeekUI,
+  toWindUI,
 }
 
 export default uiFormatter
