@@ -2,12 +2,13 @@
  * AppStorage
  * @typedef     AppStorage  Persisted application storage
  * @type        {object}
- * @property    {TodayEnergyPrices}    todayEnergyPrices
+ * @property    {DailyEnergyPrices=}    todayEnergyPrices
+ * @property    {DailyEnergyPrices=}    tomorrowEnergyPrices
  */
 
 /**
- * TodayEnergyPrices
- * @typedef     TodayEnergyPrices
+ * DailyEnergyPrices
+ * @typedef     DailyEnergyPrices
  * @type        {object}
  * @property    {Date}      updatedAt
  * @property    {string}    pricesForDate

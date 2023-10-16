@@ -19,7 +19,7 @@ const EnergyPricesCard = ({ energyPrices }) => {
     .map((energyPrice) => ({
       price: energyPrice.price,
       hour: energyPrice.hour,
-      energyPrice: energyPrice.date,
+      date: new Date(energyPrice.date),
     }))
     .sort((a, b) => a.hour - b.hour)
 

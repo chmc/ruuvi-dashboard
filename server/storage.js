@@ -32,6 +32,9 @@ const loadOrDefault = async () => {
   return {}
 }
 
+/**
+ * @returns {AppStorage}
+ */
 const loadOrDefaultSync = () => {
   if (existsSync(appStorageFilePath)) {
     const data = readFileSync(appStorageFilePath)
@@ -42,6 +45,9 @@ const loadOrDefaultSync = () => {
   return {}
 }
 
+/**
+ * @param {AppStorage} data
+ */
 const save = async (data) => {
   const json = JSON.stringify(data)
   // console.log('save: ', json)
@@ -54,6 +60,9 @@ const save = async (data) => {
   })
 }
 
+/**
+ * @param {AppStorage} data
+ */
 const saveSync = (data) => {
   const json = JSON.stringify(data)
   writeFileSync(appStorageFilePath, json)

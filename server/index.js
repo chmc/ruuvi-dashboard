@@ -39,32 +39,6 @@ app.get('/api/energyprices', async (req, res) => {
   // console.log('storage', appStorage)
   const json = await utils.getEnergyPrices(appStorage)
   res.send(json)
-  // console.log('send done')
-  // try {
-  //   const appStorage = storage.loadOrDefault()
-  //   const currentDate = new Date().toISOString().split('T')[0]
-  //   // const response = await fetch(
-  //   //   `https://www.sahkohinta-api.fi/api/v1/halpa?tunnit=24&tulos=haja&aikaraja=${currentDate}`
-  //   // )
-  //   // console.log('api called')
-  //   // const json = await response.text()
-  //   const json =
-  //     '[{"aikaleima_suomi":"2023-10-14T06:00","aikaleima_utc":"2023-10-14T03:00","hinta":"-0.43700"},{"aikaleima_suomi":"2023-10-14T05:00","aikaleima_utc":"2023-10-14T02:00","hinta":"-0.39500"},{"aikaleima_suomi":"2023-10-14T04:00","aikaleima_utc":"2023-10-14T01:00","hinta":"-0.34300"},{"aikaleima_suomi":"2023-10-14T07:00","aikaleima_utc":"2023-10-14T04:00","hinta":"-0.30200"},{"aikaleima_suomi":"2023-10-14T00:00","aikaleima_utc":"2023-10-13T21:00","hinta":"-0.29800"},{"aikaleima_suomi":"2023-10-14T03:00","aikaleima_utc":"2023-10-14T00:00","hinta":"-0.27700"},{"aikaleima_suomi":"2023-10-14T14:00","aikaleima_utc":"2023-10-14T11:00","hinta":"-0.26200"},{"aikaleima_suomi":"2023-10-14T13:00","aikaleima_utc":"2023-10-14T10:00","hinta":"-0.26000"},{"aikaleima_suomi":"2023-10-14T08:00","aikaleima_utc":"2023-10-14T05:00","hinta":"-0.26000"},{"aikaleima_suomi":"2023-10-14T23:00","aikaleima_utc":"2023-10-14T20:00","hinta":"-0.22400"},{"aikaleima_suomi":"2023-10-14T12:00","aikaleima_utc":"2023-10-14T09:00","hinta":"-0.21900"},{"aikaleima_suomi":"2023-10-14T11:00","aikaleima_utc":"2023-10-14T08:00","hinta":"-0.21900"},{"aikaleima_suomi":"2023-10-14T15:00","aikaleima_utc":"2023-10-14T12:00","hinta":"-0.21100"},{"aikaleima_suomi":"2023-10-14T02:00","aikaleima_utc":"2023-10-13T23:00","hinta":"-0.20600"},{"aikaleima_suomi":"2023-10-14T10:00","aikaleima_utc":"2023-10-14T07:00","hinta":"-0.20300"},{"aikaleima_suomi":"2023-10-14T09:00","aikaleima_utc":"2023-10-14T06:00","hinta":"-0.20300"},{"aikaleima_suomi":"2023-10-14T22:00","aikaleima_utc":"2023-10-14T19:00","hinta":"-0.12700"},{"aikaleima_suomi":"2023-10-14T01:00","aikaleima_utc":"2023-10-13T22:00","hinta":"-0.12500"},{"aikaleima_suomi":"2023-10-14T16:00","aikaleima_utc":"2023-10-14T13:00","hinta":"-0.12500"},{"aikaleima_suomi":"2023-10-14T21:00","aikaleima_utc":"2023-10-14T18:00","hinta":"-0.10700"},{"aikaleima_suomi":"2023-10-14T17:00","aikaleima_utc":"2023-10-14T14:00","hinta":"-0.10200"},{"aikaleima_suomi":"2023-10-14T18:00","aikaleima_utc":"2023-10-14T15:00","hinta":"0.00000"},{"aikaleima_suomi":"2023-10-14T20:00","aikaleima_utc":"2023-10-14T17:00","hinta":"0.00000"},{"aikaleima_suomi":"2023-10-14T19:00","aikaleima_utc":"2023-10-14T16:00","hinta":"0.00100"}]'
-
-  //   console.log(json)
-  //   res.send(json)
-  //   console.log('send done')
-
-  //   console.log('storage loaded')
-  //   appStorage.todayEnergyPrices = {
-  //     updatedAt: new Date(),
-  //     pricesForDate: currentDate,
-  //     data: json,
-  //   }
-  //   await storage.save(appStorage)
-  // } catch (error) {
-  //   console.error(error)
-  // }
 })
 
 if (!process.env.TEST) {
