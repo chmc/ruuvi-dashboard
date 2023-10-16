@@ -19,7 +19,7 @@ const EnergyPricesCard = ({ energyPrices }) => {
     .map((energyPrice) => {
       const date = new Date(energyPrice.aikaleima_suomi)
       return {
-        price: energyPrice.hinta,
+        price: Math.round(Number.parseFloat(energyPrice.hinta) * 100) / 100,
         hour: date.getHours(),
         date,
       }

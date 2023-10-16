@@ -9,6 +9,7 @@ import {
   Legend,
 } from 'chart.js'
 import { Bar } from 'react-chartjs-2'
+import ChartDataLabels from 'chartjs-plugin-datalabels'
 
 // https://www.chartjs.org/docs/latest/charts/bar.html
 const VerticalBarChart = ({ dataset, labels, fullData }) => {
@@ -18,7 +19,8 @@ const VerticalBarChart = ({ dataset, labels, fullData }) => {
     BarElement,
     Title,
     Tooltip,
-    Legend
+    Legend,
+    ChartDataLabels
   )
 
   const options = {
@@ -30,11 +32,20 @@ const VerticalBarChart = ({ dataset, labels, fullData }) => {
       },
       title: {
         display: true,
-        text: 'Energy price',
+        text: 'Energy price c/kWh',
       },
       tooltips: {
         callbacks: {
           label: (tooltipItem) => tooltipItem.yLabel,
+        },
+      },
+      datalabels: {
+        anchor: 'end',
+        align: 'top',
+        formatter: (value, context) => value,
+        font: {
+          color: 'white',
+          weight: 'bold',
         },
       },
     },
