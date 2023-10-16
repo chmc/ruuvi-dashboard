@@ -16,14 +16,11 @@ const EnergyPricesCard = ({ energyPrices }) => {
   }
 
   const sortedEnergyPrices = energyPrices
-    .map((energyPrice) => {
-      const date = new Date(energyPrice.aikaleima_suomi)
-      return {
-        price: Math.round(Number.parseFloat(energyPrice.hinta) * 100) / 100,
-        hour: date.getHours(),
-        date,
-      }
-    })
+    .map((energyPrice) => ({
+      price: energyPrice.price,
+      hour: energyPrice.hour,
+      energyPrice: energyPrice.date,
+    }))
     .sort((a, b) => a.hour - b.hour)
 
   const dataset = sortedEnergyPrices.map((energyPrice) => energyPrice.price)
