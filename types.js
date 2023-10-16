@@ -18,7 +18,7 @@
  * EnergyPrice
  * @typedef     EnergyPrice
  * @type        {object}
- * @property    {Date}      aikaleima_suomi
- * @property    {Date}      aikaleima_utc
- * @property    {number}    hinta
+ * @property    {Date}      date
+ * @property    {number}    price
+ * @property    {number}    hour
  */
