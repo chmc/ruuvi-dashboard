@@ -64,7 +64,10 @@ const App = () => {
     // eslint-disable-next-line no-console
     fetchEnergyPrices().catch(console.error)
 
-    const intervalId = setInterval(fetchRuuviData, 10000)
+    const intervalId = setInterval(() => {
+      fetchRuuviData()
+      // fetchEnergyPrices()
+    }, 10000)
     return () => clearInterval(intervalId)
   }, [])
 

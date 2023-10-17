@@ -9,6 +9,10 @@ require('dotenv').config()
 const app = express()
 const port = process.env.PORT || 3001
 const cache = new NodeCache({ stdTTL: 60 })
+const cacheKeys = {
+  ruuvi: 'ruuvi',
+  energyPrices: 'energyPrices',
+}
 
 app.use(express.json())
 
@@ -23,21 +27,38 @@ app.get('/api/express_backend', (req, res) => {
 
 app.get('/api/ruuvi', (req, res) => {
   console.log('api get ruuvi received')
-  res.send(cache.get('ruuvi'))
+  res.send(cache.get(cacheKeys.ruuvi))
 })
 
 app.post('/api/ruuvi', (req, res) => {
   console.log('post call received')
   const data = req.body
-  cache.set('ruuvi', data)
+  cache.set(cacheKeys.ruuvi, data)
   console.log(data)
 })
 
 app.get('/api/energyprices', async (req, res) => {
-  console.log('energy prices called')
-  const appStorage = await storage.loadOrDefaultSync()
-  const json = await utils.getEnergyPrices(appStorage)
-  res.send(json)
+  console.log('Energy prices called')
+  /** @type {EnergyPrices=} */
+  let cachedEnergyPrices = cache.get(cacheKeys.energyPrices)
+
+  if (!cachedEnergyPrices) {
+    console.log('Not in cache, try load store')
+    const appStorage = await storage.loadOrDefaultSync()
+    cachedEnergyPrices = {
+      updatedAt: appStorage.todayEnergyPrices?.updatedAt,
+      todayEnergyPrices: appStorage.todayEnergyPrices,
+      tomorrowEnergyPrices: appStorage.tomorrowEnergyPrices,
+    }
+  }
+  const energyPrices = await utils.getEnergyPrices(cachedEnergyPrices)
+  cache.set(cacheKeys.energyPrices, energyPrices)
+
+  const energyPricesForClient = {
+    todayEnergyPrices: energyPrices.todayEnergyPrices?.data,
+    tomorrowEnergyPrices: energyPrices.tomorrowEnergyPrices?.data,
+  }
+  res.send(energyPricesForClient)
 })
 
 if (!process.env.TEST) {
@@ -76,7 +97,7 @@ if (!process.env.TEST) {
 
   setInterval(() => {
     utils.modifyDataWithWave(jsonData)
-    cache.set('ruuvi', jsonData)
+    cache.set(cacheKeys.ruuvi, jsonData)
     // console.log(jsonData);
   }, 1000)
 }

@@ -7,6 +7,15 @@
  */
 
 /**
+ * EnergyPrices
+ * @typedef     EnergyPrices  Persisted application storage
+ * @type        {object}
+ * @property    {Date}                  updatedAt
+ * @property    {DailyEnergyPrices=}    todayEnergyPrices
+ * @property    {DailyEnergyPrices=}    tomorrowEnergyPrices
+ */
+
+/**
  * DailyEnergyPrices
  * @typedef     DailyEnergyPrices
  * @type        {object}

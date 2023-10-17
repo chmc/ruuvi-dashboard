@@ -66,19 +66,20 @@ const isSameDate = (date1, date2) =>
   date1?.getDate() === date2?.getDate()
 
 /**
- * @param {AppStorage} appStorage
+ * @param   {EnergyPrices} energyPrices
+ * @returns {EnergyPrices}
  */
 // eslint-disable-next-line consistent-return
-const getEnergyPrices = async (appStorage) => {
+const getEnergyPrices = async (energyPrices) => {
   try {
     const currentDateObject = new Date()
     const currentDate = currentDateObject.toISOString().split('T')[0]
     const tomorrowDateObject = addOneDay()
     const tomorrowDate = tomorrowDateObject.toISOString().split('T')[0]
-    const updatedAt = new Date(appStorage.todayEnergyPrices.updatedAt)
+    const updatedAt = new Date(energyPrices?.todayEnergyPrices?.updatedAt)
     console.log(
       'Updated at ',
-      appStorage.todayEnergyPrices.updatedAt,
+      energyPrices?.todayEnergyPrices?.updatedAt,
       updatedAt,
       new Date()
     )
@@ -89,12 +90,12 @@ const getEnergyPrices = async (appStorage) => {
     console.log('Last energy prices updated: ', hoursDifference, 'h ago')
 
     let allowUpdateEnergyPrices = false
-    if (!appStorage.todayEnergyPrices) {
+    if (!energyPrices.todayEnergyPrices) {
       allowUpdateEnergyPrices = true
     } else if (
       currentDateObject.getHours > 12 &&
       hoursDifference > 0.5 &&
-      !appStorage.tomorrowEnergyPrices
+      !energyPrices.tomorrowEnergyPrices
     ) {
       allowUpdateEnergyPrices = true
     } else if (hoursDifference > 4) {
@@ -118,6 +119,7 @@ const getEnergyPrices = async (appStorage) => {
         isSameDate(energyPrice.date, tomorrowDateObject)
       )
 
+      const appStorage = await storage.loadOrDefault()
       const updatedAppStorage = {
         ...appStorage,
         todayEnergyPrices: {
@@ -135,12 +137,19 @@ const getEnergyPrices = async (appStorage) => {
               },
       }
       await storage.save(updatedAppStorage)
-    } else {
-      console.log('Use energy prices from store')
+
       return {
-        todayEnergyPrices: appStorage.todayEnergyPrices.data,
-        tomorrowEnergyPrices: appStorage.tomorrowEnergyPrices?.data,
+        updatedAt: updatedAppStorage.todayEnergyPrices.updatedAt,
+        todayEnergyPrices: updatedAppStorage.todayEnergyPrices,
+        tomorrowEnergyPrices: updatedAppStorage.tomorrowEnergyPrices,
       }
+    }
+
+    console.log('Use energy prices from cache')
+    return {
+      updatedAt: energyPrices.todayEnergyPrices.updatedAt,
+      todayEnergyPrices: energyPrices.todayEnergyPrices,
+      tomorrowEnergyPrices: energyPrices.tomorrowEnergyPrices,
     }
   } catch (error) {
     console.error(error)
