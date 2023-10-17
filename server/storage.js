@@ -13,6 +13,21 @@ const appStorageFilePath = path.resolve(__dirname, APP_STORAGE_FILE_NAME)
 console.log(appStorageFilePath)
 
 /**
+ * @param {string} key
+ * @param {any} value
+ * @returns {any}
+ */
+const jsonParseReviverFunc = (key, value) => {
+  if (
+    typeof value === 'string' &&
+    value.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/)
+  ) {
+    return new Date(value)
+  }
+  return value
+}
+
+/**
  * @returns {AppStorage}
  */
 const loadOrDefault = async () => {
@@ -24,7 +39,7 @@ const loadOrDefault = async () => {
         return {}
       }
       console.log('loaded')
-      return JSON.parse(data)
+      return JSON.parse(data, jsonParseReviverFunc)
     })
   }
 
@@ -39,7 +54,7 @@ const loadOrDefaultSync = () => {
   if (existsSync(appStorageFilePath)) {
     const data = readFileSync(appStorageFilePath)
     console.log('loaded')
-    return JSON.parse(data)
+    return JSON.parse(data, jsonParseReviverFunc)
   }
 
   return {}

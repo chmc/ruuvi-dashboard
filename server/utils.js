@@ -88,7 +88,20 @@ const getEnergyPrices = async (appStorage) => {
     const hoursDifference = timeDifferenceInMilliseconds / (1000 * 60 * 60)
     console.log('Last energy prices updated: ', hoursDifference, 'h ago')
 
-    if (hoursDifference > 4) {
+    let allowUpdateEnergyPrices = false
+    if (!appStorage.todayEnergyPrices) {
+      allowUpdateEnergyPrices = true
+    } else if (
+      currentDateObject.getHours > 12 &&
+      hoursDifference > 0.5 &&
+      !appStorage.tomorrowEnergyPrices
+    ) {
+      allowUpdateEnergyPrices = true
+    } else if (hoursDifference > 4) {
+      allowUpdateEnergyPrices = true
+    }
+
+    if (allowUpdateEnergyPrices) {
       console.log('Get new energy prices')
       const dataText = await getEnergyPricesFromApi()
       const allEnergyPrices = JSON.parse(dataText).map((daily) => ({

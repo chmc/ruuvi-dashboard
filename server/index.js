@@ -36,7 +36,6 @@ app.post('/api/ruuvi', (req, res) => {
 app.get('/api/energyprices', async (req, res) => {
   console.log('energy prices called')
   const appStorage = await storage.loadOrDefaultSync()
-  // console.log('storage', appStorage)
   const json = await utils.getEnergyPrices(appStorage)
   res.send(json)
 })
