@@ -25,19 +25,19 @@ const toDayOfWeekUI = (dateString) => {
   const dayOfWeek = date.getDay()
   switch (dayOfWeek) {
     case 0:
-      return 'Sun'
+      return 'Su'
     case 1:
-      return 'Mon'
+      return 'Ma'
     case 2:
-      return 'Tue'
+      return 'Ti'
     case 3:
-      return 'Wed'
+      return 'Ke'
     case 4:
-      return 'Thu'
+      return 'To'
     case 5:
-      return 'Fri'
+      return 'Pe'
     case 6:
-      return 'Sat'
+      return 'La'
     default:
       return ''
   }

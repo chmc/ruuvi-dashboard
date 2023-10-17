@@ -93,7 +93,7 @@ const App = () => {
         />
         <EnergyPricesCard
           title="Huomenna c/kWh"
-          noPricesText="Huomisen sähköhinnat tulevat klo 14.00 jälkeen"
+          noPricesText="Huomisen sähkön hinnat tulevat klo 14.00 jälkeen"
           energyPrices={tomorrowEnergyPrices}
         />
       </Grid>

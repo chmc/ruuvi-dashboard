@@ -19,7 +19,7 @@ const InOutCard = ({ ruuviDatas }) => {
           <Card>
             <CardContent>
               <Typography variant="h5" component="div">
-                Indoor
+                Sisällä
               </Typography>
               <Typography variant="h5" color="text.secondary">
                 {uiFormatter.toTemperatureUI(indoorRuuvi.temperature)}c
@@ -32,7 +32,7 @@ const InOutCard = ({ ruuviDatas }) => {
           <Card>
             <CardContent>
               <Typography variant="h5" component="div">
-                Outdoor
+                Ulkona
               </Typography>
               <Typography variant="h5" color="text.secondary">
                 {uiFormatter.toTemperatureUI(outdoorRuuvi.temperature)}c
