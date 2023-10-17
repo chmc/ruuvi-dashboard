@@ -12,7 +12,7 @@ import { Bar } from 'react-chartjs-2'
 import ChartDataLabels from 'chartjs-plugin-datalabels'
 
 // https://www.chartjs.org/docs/latest/charts/bar.html
-const VerticalBarChart = ({ dataset, labels, fullData }) => {
+const VerticalBarChart = ({ title, dataset, labels, fullData }) => {
   ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -32,7 +32,7 @@ const VerticalBarChart = ({ dataset, labels, fullData }) => {
       },
       title: {
         display: true,
-        text: 'Energy price c/kWh',
+        text: title,
       },
       tooltips: {
         callbacks: {
@@ -59,12 +59,28 @@ const VerticalBarChart = ({ dataset, labels, fullData }) => {
       return 'gray'
     }
     if (value <= 5) {
-      return 'rgba(55, 252, 52, 0.3)'
+      // return 'rgba(55, 252, 52, 0.3)'
+      // Green
+      return 'rgba(0, 204, 136, 0.5)'
     }
-    if (value > 5 && value <= 10) {
-      return 'rgba(255, 205, 66, 0.3)'
+    if (value > 5 && value <= 13) {
+      // A lighter green transitioning to yellow
+      return 'rgba(158, 229, 112, 0.5)'
     }
-    return 'rgba(255, 50, 50, 0.3)'
+    if (value > 13 && value <= 15) {
+      // Yellow
+      return 'rgba(255, 221, 51, 0.5)'
+    }
+    if (value > 15 && value <= 18) {
+      // A lighter yellow transitioning to red
+      return 'rgba(255, 98, 98, 0.8)'
+    }
+    if (value > 18 && value <= 20) {
+      // Dark Red
+      return 'rgba(255, 30, 30, 0.7)'
+    }
+    // Dark Red
+    return 'rgba(255, 30, 30, 1)'
   }
 
   const data2 = {
@@ -79,6 +95,6 @@ const VerticalBarChart = ({ dataset, labels, fullData }) => {
     ],
   }
 
-  return <Bar options={options} data={data2} height={50} />
+  return <Bar options={options} data={data2} height={49} />
 }
 export default VerticalBarChart

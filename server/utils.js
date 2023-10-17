@@ -124,7 +124,10 @@ const getEnergyPrices = async (appStorage) => {
       await storage.save(updatedAppStorage)
     } else {
       console.log('Use energy prices from store')
-      return appStorage.todayEnergyPrices.data
+      return {
+        todayEnergyPrices: appStorage.todayEnergyPrices.data,
+        tomorrowEnergyPrices: appStorage.tomorrowEnergyPrices?.data,
+      }
     }
   } catch (error) {
     console.error(error)

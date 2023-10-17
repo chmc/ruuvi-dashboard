@@ -1,18 +1,28 @@
 import Grid from '@mui/material/Grid'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
+import Typography from '@mui/material/Typography'
+import Box from '@mui/material/Box'
 import VerticalBarChart from './VerticalBarChart'
 
-const EnergyPricesCard = ({ energyPrices }) => {
-  //   const data = [
-  //     { name: 'Category 1', value: 25, color: 'blue' },
-  //     { name: 'Category 2', value: 50, color: 'green' },
-  //     { name: 'Category 3', value: 30, color: 'red' },
-  //     // Add more data points as needed
-  //   ]
-
+const EnergyPricesCard = ({ title, noPricesText, energyPrices }) => {
   if (!energyPrices) {
-    return null
+    return (
+      <Grid item xs={12}>
+        <Card display="flex">
+          <Box
+            height={149}
+            display="flex"
+            alignItems="center" // Use alignItems for vertical centering
+            justifyContent="center"
+          >
+            <CardContent>
+              <Typography variant="body1">{noPricesText}</Typography>
+            </CardContent>
+          </Box>
+        </Card>
+      </Grid>
+    )
   }
 
   const sortedEnergyPrices = energyPrices
@@ -31,6 +41,7 @@ const EnergyPricesCard = ({ energyPrices }) => {
       <Card>
         <CardContent>
           <VerticalBarChart
+            title={title}
             dataset={dataset}
             labels={labels}
             fullData={sortedEnergyPrices}
