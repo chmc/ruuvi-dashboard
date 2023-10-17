@@ -66,6 +66,36 @@ const isSameDate = (date1, date2) =>
   date1?.getDate() === date2?.getDate()
 
 /**
+ * @param {EnergyPrices} energyPrices
+ * @returns {boolean}
+ */
+const allowUpdateEnergyPrices = (energyPrices) => {
+  const currentDateObject = new Date()
+
+  // Calculate the difference in hours
+  const updatedAt =
+    energyPrices?.todayEnergyPrices?.updatedAt ?? new Date('1900-01-01')
+  const timeDifferenceInMilliseconds = new Date() - updatedAt
+  const hoursDifference = timeDifferenceInMilliseconds / (1000 * 60 * 60)
+  console.log('Last energy prices updated: ', hoursDifference)
+
+  if (!energyPrices.todayEnergyPrices) {
+    return true
+  }
+  if (
+    currentDateObject.getHours() > 12 &&
+    hoursDifference > 0.5 &&
+    !energyPrices.tomorrowEnergyPrices
+  ) {
+    return true
+  }
+  if (hoursDifference > 4) {
+    return true
+  }
+  return false
+}
+
+/**
  * @param   {EnergyPrices} energyPrices
  * @returns {EnergyPrices}
  */
@@ -76,33 +106,9 @@ const getEnergyPrices = async (energyPrices) => {
     const currentDate = currentDateObject.toISOString().split('T')[0]
     const tomorrowDateObject = addOneDay()
     const tomorrowDate = tomorrowDateObject.toISOString().split('T')[0]
-    const updatedAt = new Date(energyPrices?.todayEnergyPrices?.updatedAt)
-    console.log(
-      'Updated at ',
-      energyPrices?.todayEnergyPrices?.updatedAt,
-      updatedAt,
-      new Date()
-    )
+    console.log('Updated at ', energyPrices?.todayEnergyPrices?.updatedAt)
 
-    // Calculate the difference in hours
-    const timeDifferenceInMilliseconds = new Date() - updatedAt
-    const hoursDifference = timeDifferenceInMilliseconds / (1000 * 60 * 60)
-    console.log('Last energy prices updated: ', hoursDifference, 'h ago')
-
-    let allowUpdateEnergyPrices = false
-    if (!energyPrices.todayEnergyPrices) {
-      allowUpdateEnergyPrices = true
-    } else if (
-      currentDateObject.getHours > 12 &&
-      hoursDifference > 0.5 &&
-      !energyPrices.tomorrowEnergyPrices
-    ) {
-      allowUpdateEnergyPrices = true
-    } else if (hoursDifference > 4) {
-      allowUpdateEnergyPrices = true
-    }
-
-    if (allowUpdateEnergyPrices) {
+    if (allowUpdateEnergyPrices(energyPrices)) {
       console.log('Get new energy prices')
       const dataText = await getEnergyPricesFromApi()
       const allEnergyPrices = JSON.parse(dataText).map((daily) => ({
