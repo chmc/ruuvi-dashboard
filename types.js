@@ -1,5 +1,4 @@
 /**
- * AppStorage
  * @typedef     AppStorage  Persisted application storage
  * @type        {object}
  * @property    {DailyEnergyPrices=}    todayEnergyPrices
@@ -7,8 +6,7 @@
  */
 
 /**
- * EnergyPrices
- * @typedef     EnergyPrices  Persisted application storage
+ * @typedef     EnergyPrices
  * @type        {object}
  * @property    {Date}                  updatedAt
  * @property    {DailyEnergyPrices=}    todayEnergyPrices
@@ -16,7 +14,6 @@
  */
 
 /**
- * DailyEnergyPrices
  * @typedef     DailyEnergyPrices
  * @type        {object}
  * @property    {Date}      updatedAt
@@ -25,10 +22,28 @@
  */
 
 /**
- * EnergyPrice
  * @typedef     EnergyPrice
  * @type        {object}
  * @property    {Date}      date
  * @property    {number}    price
  * @property    {number}    hour
+ */
+
+/**
+ * @typedef {Object} SensorData
+ * @property {number} data_format
+ * @property {number} humidity
+ * @property {number} temperature
+ * @property {number} pressure
+ */
+
+/**
+ * @typedef {Object.<string, SensorData>} SensorDataCollection
+ */
+
+/**
+ * @typedef {Object} TodayMinMaxTemperature
+ * @property {Date} date
+ * @property {number} minTemperature
+ * @property {number} maxTemperature
  */
