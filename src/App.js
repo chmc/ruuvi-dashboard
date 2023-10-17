@@ -1,8 +1,5 @@
 import { useEffect, useState } from 'react'
 import Grid from '@mui/material/Grid'
-import Card from '@mui/material/Card'
-import CardContent from '@mui/material/CardContent'
-import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 import RuuviCard from './components/RuuviCard'
 import InOutCard from './components/InOutCard'
@@ -54,9 +51,6 @@ const App = () => {
       setTomorrowEnergyPrices(json.tomorrowEnergyPrices)
     }
 
-    setTimeout(() => {
-      console.log('wait 1s...')
-    }, 1000)
     // eslint-disable-next-line no-console
     fetchWeatherData().catch(console.error)
     // eslint-disable-next-line no-console
@@ -64,11 +58,19 @@ const App = () => {
     // eslint-disable-next-line no-console
     fetchEnergyPrices().catch(console.error)
 
-    const intervalId = setInterval(() => {
+    const ruuviIntervalId = setInterval(() => {
+      // Every 10sec
       fetchRuuviData()
-      // fetchEnergyPrices()
     }, 10000)
-    return () => clearInterval(intervalId)
+    const energyPricesIntervalId = setInterval(() => {
+      fetchEnergyPrices()
+      // Every 30mins
+    }, 30 * 60 * 1000)
+
+    return () => {
+      clearInterval(ruuviIntervalId)
+      clearInterval(energyPricesIntervalId)
+    }
   }, [])
 
   return (
