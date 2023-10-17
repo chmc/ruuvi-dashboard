@@ -21,8 +21,8 @@ const WeatherForecastCard = ({ dailyWeatherList }) => {
           {dailyWeatherList.map((dailyWeather) => (
             <Box
               component="div"
-              ml={1.25}
-              mr={1.25}
+              ml={2.75}
+              mr={2.75}
               sx={{ display: 'inline-block' }}
               key={dailyWeather.weekDay}
             >
@@ -37,14 +37,14 @@ const WeatherForecastCard = ({ dailyWeatherList }) => {
                   <Chip
                     size="small"
                     icon={<ThermostatIcon fontSize="small" color="primary" />}
-                    label={formatters.toTemperatureUI(dailyWeather.temp)}
+                    label={formatters.toTemperatureRoundUpUI(dailyWeather.temp)}
                   />
                 </Box>
                 <Box>
                   <Chip
                     size="small"
                     icon={<AirIcon fontSize="small" color="primary" />}
-                    label={formatters.toWindUI(dailyWeather.wind)}
+                    label={formatters.toTemperatureRoundUpUI(dailyWeather.wind)}
                   />
                 </Box>
               </Box>

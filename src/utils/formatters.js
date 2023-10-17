@@ -5,6 +5,13 @@
 const toTemperatureUI = (temperature) => temperature.toFixed(1)
 
 /**
+ * @param {number} temperature
+ * @returns {string}
+ */
+const toTemperatureRoundUpUI = (temperature) =>
+  Math.round(temperature).toString()
+
+/**
  * @param {number} humidity
  * @returns {string}
  */
@@ -51,6 +58,7 @@ const toWindUI = (wind) => wind.toFixed(1)
 
 const uiFormatter = {
   toTemperatureUI,
+  toTemperatureRoundUpUI,
   toHumidityUI,
   toPressureUI,
   toDayOfWeekUI,
