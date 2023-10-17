@@ -59,27 +59,26 @@ const VerticalBarChart = ({ title, dataset, labels, fullData }) => {
       return 'gray'
     }
     if (value <= 5) {
-      // return 'rgba(55, 252, 52, 0.3)'
       // Green
       return 'rgba(0, 204, 136, 0.5)'
     }
-    if (value > 5 && value <= 13) {
+    if (value > 5 && value <= 8) {
       // A lighter green transitioning to yellow
       return 'rgba(158, 229, 112, 0.5)'
     }
-    if (value > 13 && value <= 15) {
+    if (value > 8 && value <= 13) {
       // Yellow
       return 'rgba(255, 221, 51, 0.5)'
     }
-    if (value > 15 && value <= 18) {
+    if (value > 13 && value <= 20) {
       // A lighter yellow transitioning to red
       return 'rgba(255, 98, 98, 0.8)'
     }
-    if (value > 18 && value <= 20) {
+    if (value > 20 && value <= 25) {
       // Dark Red
       return 'rgba(255, 30, 30, 0.7)'
     }
-    // Dark Red
+    // Dark Red solid
     return 'rgba(255, 30, 30, 1)'
   }
 
