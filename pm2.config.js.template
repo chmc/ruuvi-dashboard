@@ -6,6 +6,7 @@ module.exports = {
       name: 'ruuvi-dashboard',
       script: 'npm',
       args: 'start',
+      cwd: '/home/your-name/repos/ruuvionpi/',
       watch: true, // (optional)
     },
   ],
