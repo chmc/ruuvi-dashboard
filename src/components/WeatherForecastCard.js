@@ -2,7 +2,6 @@
 import Grid from '@mui/material/Grid'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
-import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 import ThermostatIcon from '@mui/icons-material/Thermostat'
 import AirIcon from '@mui/icons-material/Air'
@@ -26,13 +25,13 @@ const WeatherForecastCard = ({ dailyWeatherList }) => {
               sx={{ display: 'inline-block' }}
               key={dailyWeather.weekDay}
             >
-              <Box display="flex" justifyContent="center" mb={-2}>
+              <Box display="flex" justifyContent="center" mb={-2.5}>
                 {dailyWeather.weekDay}
               </Box>
               <Box display="flex" justifyContent="center">
                 <img src={dailyWeather.iconUrl} />
               </Box>
-              <Box display="flex" justifyContent="center" mt={-1.5}>
+              <Box display="flex" justifyContent="center" mt={-2}>
                 <Box mr={1}>
                   <Chip
                     size="small"

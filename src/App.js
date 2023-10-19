@@ -96,7 +96,10 @@ const App = () => {
               ruuviData={ruuviDatas[macItem.mac]}
             />
           ))}
-        <InOutCard ruuviDatas={ruuviDatas} />
+        <InOutCard
+          ruuviDatas={ruuviDatas}
+          todayMinMaxTemperature={todayMinMaxTemperature}
+        />
         <WeatherForecastCard dailyWeatherList={dailyWeatherList} />
         <EnergyPricesCard
           title="Sähkön hinta tänään c/kWh"
