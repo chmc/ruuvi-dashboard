@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import Grid from '@mui/material/Grid'
 import Box from '@mui/material/Box'
+import { getSunrise, getSunset } from 'sunrise-sunset-js'
 import RuuviCard from './components/RuuviCard'
 import InOutCard from './components/InOutCard'
 import configs from './configs'
@@ -14,6 +15,8 @@ const App = () => {
   const [todayEnergyPrices, setTodayEnergyPrices] = useState(null)
   const [tomorrowEnergyPrices, setTomorrowEnergyPrices] = useState(null)
   const [todayMinMaxTemperature, setTodayMinMaxTemperature] = useState(null)
+  const sunrise = getSunrise(60.1703524, 24.9589753)
+  const sunset = getSunset(60.1703524, 24.9589753)
 
   useEffect(() => {
     const fetchRuuviData = async () => {
@@ -99,6 +102,8 @@ const App = () => {
         <InOutCard
           ruuviDatas={ruuviDatas}
           todayMinMaxTemperature={todayMinMaxTemperature}
+          sunrise={sunrise}
+          sunset={sunset}
         />
         <WeatherForecastCard dailyWeatherList={dailyWeatherList} />
         <EnergyPricesCard

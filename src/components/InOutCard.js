@@ -8,7 +8,6 @@ import ThermostatIcon from '@mui/icons-material/Thermostat'
 import WbSunny from '@mui/icons-material/WbSunny'
 import WbTwilight from '@mui/icons-material/WbTwilight'
 import Box from '@mui/material/Box'
-import { getSunrise, getSunset } from 'sunrise-sunset-js'
 import configs from '../configs'
 import uiFormatter from '../utils/formatters'
 
@@ -22,14 +21,12 @@ import uiFormatter from '../utils/formatters'
 /**
  * @param {InOutCard} props
  */
-const InOutCard = ({ ruuviDatas, todayMinMaxTemperature }) => {
+const InOutCard = ({ ruuviDatas, todayMinMaxTemperature, sunrise, sunset }) => {
   if (!ruuviDatas) {
     return null
   }
   const indoorRuuvi = ruuviDatas[configs.mainIndoorMac]
   const outdoorRuuvi = ruuviDatas[configs.mainOutdoorMac]
-  const sunrise = getSunrise(60.1703524, 24.9589753)
-  const sunset = getSunset(60.1703524, 24.9589753)
 
   return (
     <Grid item xs={4}>
