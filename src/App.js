@@ -17,8 +17,8 @@ const App = () => {
 
   useEffect(() => {
     const fetchRuuviData = async () => {
-      const response = await fetch('/api/ruuvi')
       try {
+        const response = await fetch('/api/ruuvi')
         const json = await response.json()
         setRuuviDatas(json)
       } catch (error) {

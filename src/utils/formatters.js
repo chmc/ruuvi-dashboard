@@ -51,6 +51,13 @@ const toDayOfWeekUI = (dateString) => {
 }
 
 /**
+ * @param {Date} date
+ * @returns {string}
+ */
+const toShortTimeUI = (date) =>
+  `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`
+
+/**
  * @param {number} wind
  * @returns {string}
  */
@@ -63,6 +70,7 @@ const uiFormatter = {
   toPressureUI,
   toDayOfWeekUI,
   toWindUI,
+  toShortTimeUI,
 }
 
 export default uiFormatter
