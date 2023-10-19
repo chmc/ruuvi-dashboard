@@ -33,6 +33,9 @@ const VerticalBarChart = ({ title, dataset, labels, fullData }) => {
       title: {
         display: true,
         text: title,
+        padding: {
+          bottom: 23,
+        },
       },
       tooltips: {
         callbacks: {

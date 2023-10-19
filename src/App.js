@@ -13,6 +13,7 @@ const App = () => {
   const [dailyWeatherList, setDailyWeatherList] = useState(null)
   const [todayEnergyPrices, setTodayEnergyPrices] = useState(null)
   const [tomorrowEnergyPrices, setTomorrowEnergyPrices] = useState(null)
+  const [todayMinMaxTemperature, setTodayMinMaxTemperature] = useState(null)
 
   useEffect(() => {
     const fetchRuuviData = async () => {
@@ -51,16 +52,27 @@ const App = () => {
       setTomorrowEnergyPrices(json.tomorrowEnergyPrices)
     }
 
+    const fetchMinMaxTemperatures = async () => {
+      const response = await fetch('/api/todayminmaxtemperature')
+      const text = await response.text()
+      const json = JSON.parse(text)
+      console.log('minmax: ', json)
+      setTodayMinMaxTemperature(json)
+    }
+
     // eslint-disable-next-line no-console
     fetchWeatherData().catch(console.error)
     // eslint-disable-next-line no-console
     fetchRuuviData().catch(console.error)
     // eslint-disable-next-line no-console
     fetchEnergyPrices().catch(console.error)
+    // eslint-disable-next-line no-console
+    fetchMinMaxTemperatures().catch(console.error)
 
     const ruuviIntervalId = setInterval(() => {
       // Every 10sec
       fetchRuuviData()
+      fetchMinMaxTemperatures()
     }, 10000)
     const energyPricesIntervalId = setInterval(() => {
       fetchEnergyPrices()
@@ -84,7 +96,10 @@ const App = () => {
               ruuviData={ruuviDatas[macItem.mac]}
             />
           ))}
-        <InOutCard ruuviDatas={ruuviDatas} />
+        <InOutCard
+          ruuviDatas={ruuviDatas}
+          todayMinMaxTemperature={todayMinMaxTemperature}
+        />
         <WeatherForecastCard dailyWeatherList={dailyWeatherList} />
         <EnergyPricesCard
           title="Sähkön hinta tänään c/kWh"

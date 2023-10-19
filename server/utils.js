@@ -163,9 +163,41 @@ const getEnergyPrices = async (energyPrices) => {
   }
 }
 
+/**
+ * @param {SensorDataCollection} sensorDataCollection
+ * @param {TodayMinMaxTemperature} todayMinMaxTemperature
+ */
+const getTodayMinMaxTemperature = (
+  sensorDataCollection,
+  todayMinMaxTemperature
+) => {
+  const { temperature } =
+    sensorDataCollection[process.env.REACT_APP_MAIN_OUTDOOR_RUUVITAG_MAC]
+
+  /** @type {TodayMinMaxTemperature} */
+  const minMax = todayMinMaxTemperature ?? {
+    date: new Date(),
+    minTemperature: temperature,
+    maxTemperature: temperature,
+  }
+
+  if (!isSameDate(minMax.date, new Date())) {
+    minMax.minTemperature = temperature
+    minMax.maxTemperature = temperature
+  }
+
+  minMax.minTemperature =
+    temperature < minMax.minTemperature ? temperature : minMax.minTemperature
+  minMax.maxTemperature =
+    temperature > minMax.maxTemperature ? temperature : minMax.maxTemperature
+
+  return minMax
+}
+
 module.exports = {
   initSimulator,
   modifyDataWithWave,
   getEnergyPrices,
   getEnergyPricesFromApi,
+  getTodayMinMaxTemperature,
 }

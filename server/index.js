@@ -12,6 +12,7 @@ const cache = new NodeCache({ stdTTL: 60 })
 const cacheKeys = {
   ruuvi: 'ruuvi',
   energyPrices: 'energyPrices',
+  todayMinMax: 'todayMinMax',
 }
 
 app.use(express.json())
@@ -32,9 +33,16 @@ app.get('/api/ruuvi', (req, res) => {
 
 app.post('/api/ruuvi', (req, res) => {
   console.log('post call received')
-  const data = req.body
-  cache.set(cacheKeys.ruuvi, data)
-  console.log(data)
+  /** @type {SensorDataCollection} */
+  const sensorDataCollection = req.body
+  cache.set(cacheKeys.ruuvi, sensorDataCollection)
+  cache.set(
+    cacheKeys.todayMinMax,
+    utils.getTodayMinMaxTemperature(
+      sensorDataCollection,
+      cache.get(cacheKeys.todayMinMax)
+    )
+  )
 })
 
 app.get('/api/energyprices', async (req, res) => {
@@ -59,6 +67,10 @@ app.get('/api/energyprices', async (req, res) => {
     tomorrowEnergyPrices: energyPrices.tomorrowEnergyPrices?.data,
   }
   res.send(energyPricesForClient)
+})
+
+app.get('/api/todayminmaxtemperature', async (req, res) => {
+  res.send(cache.get(cacheKeys.todayMinMax))
 })
 
 if (!process.env.TEST) {
@@ -93,11 +105,20 @@ if (!process.env.TEST) {
   // Run in test mode
   console.log('Run in TEST MODE')
   console.log('Do not run python script')
-  const jsonData = utils.initSimulator()
+  /** @type {SensorDataCollection} */
+  const sensorDataCollection = utils.initSimulator()
 
   setInterval(() => {
-    utils.modifyDataWithWave(jsonData)
-    cache.set(cacheKeys.ruuvi, jsonData)
+    utils.modifyDataWithWave(sensorDataCollection)
+    cache.set(cacheKeys.ruuvi, sensorDataCollection)
+    cache.set(
+      cacheKeys.todayMinMax,
+      utils.getTodayMinMaxTemperature(
+        sensorDataCollection,
+        cache.get(cacheKeys.todayMinMax)
+      )
+    )
+
     // console.log(jsonData);
   }, 1000)
 }
