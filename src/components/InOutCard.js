@@ -56,43 +56,40 @@ const InOutCard = ({ ruuviDatas, todayMinMaxTemperature }) => {
                   {uiFormatter.toTemperatureUI(outdoorRuuvi.temperature)}
                   <ThermostatIcon fontSize="small" color="primary" />
                 </Box>
-                {todayMinMaxTemperature && (
-                  <Box display="flex" mt={1.8}>
-                    <Box
-                      p={0.75}
-                      pr={1.25}
-                      display="flex"
-                      bgcolor="rgba(255, 255, 255, 0.16)"
-                      borderRadius={4}
-                      fontSize="small"
-                      alignItems="center"
-                      mr={1}
-                    >
-                      <VerticalAlignBottomIcon
-                        fontSize="small"
-                        color="primary"
-                      />
-                      {uiFormatter.toTemperatureUI(
-                        todayMinMaxTemperature.minTemperature
-                      )}
-                    </Box>
-                    <Box
-                      p={0.75}
-                      pr={1.25}
-                      display="flex"
-                      bgcolor="rgba(255, 255, 255, 0.16)"
-                      borderRadius={4}
-                      fontSize="small"
-                      alignItems="center" // Use alignItems for vertical centering
-                    >
-                      <VerticalAlignTopIcon fontSize="small" color="primary" />
-                      {uiFormatter.toTemperatureUI(
-                        todayMinMaxTemperature.maxTemperature
-                      )}
-                    </Box>
-                  </Box>
-                )}
               </Typography>
+              {todayMinMaxTemperature && (
+                <Box display="flex" mt={2.1}>
+                  <Box
+                    p={0.75}
+                    pr={1.25}
+                    display="flex"
+                    bgcolor="rgba(255, 255, 255, 0.16)"
+                    borderRadius={4}
+                    fontSize="small"
+                    alignItems="center"
+                    mr={1}
+                  >
+                    <VerticalAlignBottomIcon fontSize="small" color="primary" />
+                    {uiFormatter.toTemperatureUI(
+                      todayMinMaxTemperature.minTemperature
+                    )}
+                  </Box>
+                  <Box
+                    p={0.75}
+                    pr={1.25}
+                    display="flex"
+                    bgcolor="rgba(255, 255, 255, 0.16)"
+                    borderRadius={4}
+                    fontSize="small"
+                    alignItems="center" // Use alignItems for vertical centering
+                  >
+                    <VerticalAlignTopIcon fontSize="small" color="primary" />
+                    {uiFormatter.toTemperatureUI(
+                      todayMinMaxTemperature.maxTemperature
+                    )}
+                  </Box>
+                </Box>
+              )}
             </CardContent>
           </Card>
         </Grid>
