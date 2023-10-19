@@ -159,3 +159,11 @@ $ npm start
 ```
 
 You can now browse app with browser on localhost or by accessing local network IP
+
+### To automatically run app on Raspberry Pi
+
+Install pm2
+
+```
+$ sudo npm install pm2 -g
+```
