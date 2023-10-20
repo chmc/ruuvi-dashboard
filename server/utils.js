@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const storage = require('./storage')
 
 // Wave height and frequency
@@ -39,10 +40,15 @@ const modifyDataWithWave = (jsonData) => {
 }
 
 const getEnergyPricesFromApi = async () => {
-  const response = await fetch(`https://api.spot-hinta.fi/TodayAndDayForward`)
-  console.log('api called')
-  const textData = await response.text()
-  return textData
+  try {
+    const response = await fetch(`https://api.spot-hinta.fi/TodayAndDayForward`)
+    console.log('api called')
+    const textData = await response.text()
+    return textData
+  } catch (error) {
+    console.error('getEnergyPricesFromApi: ', error)
+    return undefined
+  }
 }
 
 /**
@@ -70,29 +76,34 @@ const isSameDate = (date1, date2) =>
  * @returns {boolean}
  */
 const allowUpdateEnergyPrices = (energyPrices) => {
-  const currentDateObject = new Date()
+  try {
+    const currentDateObject = new Date()
 
-  // Calculate the difference in hours
-  const updatedAt =
-    energyPrices?.todayEnergyPrices?.updatedAt ?? new Date('1900-01-01')
-  const timeDifferenceInMilliseconds = new Date() - updatedAt
-  const hoursDifference = timeDifferenceInMilliseconds / (1000 * 60 * 60)
-  console.log('Last energy prices updated: ', hoursDifference)
+    // Calculate the difference in hours
+    const updatedAt =
+      energyPrices?.todayEnergyPrices?.updatedAt ?? new Date('1900-01-01')
+    const timeDifferenceInMilliseconds = new Date() - updatedAt
+    const hoursDifference = timeDifferenceInMilliseconds / (1000 * 60 * 60)
+    console.log('Last energy prices updated: ', hoursDifference)
 
-  if (!energyPrices.todayEnergyPrices) {
-    return true
+    if (!energyPrices.todayEnergyPrices) {
+      return true
+    }
+    if (
+      currentDateObject.getHours() > 12 &&
+      hoursDifference > 0.5 &&
+      !energyPrices.tomorrowEnergyPrices
+    ) {
+      return true
+    }
+    if (hoursDifference > 4) {
+      return true
+    }
+    return false
+  } catch (error) {
+    console.error('allowUpdateEnergyPrices:', error)
+    return false
   }
-  if (
-    currentDateObject.getHours() > 12 &&
-    hoursDifference > 0.5 &&
-    !energyPrices.tomorrowEnergyPrices
-  ) {
-    return true
-  }
-  if (hoursDifference > 4) {
-    return true
-  }
-  return false
 }
 
 /**
@@ -158,8 +169,8 @@ const getEnergyPrices = async (energyPrices) => {
       tomorrowEnergyPrices: energyPrices.tomorrowEnergyPrices,
     }
   } catch (error) {
-    console.error(error)
-    return null
+    console.error('getEnergyPrices: ', error)
+    return undefined
   }
 }
 
@@ -171,27 +182,32 @@ const getTodayMinMaxTemperature = (
   sensorDataCollection,
   todayMinMaxTemperature
 ) => {
-  const { temperature } =
-    sensorDataCollection[process.env.REACT_APP_MAIN_OUTDOOR_RUUVITAG_MAC]
+  try {
+    const { temperature } =
+      sensorDataCollection[process.env.REACT_APP_MAIN_OUTDOOR_RUUVITAG_MAC]
 
-  /** @type {TodayMinMaxTemperature} */
-  const minMax = todayMinMaxTemperature ?? {
-    date: new Date(),
-    minTemperature: temperature,
-    maxTemperature: temperature,
+    /** @type {TodayMinMaxTemperature} */
+    const minMax = todayMinMaxTemperature ?? {
+      date: new Date(),
+      minTemperature: temperature,
+      maxTemperature: temperature,
+    }
+
+    if (!isSameDate(minMax.date, new Date())) {
+      minMax.minTemperature = temperature
+      minMax.maxTemperature = temperature
+    }
+
+    minMax.minTemperature =
+      temperature < minMax.minTemperature ? temperature : minMax.minTemperature
+    minMax.maxTemperature =
+      temperature > minMax.maxTemperature ? temperature : minMax.maxTemperature
+
+    return minMax
+  } catch (error) {
+    console.error('getTodayMinMaxTemperature: ', error)
+    return undefined
   }
-
-  if (!isSameDate(minMax.date, new Date())) {
-    minMax.minTemperature = temperature
-    minMax.maxTemperature = temperature
-  }
-
-  minMax.minTemperature =
-    temperature < minMax.minTemperature ? temperature : minMax.minTemperature
-  minMax.maxTemperature =
-    temperature > minMax.maxTemperature ? temperature : minMax.maxTemperature
-
-  return minMax
 }
 
 module.exports = {
