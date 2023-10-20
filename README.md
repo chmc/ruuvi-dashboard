@@ -167,3 +167,64 @@ Install pm2
 ```
 $ sudo npm install pm2 -g
 ```
+
+Run the following command in your project directory to start your app with pm2:
+
+```
+$ pm2 start pm2.config.js
+```
+
+To grant execute permission to the directory, run:
+
+```
+chmod +x /home/your-name/repos/ruuvionpi
+```
+
+To grant execute permission to the pm2.config.js file, run:
+
+```
+chmod +x /home/your-name/repos/ruuvionpi/pm2.config.js
+```
+
+Create a systemd service unit file to manage the pm2 process
+
+```
+$ sudo nano /etc/systemd/system/ruuvi-dashboard.service
+```
+
+Paste the following content into the file, adjusting the ExecStart and WorkingDirectory to match your project:
+
+```
+[Unit]
+Description=ruuvi-dashboard
+
+[Service]
+Type=simple
+WorkingDirectory=/repos/ruuvionpi
+ExecStart=/usr/local/bin/pm2 start /home/[user-name]/repos/ruuvionpi/pm2.config.js
+ExecReload=/usr/local/bin/pm2 reload /home/[user-name]/repos/ruuvionpi/pm2.config.js
+ExecStop=/usr/local/bin/pm2 stop /home/[user-name]/repos/ruuvionpi/pm2.config.js
+User=your-username
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Run the following commands to enable and start new systemd service:
+
+```
+$ sudo systemctl enable ruuvi-dashboard
+$ sudo systemctl start ruuvi-dashboard
+```
+
+Check if service is running by using the following command:
+
+```
+$ systemctl status ruuvi-dashboard
+```
+
+If automatic start doesn't work, you can start it manually
+
+```
+ /home/your-name/repos/ruuvionpi/start.sh
+```
