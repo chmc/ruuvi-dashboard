@@ -34,15 +34,18 @@ app.get('/api/ruuvi', (req, res) => {
 app.post('/api/ruuvi', (req, res) => {
   console.log('post call received')
   /** @type {SensorDataCollection} */
-  const sensorDataCollection = req.body
-  cache.set(cacheKeys.ruuvi, sensorDataCollection)
-  cache.set(
-    cacheKeys.todayMinMax,
-    utils.getTodayMinMaxTemperature(
+  try {
+    const sensorDataCollection = req.body
+    cache.set(cacheKeys.ruuvi, sensorDataCollection)
+
+    const todayminmaxtemperature = utils.getTodayMinMaxTemperature(
       sensorDataCollection,
       cache.get(cacheKeys.todayMinMax)
     )
-  )
+    cache.set(cacheKeys.todayMinMax, todayminmaxtemperature)
+  } catch (error) {
+    console.error('POST /api/ruuvi, error: ', error)
+  }
 })
 
 app.get('/api/energyprices', async (req, res) => {
