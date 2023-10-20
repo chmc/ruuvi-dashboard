@@ -27,12 +27,12 @@ app.get('/api/express_backend', (req, res) => {
 })
 
 app.get('/api/ruuvi', (req, res) => {
-  console.log('api get ruuvi received')
+  console.log(new Date().toLocaleString(), 'api get ruuvi received')
   res.send(cache.get(cacheKeys.ruuvi))
 })
 
 app.post('/api/ruuvi', (req, res) => {
-  console.log('post call received')
+  console.log(new Date().toLocaleString(), 'post call received')
   /** @type {SensorDataCollection} */
   try {
     const sensorDataCollection = req.body
@@ -49,7 +49,7 @@ app.post('/api/ruuvi', (req, res) => {
 })
 
 app.get('/api/energyprices', async (req, res) => {
-  console.log('Energy prices called')
+  console.log(new Date().toLocaleString(), 'Energy prices called')
   /** @type {EnergyPrices=} */
   let cachedEnergyPrices = cache.get(cacheKeys.energyPrices)
 
