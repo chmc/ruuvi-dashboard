@@ -1,27 +1,30 @@
 /**
- * @param {number} temperature
+ * @param {number=} temperature
  * @returns {string}
  */
-const toTemperatureUI = (temperature) => temperature.toFixed(1)
+const toTemperatureUI = (temperature) =>
+  temperature ? temperature.toFixed(1) : '-'
 
 /**
- * @param {number} temperature
+ * @param {number}= temperature
  * @returns {string}
  */
 const toTemperatureRoundUpUI = (temperature) =>
-  Math.round(temperature).toString()
+  temperature ? Math.round(temperature).toString() : '-'
 
 /**
- * @param {number} humidity
+ * @param {number=} humidity
  * @returns {string}
  */
-const toHumidityUI = (humidity) => Math.round(humidity).toString()
+const toHumidityUI = (humidity) =>
+  humidity ? Math.round(humidity).toString() : '-'
 
 /**
- * @param {number} pressure
+ * @param {number=} pressure
  * @returns {string}
  */
-const toPressureUI = (pressure) => Math.round(pressure.toFixed(0)).toString()
+const toPressureUI = (pressure) =>
+  pressure ? Math.round(pressure.toFixed(0)).toString() : '-'
 
 /**
  * @param {string} dateString

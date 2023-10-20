@@ -12,9 +12,9 @@ const RuuviCard = ({ ruuvi, ruuviData }) => (
           {ruuvi.name}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Asteet: {uiFormatter.toTemperatureUI(ruuviData.temperature)} c<br />
-          Kosteus: {uiFormatter.toHumidityUI(ruuviData.humidity)} %<br />
-          Ilmanpaine: {uiFormatter.toPressureUI(ruuviData.pressure)} hPa
+          Asteet: {uiFormatter.toTemperatureUI(ruuviData?.temperature)} c<br />
+          Kosteus: {uiFormatter.toHumidityUI(ruuviData?.humidity)} %<br />
+          Ilmanpaine: {uiFormatter.toPressureUI(ruuviData?.pressure)} hPa
         </Typography>
       </CardContent>
     </Card>
