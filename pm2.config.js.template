@@ -1,5 +1,3 @@
-const { Dashboard } = require('@mui/icons-material')
-
 module.exports = {
   apps: [
     {
