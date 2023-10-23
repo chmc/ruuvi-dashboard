@@ -100,6 +100,14 @@ if (!process.env.TEST) {
   function runRuuviScript() {
     const pythonProcess = spawn('python3', args)
 
+    // When the Python script starts, set a timeout
+    const timeoutId = setTimeout(() => {
+      console.log(
+        'Python Ruuvi script execution timed out. Terminating process.'
+      )
+      pythonProcess.kill('SIGKILL')
+    }, 30000)
+
     pythonProcess.stdout.on('data', (data) => {
       console.log(`Python Ruuvi script output: ${data}`)
     })
@@ -109,8 +117,17 @@ if (!process.env.TEST) {
     })
 
     pythonProcess.on('close', (code) => {
+      clearTimeout(timeoutId)
       console.log(`Python Ruuvi script exited with code ${code}`)
     })
+
+    pythonProcess.on('error', (err) => {
+      console.error('Error starting Python Ruuvi script:', err)
+    })
+
+    pythonProcess.stdin.end()
+    pythonProcess.stdout.end()
+    pythonProcess.stderr.end()
   }
 
   console.log('Wait 3sec before first ruuvi script run')
