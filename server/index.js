@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 const express = require('express')
-const { exec } = require('child_process')
+const { spawn } = require('child_process')
 const NodeCache = require('node-cache')
 const utils = require('./utils')
 const storage = require('./storage')
@@ -81,29 +81,47 @@ if (!process.env.TEST) {
   const macs = process.env.REACT_APP_RUUVITAG_MACS
   console.log('macs: ', macs)
   const ruuviScript = './scripts/ruuvi.py'
-  const command = `python3 ${ruuviScript} --macs "${macs}"`
-  console.log('command: ', command)
+  // const command = `python3 ${ruuviScript} --macs "${macs}"`
+  // console.log('command: ', command)
+  const args = [ruuviScript, '--macs', macs]
+
+  // // eslint-disable-next-line no-inner-declarations
+  // function execRuuviScript() {
+  //   exec(command, (error, stdout, stderr) => {
+  //     if (error) {
+  //       console.error(`Error: ${error.message}`)
+  //       return
+  //     }
+  //     console.log(`Python script output:\n${stdout}`)
+  //   })
+  // }
 
   // eslint-disable-next-line no-inner-declarations
-  function execRuuviScript() {
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Error: ${error.message}`)
-        return
-      }
-      console.log(`Python script output:\n${stdout}`)
+  function runRuuviScript() {
+    const pythonProcess = spawn('python3', args)
+
+    pythonProcess.stdout.on('data', (data) => {
+      console.log(`Python Ruuvi script output: ${data}`)
+    })
+
+    pythonProcess.stderr.on('data', (data) => {
+      console.log(`Python Ruuvi script ERROR: ${data}`)
+    })
+
+    pythonProcess.on('close', (code) => {
+      console.log(`Python Ruuvi script exited with code ${code}`)
     })
   }
 
   console.log('Wait 3sec before first ruuvi script run')
   setTimeout(() => {
     console.log('Call ruuvi script')
-    execRuuviScript()
+    runRuuviScript()
   }, 3000)
 
   // Run every 10sec
   console.log('Run ruuvi script every 35sec')
-  const interval = setInterval(execRuuviScript, 35000)
+  const interval = setInterval(runRuuviScript, 35000)
 } else {
   // Run in test mode
   console.log('Run in TEST MODE')
