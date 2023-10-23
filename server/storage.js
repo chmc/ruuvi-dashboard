@@ -39,7 +39,16 @@ const loadOrDefault = async () => {
         return {}
       }
       console.log('loaded')
-      return JSON.parse(data, jsonParseReviverFunc)
+      try {
+        return JSON.parse(data, jsonParseReviverFunc)
+      } catch (error) {
+        console.error(
+          new Date().toLocaleDateString(),
+          'loadOrDefault() Parse loaded data failed: ',
+          error
+        )
+        return {}
+      }
     })
   }
 
@@ -54,7 +63,16 @@ const loadOrDefaultSync = () => {
   if (existsSync(appStorageFilePath)) {
     const data = readFileSync(appStorageFilePath)
     console.log('loaded')
-    return JSON.parse(data, jsonParseReviverFunc)
+    try {
+      return JSON.parse(data, jsonParseReviverFunc)
+    } catch (error) {
+      console.error(
+        new Date().toLocaleDateString(),
+        'loadOrDefaultSync() Parse loaded data failed: ',
+        error
+      )
+      return {}
+    }
   }
 
   return {}
