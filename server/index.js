@@ -120,8 +120,8 @@ if (!process.env.TEST) {
   }, 3000)
 
   // Run every 10sec
-  console.log('Run ruuvi script every 35sec')
-  const interval = setInterval(runRuuviScript, 35000)
+  console.log('Run ruuvi script every 60sec')
+  const interval = setInterval(runRuuviScript, 60000)
 } else {
   // Run in test mode
   console.log('Run in TEST MODE')
