@@ -183,6 +183,26 @@ const getTodayMinMaxTemperature = (
   todayMinMaxTemperature
 ) => {
   try {
+    if (!sensorDataCollection) {
+      console.log(
+        'getTodayMinMaxTemperature() sensorDataCollection is:',
+        sensorDataCollection
+      )
+      return undefined
+    }
+
+    if (
+      !sensorDataCollection[process.env.REACT_APP_MAIN_OUTDOOR_RUUVITAG_MAC]
+    ) {
+      console.log(
+        'getTodayMinMaxTemperature() sensorDataCollection for mac: "',
+        process.env.REACT_APP_MAIN_OUTDOOR_RUUVITAG_MAC,
+        '" is:',
+        sensorDataCollection
+      )
+      return undefined
+    }
+
     const { temperature } =
       sensorDataCollection[process.env.REACT_APP_MAIN_OUTDOOR_RUUVITAG_MAC]
 

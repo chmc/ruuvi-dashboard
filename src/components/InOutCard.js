@@ -87,7 +87,7 @@ const InOutCard = ({ ruuviDatas, todayMinMaxTemperature, sunrise, sunset }) => {
                   >
                     <VerticalAlignBottomIcon fontSize="small" color="primary" />
                     {uiFormatter.toTemperatureUI(
-                      todayMinMaxTemperature.minTemperature
+                      todayMinMaxTemperature?.minTemperature
                     )}
                   </Box>
                   <Box
@@ -101,7 +101,7 @@ const InOutCard = ({ ruuviDatas, todayMinMaxTemperature, sunrise, sunset }) => {
                   >
                     <VerticalAlignTopIcon fontSize="small" color="primary" />
                     {uiFormatter.toTemperatureUI(
-                      todayMinMaxTemperature.maxTemperature
+                      todayMinMaxTemperature?.maxTemperature
                     )}
                   </Box>
                 </Box>

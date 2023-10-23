@@ -42,7 +42,9 @@ app.post('/api/ruuvi', (req, res) => {
       sensorDataCollection,
       cache.get(cacheKeys.todayMinMax)
     )
-    cache.set(cacheKeys.todayMinMax, todayminmaxtemperature)
+    if (todayminmaxtemperature) {
+      cache.set(cacheKeys.todayMinMax, todayminmaxtemperature)
+    }
   } catch (error) {
     console.error('POST /api/ruuvi, error: ', error)
   }
