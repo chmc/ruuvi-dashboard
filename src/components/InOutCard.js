@@ -39,7 +39,7 @@ const InOutCard = ({ ruuviDatas, todayMinMaxTemperature, sunrise, sunset }) => {
               </Typography>
               <Typography variant="h5" color="text.secondary">
                 <Box display="flex" alignItems="center">
-                  {uiFormatter.toTemperatureUI(indoorRuuvi.temperature)}
+                  {uiFormatter.toTemperatureUI(indoorRuuvi?.temperature)}
                   <ThermostatIcon fontSize="small" color="primary" />
                 </Box>
               </Typography>
@@ -69,7 +69,7 @@ const InOutCard = ({ ruuviDatas, todayMinMaxTemperature, sunrise, sunset }) => {
               </Typography>
               <Typography variant="h5" color="text.secondary">
                 <Box display="flex" alignItems="center">
-                  {uiFormatter.toTemperatureUI(outdoorRuuvi.temperature)}
+                  {uiFormatter.toTemperatureUI(outdoorRuuvi?.temperature)}
                   <ThermostatIcon fontSize="small" color="primary" />
                 </Box>
               </Typography>
