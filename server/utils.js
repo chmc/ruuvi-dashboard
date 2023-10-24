@@ -188,7 +188,7 @@ const getTodayMinMaxTemperature = (
         'getTodayMinMaxTemperature() sensorDataCollection is:',
         sensorDataCollection
       )
-      return undefined
+      return todayMinMaxTemperature
     }
 
     if (
@@ -200,7 +200,7 @@ const getTodayMinMaxTemperature = (
         '" is:',
         sensorDataCollection
       )
-      return undefined
+      return todayMinMaxTemperature
     }
 
     const { temperature } =
@@ -226,7 +226,7 @@ const getTodayMinMaxTemperature = (
     return minMax
   } catch (error) {
     console.error('getTodayMinMaxTemperature: ', error)
-    return undefined
+    return todayMinMaxTemperature
   }
 }
 
