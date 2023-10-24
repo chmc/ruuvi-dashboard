@@ -5,7 +5,7 @@ import Typography from '@mui/material/Typography'
 import uiFormatter from '../utils/formatters'
 
 const RuuviCard = ({ ruuvi, ruuviData }) => (
-  <Grid item xs={4}>
+  <Grid item xs={3}>
     <Card>
       <CardContent>
         <Typography variant="h5" component="div">

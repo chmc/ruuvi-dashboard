@@ -24,6 +24,12 @@ const initSimulator = () => ({
     temperature: 24.42,
     pressure: 1013.58,
   },
+  mac4: {
+    data_format: 5,
+    humidity: 79.2,
+    temperature: 27.29,
+    pressure: 997.28,
+  },
 })
 
 const modifyDataWithWave = (jsonData) => {
