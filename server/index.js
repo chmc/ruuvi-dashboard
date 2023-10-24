@@ -8,7 +8,7 @@ require('dotenv').config()
 
 const app = express()
 const port = process.env.PORT || 3001
-const cache = new NodeCache({ stdTTL: 60 })
+const cache = new NodeCache()
 const cacheKeys = {
   ruuvi: 'ruuvi',
   energyPrices: 'energyPrices',
