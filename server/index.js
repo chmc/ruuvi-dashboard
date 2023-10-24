@@ -108,7 +108,7 @@ if (!process.env.TEST) {
         'Python Ruuvi script execution timed out. Terminating process.'
       )
       pythonProcess.kill('SIGKILL')
-    }, 30000)
+    }, 35000)
 
     pythonProcess.stdout.on('data', (data) => {
       console.log(`Python Ruuvi script output: ${data}`)
@@ -138,7 +138,7 @@ if (!process.env.TEST) {
     runRuuviScript()
   }, 3000)
 
-  // Run every 10sec
+  // Run every 60sec
   console.log('Run ruuvi script every 60sec')
   const interval = setInterval(runRuuviScript, 60000)
 } else {
