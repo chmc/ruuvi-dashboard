@@ -1,74 +1,131 @@
-// utils.test.js
-const utils = require('./utils') // Import the module you want to test
+const utils = require('./utils')
 
-// Mock the storage module using a factory function
-jest.mock('./storage', () => {
-  const mockStorage = {
-    loadOrDefault: jest.fn(),
-    save: jest.fn(),
-  }
-  return mockStorage
-})
+describe('utils', () => {
+  describe('getTodayMinMaxTemperature', () => {
+    // Set the environment variable before running your tests
+    beforeAll(() => {
+      // Set the environment variable before importing your module
+      process.env.REACT_APP_MAIN_OUTDOOR_RUUVITAG_MAC = 'mac1'
+      jest.useFakeTimers()
+      jest.setSystemTime(new Date('2023-10-24T12:11:00'))
 
-// Mock the getEnergyPricesFromApi function
-const getEnergyPricesFromApi = jest.fn()
-
-describe('getEnergyPrices', () => {
-  it('should fetch and save energy prices to storage', async () => {
-    // Mock the behavior of the storage module
-    // eslint-disable-next-line global-require
-    const storage = require('./storage') // Import the mocked storage module
-    storage.loadOrDefault.mockReturnValue({
-      todayEnergyPrices: null, // Simulate an empty storage
+      // Reset Jest modules to ensure your module sees the updated environment variable
+      jest.resetModules()
     })
 
-    // Mock the behavior of the getEnergyPricesFromApi function
-    const mockApiResponse =
-      '[{"aikaleima_suomi":"2023-10-14T06:00","hinta":"-0.43700"}, /* ... */ ]'
-    getEnergyPricesFromApi.mockReturnValue(mockApiResponse)
-
-    const result = await utils.getEnergyPrices()
-
-    // Check that the function correctly returns the API response
-    expect(result).toEqual(mockApiResponse)
-
-    // Check that the storage functions were called with the expected data
-    expect(storage.loadOrDefault).toHaveBeenCalled()
-    expect(storage.save).toHaveBeenCalledWith(
-      expect.objectContaining({
-        todayEnergyPrices: expect.objectContaining({
-          updatedAt: expect.any(Date),
-          pricesForDate: expect.any(String),
-          data: mockApiResponse,
-        }),
-      })
-    )
-
-    // Check that getEnergyPricesFromApi was called
-    expect(getEnergyPricesFromApi).toHaveBeenCalled()
-  })
-
-  it('should handle errors', async () => {
-    // Mock the behavior of the storage module
-    // eslint-disable-next-line global-require
-    const storage = require('./storage') // Import the mocked storage module
-    storage.loadOrDefault.mockReturnValue({
-      todayEnergyPrices: null, // Simulate an empty storage
+    // Restore the original environment variable after the tests
+    afterAll(() => {
+      // Clear the environment variable after the tests
+      delete process.env.REACT_APP_MAIN_OUTDOOR_RUUVITAG_MAC
+      jest.useRealTimers()
     })
 
-    // Mock an error response from the API
-    getEnergyPricesFromApi.mockRejectedValue(new Error('API error'))
+    it('should return object with min and max temp set to given temp', () => {
+      const sensorDataCollection = {
+        mac1: {
+          data_format: 5,
+          humidity: 47.17,
+          temperature: 20.74,
+          pressure: 1012.17,
+          mac: 'mac1',
+        },
+        mac2: {
+          data_format: 5,
+          humidity: 47.27,
+          temperature: 21.37,
+          pressure: 1012.4,
+          mac: 'mac2',
+        },
+      }
 
-    const result = await utils.getEnergyPrices()
+      const expected = {
+        date: new Date('2023-10-24T12:11:00'),
+        maxTemperature: 20.74,
+        minTemperature: 20.74,
+      }
 
-    // Check that the function returns null on error
-    expect(result).toBeNull()
+      const act = utils.getTodayMinMaxTemperature(
+        sensorDataCollection,
+        undefined
+      )
 
-    // Check that the error was logged
-    expect(console.error).toHaveBeenCalledWith(expect.any(Error))
+      expect(act).toStrictEqual(expected)
+    })
 
-    // Check that the storage functions were still called
-    expect(storage.loadOrDefault).toHaveBeenCalled()
-    expect(storage.save).toHaveBeenCalled()
+    it('should set max temp with given temp', () => {
+      const sensorDataCollection = {
+        mac1: {
+          data_format: 5,
+          humidity: 47.17,
+          temperature: 20.74,
+          pressure: 1012.17,
+          mac: 'mac1',
+        },
+        mac2: {
+          data_format: 5,
+          humidity: 47.27,
+          temperature: 21.37,
+          pressure: 1012.4,
+          mac: 'mac2',
+        },
+      }
+
+      const todayMinMaxTemperature = {
+        date: new Date('2023-10-24T12:11:00'),
+        maxTemperature: 18,
+        minTemperature: 15.24,
+      }
+
+      const expected = {
+        date: new Date('2023-10-24T12:11:00'),
+        maxTemperature: 20.74,
+        minTemperature: 15.24,
+      }
+
+      const act = utils.getTodayMinMaxTemperature(
+        sensorDataCollection,
+        todayMinMaxTemperature
+      )
+
+      expect(act).toStrictEqual(expected)
+    })
+
+    it('should set min temp with given temp', () => {
+      const sensorDataCollection = {
+        mac1: {
+          data_format: 5,
+          humidity: 47.17,
+          temperature: 10,
+          pressure: 1012.17,
+          mac: 'mac1',
+        },
+        mac2: {
+          data_format: 5,
+          humidity: 47.27,
+          temperature: 21.37,
+          pressure: 1012.4,
+          mac: 'mac2',
+        },
+      }
+
+      const todayMinMaxTemperature = {
+        date: new Date('2023-10-24T12:11:00'),
+        maxTemperature: 18,
+        minTemperature: 15.24,
+      }
+
+      const expected = {
+        date: new Date('2023-10-24T12:11:00'),
+        maxTemperature: 18,
+        minTemperature: 10,
+      }
+
+      const act = utils.getTodayMinMaxTemperature(
+        sensorDataCollection,
+        todayMinMaxTemperature
+      )
+
+      expect(act).toStrictEqual(expected)
+    })
   })
 })
