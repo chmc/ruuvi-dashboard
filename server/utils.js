@@ -189,7 +189,7 @@ const getTodayMinMaxTemperature = (
   todayMinMaxTemperature
 ) => {
   try {
-    console.log('getTodayMinMaxTemperature start')
+    // console.log('getTodayMinMaxTemperature start')
     if (!sensorDataCollection) {
       console.log(
         'getTodayMinMaxTemperature() sensorDataCollection is:',
@@ -213,12 +213,12 @@ const getTodayMinMaxTemperature = (
     const { temperature } =
       sensorDataCollection[process.env.REACT_APP_MAIN_OUTDOOR_RUUVITAG_MAC]
 
-    console.log(
-      'getTodayMinMaxTemperature, sensorData temperature: ',
-      temperature,
-      'todayMinMaxTemperature: ',
-      todayMinMaxTemperature
-    )
+    // console.log(
+    //   'getTodayMinMaxTemperature, sensorData temperature: ',
+    //   temperature,
+    //   'todayMinMaxTemperature: ',
+    //   todayMinMaxTemperature
+    // )
 
     /** @type {TodayMinMaxTemperature} */
     const minMaxObj = todayMinMaxTemperature ?? {
@@ -240,12 +240,12 @@ const getTodayMinMaxTemperature = (
     const maxTemperature =
       temperature > minMax.maxTemperature ? temperature : minMax.maxTemperature
 
-    console.log(
-      'getTodayMinMaxTemperature return min: ',
-      minTemperature,
-      'max: ',
-      maxTemperature
-    )
+    // console.log(
+    //   'getTodayMinMaxTemperature return min: ',
+    //   minTemperature,
+    //   'max: ',
+    //   maxTemperature
+    // )
 
     return { ...minMax, minTemperature, maxTemperature }
   } catch (error) {
