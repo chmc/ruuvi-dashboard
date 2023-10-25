@@ -247,7 +247,14 @@ const getTodayMinMaxTemperature = (
       maxTemperature
     )
 
-    return { ...minMax, minTemperature, maxTemperature }
+    const ret = { ...minMax, minTemperature, maxTemperature }
+    console.log(
+      'getTodayMinMaxTemperature original cache: ',
+      todayMinMaxTemperature,
+      'return object: ',
+      ret
+    )
+    return ret
   } catch (error) {
     console.error('getTodayMinMaxTemperature failed: ', error)
     return todayMinMaxTemperature
