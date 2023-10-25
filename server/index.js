@@ -3,6 +3,7 @@ const express = require('express')
 const { spawn } = require('child_process')
 const NodeCache = require('node-cache')
 const utils = require('./utils')
+const simulatorUtils = require('./utils/simulator')
 const storage = require('./storage')
 require('dotenv').config()
 
@@ -146,10 +147,10 @@ if (!process.env.TEST) {
   console.log('Run in TEST MODE')
   console.log('Do not run python script')
   /** @type {SensorDataCollection} */
-  const sensorDataCollection = utils.initSimulator()
+  const sensorDataCollection = simulatorUtils.initSimulator()
 
   setInterval(() => {
-    utils.modifyDataWithWave(sensorDataCollection)
+    simulatorUtils.modifyDataWithWave(sensorDataCollection)
     cache.set(cacheKeys.ruuvi, sensorDataCollection)
     cache.set(
       cacheKeys.todayMinMax,
