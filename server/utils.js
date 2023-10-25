@@ -230,7 +230,7 @@ const getTodayMinMaxTemperature = (
     const minMax = isSameDate(minMaxObj.date, new Date())
       ? minMaxObj
       : {
-          ...minMaxObj,
+          date: new Date(),
           minTemperature: temperature,
           maxTemperature: temperature,
         }
