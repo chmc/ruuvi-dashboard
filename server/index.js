@@ -2,7 +2,7 @@
 const express = require('express')
 const { spawn } = require('child_process')
 const NodeCache = require('node-cache')
-const utils = require('./utils')
+const temperatureService = require('./services/temperature')
 const simulatorUtils = require('./utils/simulator')
 const energyPricesService = require('./services/energyPrices')
 const storage = require('./storage')
@@ -32,7 +32,7 @@ app.post('/api/ruuvi', (req, res) => {
     const sensorDataCollection = req.body
     cache.set(cacheKeys.ruuvi, sensorDataCollection)
 
-    const todayminmaxtemperature = utils.getTodayMinMaxTemperature(
+    const todayminmaxtemperature = temperatureService.getTodayMinMaxTemperature(
       sensorDataCollection,
       cache.get(cacheKeys.todayMinMax)
     )
@@ -136,7 +136,7 @@ if (!process.env.TEST) {
     cache.set(cacheKeys.ruuvi, sensorDataCollection)
     cache.set(
       cacheKeys.todayMinMax,
-      utils.getTodayMinMaxTemperature(
+      temperatureService.getTodayMinMaxTemperature(
         sensorDataCollection,
         cache.get(cacheKeys.todayMinMax)
       )

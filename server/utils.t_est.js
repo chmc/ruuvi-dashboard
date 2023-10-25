@@ -1,5 +1,5 @@
 // energy.test.js
-const { getEnergyPrices } = require('./utils') // Import the function you want to test
+const { getEnergyPrices } = require('./services/temperature') // Import the function you want to test
 const storage = require('./storage') // Import the storage module
 
 describe('getEnergyPrices', () => {

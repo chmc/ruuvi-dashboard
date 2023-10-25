@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-const dateUtils = require('./utils/date')
+const dateUtils = require('../utils/date')
 
 /**
  * @param {SensorDataCollection} sensorDataCollection
