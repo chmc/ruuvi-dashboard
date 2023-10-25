@@ -5,6 +5,7 @@ const NodeCache = require('node-cache')
 const temperatureService = require('./services/temperature')
 const simulatorUtils = require('./utils/simulator')
 const energyPricesService = require('./services/energyPrices')
+const bluetoothUtils = require('./utils/bluetooth')
 const storage = require('./storage')
 require('dotenv').config()
 
@@ -99,6 +100,8 @@ if (!process.env.TEST) {
 
     pythonProcess.stderr.on('data', (data) => {
       console.log(`Python Ruuvi script ERROR: ${data}`)
+      console.log('Next reset bluetooth interface')
+      bluetoothUtils.resetBluetoothInterface()
     })
 
     pythonProcess.on('close', (code) => {
