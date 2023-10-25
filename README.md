@@ -55,6 +55,14 @@ sudo n latest
 Follow the instructions from here  
 https://github.com/ttu/ruuvitag-sensor/blob/master/install_guide_pi.md
 
+### Useful Ubuntu commands
+
+Reboot OS
+
+```
+$ sudo reboot --force
+```
+
 ### Create react app
 
 App will be created inside `ruuvionpi` folder
@@ -250,4 +258,24 @@ If the ruuvi.py script gets stuck, use this command to kill them
 
 ```
 $ pkill -f "python3 ./scripts/ruuvi.py"
+```
+
+### Troubleshooting
+
+If you get this error
+
+```
+Python Ruuvi script ERROR: Can't init device hci0: Connection timed out (110)
+```
+
+Try to resolve that error by resetting BLE
+
+```
+$ sudo hciconfig hci0 reset
+```
+
+If resetting BLE does not work Try running ruuvitag_sensor script
+
+```
+$ python3 -m ruuvitag_sensor -f
 ```
