@@ -4,6 +4,7 @@ const { spawn } = require('child_process')
 const NodeCache = require('node-cache')
 const utils = require('./utils')
 const simulatorUtils = require('./utils/simulator')
+const energyPricesService = require('./services/energyPrices')
 const storage = require('./storage')
 require('dotenv').config()
 
@@ -57,7 +58,9 @@ app.get('/api/energyprices', async (req, res) => {
       tomorrowEnergyPrices: appStorage.tomorrowEnergyPrices,
     }
   }
-  const energyPrices = await utils.getEnergyPrices(cachedEnergyPrices)
+  const energyPrices = await energyPricesService.getEnergyPrices(
+    cachedEnergyPrices
+  )
   cache.set(cacheKeys.energyPrices, energyPrices)
 
   const energyPricesForClient = {
