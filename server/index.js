@@ -87,12 +87,13 @@ if (!process.env.TEST) {
     const pythonProcess = spawn('python3', args)
 
     // When the Python script starts, set a timeout
+    const timeoutInSec = 50000
     const timeoutId = setTimeout(() => {
       console.log(
         'Python Ruuvi script execution timed out. Terminating process.'
       )
       pythonProcess.kill('SIGKILL')
-    }, 50000)
+    }, timeoutInSec)
 
     pythonProcess.stdout.on('data', (data) => {
       console.log(`Python Ruuvi script output: ${data}`)

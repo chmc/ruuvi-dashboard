@@ -4,21 +4,30 @@ const resetBluetoothInterface = () => {
   const command = 'sudo'
   const args = ['hciconfig', 'hci0', 'reset']
 
-  const child = spawn(command, args)
+  const childProcess = spawn(command, args)
 
-  child.stdout.on('data', (data) => {
+  const timeoutInSec = 10000
+  const killChildProcessTimeoutId = setTimeout(() => {
+    console.log(
+      'Reset bluetooth interface execution timeout. Terminating process.'
+    )
+    childProcess.kill('SIGKILL')
+  }, timeoutInSec)
+
+  childProcess.stdout.on('data', (data) => {
     console.log(`resetBluetoothInterface stdout: ${data}`)
   })
 
-  child.stderr.on('data', (data) => {
+  childProcess.stderr.on('data', (data) => {
     console.error(`resetBluetoothInterface ERROR stderr: ${data}`)
   })
 
-  child.on('error', (error) => {
+  childProcess.on('error', (error) => {
     console.error(`resetBluetoothInterface Error: ${error.message}`)
   })
 
-  child.on('close', (code) => {
+  childProcess.on('close', (code) => {
+    clearTimeout(killChildProcessTimeoutId)
     if (code === 0) {
       console.log('resetBluetoothInterface Command executed successfully')
     } else {
@@ -27,6 +36,10 @@ const resetBluetoothInterface = () => {
       )
     }
   })
+
+  childProcess.stdin.end()
+  childProcess.stdout.end()
+  childProcess.stderr.end()
 }
 
 module.exports = {
