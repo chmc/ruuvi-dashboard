@@ -17,15 +17,7 @@ const cacheKeys = {
 }
 
 app.use(express.json())
-
-// This displays message that the server running and listening to specified port
 app.listen(port, () => console.log(`Listening on port ${port}`))
-
-// create a GET route
-app.get('/api/express_backend', (req, res) => {
-  console.log('api call received')
-  res.send({ express: 'YOUR EXPRESS BACKEND IS CONNECTED TO REACT' }) // Line 10
-})
 
 app.get('/api/ruuvi', (req, res) => {
   console.log(new Date().toLocaleString(), 'api get ruuvi received')
@@ -84,20 +76,7 @@ if (!process.env.TEST) {
   const macs = process.env.REACT_APP_RUUVITAG_MACS
   console.log('macs: ', macs)
   const ruuviScript = './scripts/ruuvi.py'
-  // const command = `python3 ${ruuviScript} --macs "${macs}"`
-  // console.log('command: ', command)
   const args = [ruuviScript, '--macs', macs]
-
-  // // eslint-disable-next-line no-inner-declarations
-  // function execRuuviScript() {
-  //   exec(command, (error, stdout, stderr) => {
-  //     if (error) {
-  //       console.error(`Error: ${error.message}`)
-  //       return
-  //     }
-  //     console.log(`Python script output:\n${stdout}`)
-  //   })
-  // }
 
   // eslint-disable-next-line no-inner-declarations
   function runRuuviScript() {
