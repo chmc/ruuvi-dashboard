@@ -92,7 +92,7 @@ if (!process.env.TEST) {
         'Python Ruuvi script execution timed out. Terminating process.'
       )
       pythonProcess.kill('SIGKILL')
-    }, 35000)
+    }, 50000)
 
     pythonProcess.stdout.on('data', (data) => {
       console.log(`Python Ruuvi script output: ${data}`)
