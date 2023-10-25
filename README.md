@@ -14,6 +14,11 @@ https://blog.cloudboost.io/how-to-run-a-nodejs-web-server-on-a-raspberry-pi-for-
 Example to connect React and Express backend
 https://blog.logrocket.com/running-react-express-concurrently/
 
+Ruuvi
+
+- High battery level: 3193
+- Low battery level: 1897
+
 # Steps
 
 ### Enable Raspberry Pi remote access
@@ -226,5 +231,23 @@ $ systemctl status ruuvi-dashboard
 If automatic start doesn't work, you can start it manually
 
 ```
- /home/your-name/repos/ruuvionpi/start.sh
+$ /home/your-name/repos/ruuvionpi/start.sh
+```
+
+To watch live logs use command
+
+```
+$ pm2 logs
+```
+
+To find jammed processes
+
+```
+$ ps aux | grep 'D'
+```
+
+If the ruuvi.py script gets stuck, use this command to kill them
+
+```
+$ pkill -f "python3 ./scripts/ruuvi.py"
 ```
