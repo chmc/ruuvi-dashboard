@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 const storage = require('./storage')
+const dateUtils = require('./utils/date')
 
 const getEnergyPricesFromApi = async () => {
   try {
@@ -12,26 +13,6 @@ const getEnergyPricesFromApi = async () => {
     return undefined
   }
 }
-
-/**
- *
- * @param {Date} [new Date()] date  Defaults to current date
- * @returns {Date}
- */
-const addOneDay = (date = new Date()) => {
-  date.setDate(date.getDate() + 1)
-  return date
-}
-
-/**
- * @param {Date=} date1
- * @param {Date=} date2
- * @returns
- */
-const isSameDate = (date1, date2) =>
-  date1?.getFullYear() === date2?.getFullYear() &&
-  date1?.getMonth() === date2?.getMonth() &&
-  date1?.getDate() === date2?.getDate()
 
 /**
  * @param {EnergyPrices} energyPrices
@@ -77,7 +58,7 @@ const getEnergyPrices = async (energyPrices) => {
   try {
     const currentDateObject = new Date()
     const currentDate = currentDateObject.toISOString().split('T')[0]
-    const tomorrowDateObject = addOneDay()
+    const tomorrowDateObject = dateUtils.addOneDay()
     const tomorrowDate = tomorrowDateObject.toISOString().split('T')[0]
     console.log('Updated at ', energyPrices?.todayEnergyPrices?.updatedAt)
 
@@ -91,11 +72,11 @@ const getEnergyPrices = async (energyPrices) => {
       }))
 
       const todayEnergyPrices = allEnergyPrices.filter((energyPrice) =>
-        isSameDate(energyPrice.date, currentDateObject)
+        dateUtils.isSameDate(energyPrice.date, currentDateObject)
       )
 
       const tomorrowEnergyPrices = allEnergyPrices.filter((energyPrice) =>
-        isSameDate(energyPrice.date, tomorrowDateObject)
+        dateUtils.isSameDate(energyPrice.date, tomorrowDateObject)
       )
 
       const appStorage = await storage.loadOrDefault()
@@ -183,7 +164,7 @@ const getTodayMinMaxTemperature = (
       maxTemperature: temperature,
     }
 
-    const minMax = isSameDate(minMaxObj.date, new Date())
+    const minMax = dateUtils.isSameDate(minMaxObj.date, new Date())
       ? minMaxObj
       : {
           date: new Date(),
