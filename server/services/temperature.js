@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define */
 /* eslint-disable no-console */
 const dateUtils = require('../utils/date')
 
@@ -11,28 +12,20 @@ const getTodayMinMaxTemperature = (
 ) => {
   try {
     console.log('getTodayMinMaxTemperature start')
-    if (!sensorDataCollection) {
-      console.log(
-        'getTodayMinMaxTemperature() sensorDataCollection not available, it is:',
-        sensorDataCollection
-      )
+    const mainOutdoorRuuviTagMac =
+      process.env.REACT_APP_MAIN_OUTDOOR_RUUVITAG_MAC
+
+    if (isSensorDataMissing(sensorDataCollection)) {
       return todayMinMaxTemperature
     }
 
     if (
-      !sensorDataCollection[process.env.REACT_APP_MAIN_OUTDOOR_RUUVITAG_MAC]
+      isSensorDataMissingForMac(sensorDataCollection, mainOutdoorRuuviTagMac)
     ) {
-      console.log(
-        'getTodayMinMaxTemperature() sensorDataCollection for mac: "',
-        process.env.REACT_APP_MAIN_OUTDOOR_RUUVITAG_MAC,
-        '" is missing. Sensor data is:',
-        sensorDataCollection
-      )
       return todayMinMaxTemperature
     }
 
-    const { temperature } =
-      sensorDataCollection[process.env.REACT_APP_MAIN_OUTDOOR_RUUVITAG_MAC]
+    const { temperature } = sensorDataCollection[mainOutdoorRuuviTagMac]
 
     console.log(
       'getTodayMinMaxTemperature, sensorData temperature: ',
@@ -41,25 +34,17 @@ const getTodayMinMaxTemperature = (
       todayMinMaxTemperature
     )
 
-    /** @type {TodayMinMaxTemperature} */
-    const minMaxObj = todayMinMaxTemperature ?? {
-      date: new Date(),
-      minTemperature: temperature,
-      maxTemperature: temperature,
-    }
+    const minMaxObj = getNewObjectIfTodayMinMaxIsMissing(
+      todayMinMaxTemperature,
+      temperature
+    )
 
-    const minMax = dateUtils.isSameDate(minMaxObj.date, new Date())
-      ? minMaxObj
-      : {
-          date: new Date(),
-          minTemperature: temperature,
-          maxTemperature: temperature,
-        }
+    const minMax = resetMinMaxIfDateIsDifferent(minMaxObj, temperature)
 
-    const minTemperature =
-      temperature < minMax.minTemperature ? temperature : minMax.minTemperature
-    const maxTemperature =
-      temperature > minMax.maxTemperature ? temperature : minMax.maxTemperature
+    const { minTemperature, maxTemperature } = getNewMinAndMaxTemperatures(
+      minMax,
+      temperature
+    )
 
     console.log(
       'getTodayMinMaxTemperature return min: ',
@@ -79,6 +64,84 @@ const getTodayMinMaxTemperature = (
   } catch (error) {
     console.error('getTodayMinMaxTemperature failed: ', error)
     return todayMinMaxTemperature
+  }
+}
+
+/**
+ * @param {SensorDataCollection} sensorDataCollection
+ */
+const isSensorDataMissing = (sensorDataCollection) => {
+  if (!sensorDataCollection) {
+    console.log(
+      'getTodayMinMaxTemperature() sensorDataCollection not available, it is:',
+      sensorDataCollection
+    )
+    return true
+  }
+  return false
+}
+
+/**
+ * @param {SensorDataCollection} sensorDataCollection
+ * @param {string} sensorMac
+ */
+const isSensorDataMissingForMac = (sensorDataCollection, sensorMac) => {
+  if (!sensorDataCollection[sensorMac]) {
+    console.log(
+      'getTodayMinMaxTemperature() sensorDataCollection for mac: "',
+      process.env.REACT_APP_MAIN_OUTDOOR_RUUVITAG_MAC,
+      '" is missing. Sensor data is:',
+      sensorDataCollection
+    )
+    return true
+  }
+  return false
+}
+
+/**
+ * @param {TodayMinMaxTemperature} todayMinMaxTemperature
+ * @param {number} temperature
+ */
+const getNewObjectIfTodayMinMaxIsMissing = (
+  todayMinMaxTemperature,
+  temperature
+) =>
+  todayMinMaxTemperature ?? {
+    date: new Date(),
+    minTemperature: temperature,
+    maxTemperature: temperature,
+  }
+
+/**
+ * @param {TodayMinMaxTemperature} todayMinMaxTemperature
+ * @param {number} temperature
+ */
+const resetMinMaxIfDateIsDifferent = (todayMinMaxTemperature, temperature) =>
+  dateUtils.isSameDate(todayMinMaxTemperature.date, new Date())
+    ? todayMinMaxTemperature
+    : {
+        date: new Date(),
+        minTemperature: temperature,
+        maxTemperature: temperature,
+      }
+
+/**
+ * @param {TodayMinMaxTemperature} todayMinMaxTemperature
+ * @param {number} temperature
+ */
+const getNewMinAndMaxTemperatures = (todayMinMaxTemperature, temperature) => {
+  const minTemperature =
+    temperature < todayMinMaxTemperature.minTemperature
+      ? temperature
+      : todayMinMaxTemperature.minTemperature
+  const maxTemperature =
+    temperature > todayMinMaxTemperature.maxTemperature
+      ? temperature
+      : todayMinMaxTemperature.maxTemperature
+
+  return {
+    minTemperature,
+    maxTemperature,
   }
 }
 
