@@ -1,6 +1,6 @@
-const utils = require('./services/temperature')
+const temperatureService = require('./temperature')
 
-describe('utils', () => {
+describe('temperature', () => {
   describe('getTodayMinMaxTemperature', () => {
     // Set the environment variable before running your tests
     beforeAll(() => {
@@ -44,7 +44,7 @@ describe('utils', () => {
         minTemperature: 20.74,
       }
 
-      const act = utils.getTodayMinMaxTemperature(
+      const act = temperatureService.getTodayMinMaxTemperature(
         sensorDataCollection,
         undefined
       )
@@ -82,7 +82,7 @@ describe('utils', () => {
         minTemperature: 15.24,
       }
 
-      const act = utils.getTodayMinMaxTemperature(
+      const act = temperatureService.getTodayMinMaxTemperature(
         sensorDataCollection,
         todayMinMaxTemperature
       )
@@ -120,7 +120,7 @@ describe('utils', () => {
         minTemperature: 10,
       }
 
-      const act = utils.getTodayMinMaxTemperature(
+      const act = temperatureService.getTodayMinMaxTemperature(
         sensorDataCollection,
         todayMinMaxTemperature
       )
