@@ -40,8 +40,14 @@ app.post('/api/ruuvi', (req, res) => {
     if (todayminmaxtemperature) {
       cache.set(cacheKeys.todayMinMax, todayminmaxtemperature)
     }
+    res
+      .status(200)
+      .json({ message: 'Data received and processed successfully' })
   } catch (error) {
     console.error('POST /api/ruuvi, error: ', error)
+    res
+      .status(500)
+      .json({ error: 'An error occurred while processing the data' })
   }
 })
 
