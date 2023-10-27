@@ -22,7 +22,7 @@ app.use(express.json())
 app.listen(port, () => console.log(`Listening on port ${port}`))
 
 app.get('/api/ruuvi', (req, res) => {
-  console.log(new Date().toLocaleString(), 'api get ruuvi received')
+  // console.log(new Date().toLocaleString(), 'api get ruuvi received')
   res.send(cache.get(cacheKeys.ruuvi))
 })
 
@@ -85,9 +85,8 @@ if (!process.env.TEST) {
   // eslint-disable-next-line no-inner-declarations
   function runRuuviScript() {
     const pythonProcess = spawn('python3', args)
-
-    // When the Python script starts, set a timeout
     const timeoutInSec = 65000
+
     const timeoutId = setTimeout(() => {
       console.log(
         'Python Ruuvi script execution timed out. Terminating process.'
@@ -107,7 +106,11 @@ if (!process.env.TEST) {
 
     pythonProcess.on('close', (code) => {
       clearTimeout(timeoutId)
-      console.log(`Python Ruuvi script exited with code ${code}`)
+      console.log(
+        `Python Ruuvi script exited with code ${code}. Next run in 10sec.`
+      )
+      // Schedule the next run after completion
+      setTimeout(runRuuviScript, 10000)
     })
 
     pythonProcess.on('error', (err) => {
@@ -119,15 +122,11 @@ if (!process.env.TEST) {
     pythonProcess.stderr.end()
   }
 
-  console.log('Wait 3sec before first ruuvi script run')
+  console.log('Wait 3sec before the first Ruuvi script run')
   setTimeout(() => {
-    console.log('Call ruuvi script')
+    console.log('Call Ruuvi script')
     runRuuviScript()
   }, 3000)
-
-  // Run every 60sec
-  console.log('Run ruuvi script every 70sec')
-  const interval = setInterval(runRuuviScript, 70000)
 } else {
   // Run in test mode
   console.log('Run in TEST MODE')

@@ -11,6 +11,7 @@ Call:
 
 import requests
 import argparse
+from datetime import datetime
 from ruuvitag_sensor.ruuvi import RuuviTagSensor
 
 # Parse command-line arguments
@@ -18,14 +19,15 @@ parser = argparse.ArgumentParser(description="Process a list of MAC addresses.")
 parser.add_argument("--macs", type=str, help="Comma-separated list of MAC addresses")
 
 args = parser.parse_args()
+current_datetime = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
 
 # Check if the 'macs' argument was provided
 if args.macs:
     # Split the comma-separated string into a list of MAC addresses
     macs = args.macs.split(",")
-    print("MAC addresses:", macs)
+    print(f'{current_datetime} - MAC addresses:', macs)
 else:
-    print("No MAC addresses provided.")
+    print(f'{current_datetime} - No MAC addresses provided.')
 
 # This should be enough that we find at least one result for each
 timeout_in_sec = 60
@@ -36,5 +38,6 @@ datas = RuuviTagSensor.get_data_for_sensors(macs, timeout_in_sec)
 
 # Use Requests to POST datas in json-format
 requests.post(url, json=datas)
+print (f'{current_datetime} Ruuvi sensor data has been POST to API')
 # print (datas)
-exit()
+exit(0)
