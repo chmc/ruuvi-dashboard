@@ -30,12 +30,6 @@ In GUI OS
 - Enable `VNC` for RealVNC Viewer connection
 - Enable `SSH` for terminal connection
 
-Tip. If you need to shutdown raspberry pi
-
-```
-$ sudo shutdown -h now
-```
-
 ### Update Node.js on Raspberry Pi Through Node Module
 
 Install npm
@@ -57,10 +51,23 @@ https://github.com/ttu/ruuvitag-sensor/blob/master/install_guide_pi.md
 
 ### Useful Ubuntu commands
 
-Reboot OS
+Shutdown raspberry pi
+
+```
+$ sudo shutdown -h now
+```
+
+Reboot raspberry pi
 
 ```
 $ sudo reboot --force
+```
+
+Get raspberry pi temperature
+
+```
+$ vcgencmd measure_temp
+--> temp=60.7'C
 ```
 
 ### Create react app
@@ -279,3 +286,5 @@ If resetting BLE does not work Try running ruuvitag_sensor script
 ```
 $ python3 -m ruuvitag_sensor -f
 ```
+
+If none of these helps to enable bluetooth, reboot raspberry pi and try again
