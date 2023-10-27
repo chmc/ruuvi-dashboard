@@ -87,7 +87,7 @@ if (!process.env.TEST) {
     const pythonProcess = spawn('python3', args)
 
     // When the Python script starts, set a timeout
-    const timeoutInSec = 50000
+    const timeoutInSec = 65000
     const timeoutId = setTimeout(() => {
       console.log(
         'Python Ruuvi script execution timed out. Terminating process.'
@@ -126,8 +126,8 @@ if (!process.env.TEST) {
   }, 3000)
 
   // Run every 60sec
-  console.log('Run ruuvi script every 60sec')
-  const interval = setInterval(runRuuviScript, 60000)
+  console.log('Run ruuvi script every 70sec')
+  const interval = setInterval(runRuuviScript, 70000)
 } else {
   // Run in test mode
   console.log('Run in TEST MODE')

@@ -9,7 +9,7 @@ const resetBluetoothInterface = () => {
   const timeoutInSec = 10000
   const killChildProcessTimeoutId = setTimeout(() => {
     console.log(
-      'Reset bluetooth interface execution timeout. Terminating process.'
+      'resetBluetoothInterface Reset bluetooth interface execution timeout. Terminating process.'
     )
     childProcess.kill('SIGKILL')
   }, timeoutInSec)
