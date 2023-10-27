@@ -1,4 +1,4 @@
-# ruuvionpi
+# ruuvi-dashboard
 
 Collect RuuviTag info, React app and Raspberry pi
 
@@ -18,6 +18,22 @@ Ruuvi
 
 - High battery level: 3193
 - Low battery level: 1897
+
+# Roadmap
+
+- Add tests to code
+- Refactor code
+- Refine and polish overall UI, add more icons etc
+- Visualize current hour energy price
+- Today hourly weather forecast
+- Outdoor temperature trend, rise/lower/stay same
+- pm2 logs to daily instead of one big, delete old files
+- Automate deployment using script
+- System monitor: Raspberry pi temp (safe under +70c), memory %, cpu %
+- Ruuvi battery level indicator
+- Integrate with Philips Hue
+- PWA support
+- Mobile friendly UI, now it works best on pad size
 
 # Steps
 
