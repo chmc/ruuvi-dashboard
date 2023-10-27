@@ -1,7 +1,7 @@
 const temperatureService = require('./temperature')
 
-describe('temperature', () => {
-  describe('getTodayMinMaxTemperature', () => {
+describe('temperatureService', () => {
+  describe('getTodayMinMaxTemperature()', () => {
     // Set the environment variable before running your tests
     beforeAll(() => {
       // Set the environment variable before importing your module

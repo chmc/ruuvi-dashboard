@@ -1,18 +1,7 @@
 /* eslint-disable no-console */
+const energypricesFromApi = require('./energyPricesFromApi')
 const storage = require('../storage')
 const dateUtils = require('../utils/date')
-
-const getEnergyPricesFromApi = async () => {
-  try {
-    const response = await fetch(`https://api.spot-hinta.fi/TodayAndDayForward`)
-    console.log('api called')
-    const textData = await response.text()
-    return textData
-  } catch (error) {
-    console.error('getEnergyPricesFromApi: ', error)
-    return undefined
-  }
-}
 
 /**
  * @param {EnergyPrices} energyPrices
@@ -29,7 +18,7 @@ const allowUpdateEnergyPrices = (energyPrices) => {
     const hoursDifference = timeDifferenceInMilliseconds / (1000 * 60 * 60)
     console.log('Last energy prices updated: ', hoursDifference)
 
-    if (!energyPrices.todayEnergyPrices) {
+    if (!energyPrices || !energyPrices.todayEnergyPrices) {
       return true
     }
     if (
@@ -64,7 +53,8 @@ const getEnergyPrices = async (energyPrices) => {
 
     if (allowUpdateEnergyPrices(energyPrices)) {
       console.log('Get new energy prices')
-      const dataText = await getEnergyPricesFromApi()
+      const dataText = await energypricesFromApi.getEnergyPricesFromApi()
+      console.log('energy prices text: ', dataText)
       const allEnergyPrices = JSON.parse(dataText).map((daily) => ({
         date: new Date(daily.DateTime),
         price: Math.round(daily.PriceWithTax * 10000) / 100,
@@ -119,5 +109,4 @@ const getEnergyPrices = async (energyPrices) => {
 
 module.exports = {
   getEnergyPrices,
-  getEnergyPricesFromApi,
 }

@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`energyPricesService getEnergyPrices() should 1`] = `
+Object {
+  "todayEnergyPrices": Object {
+    "data": Array [],
+    "pricesForDate": "2023-10-24",
+    "updatedAt": 2023-10-24T09:11:00.000Z,
+  },
+  "tomorrowEnergyPrices": undefined,
+  "updatedAt": 2023-10-24T09:11:00.000Z,
+}
+`;
