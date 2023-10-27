@@ -34,15 +34,17 @@ timeout_in_sec = 60
 
 url = "http://localhost:3001/api/ruuvi"
 
-datas = RuuviTagSensor.get_data_for_sensors(macs, timeout_in_sec)
-
-# Use Requests to POST datas in json-format
 try:
+    datas = RuuviTagSensor.get_data_for_sensors(macs, timeout_in_sec)
+    print(f'{current_datetime} - Ruuvi sensor data has been fetched', flush=True)
+    
     response = requests.post(url, json=datas, timeout=4)
     response.raise_for_status()  # Check for HTTP status code
-    print(f'{current_datetime} - Ruuvi sensor data has been POST to API', response)
+    print(f'{current_datetime} - Ruuvi sensor data has been POST to API', flush=True)
+    
 except requests.exceptions.RequestException as e:
-    print(f'{current_datetime} - Error making POST request:', e)
+    print(f'{current_datetime} - Error making POST request:', e, flush=True)
+except Exception as e:
+    print(f'{current_datetime} - Error in script:', e, flush=True)
 
-# print (datas)
 exit(0)
