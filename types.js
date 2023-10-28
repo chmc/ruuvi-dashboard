@@ -17,7 +17,7 @@
  * @typedef     DailyEnergyPrices
  * @type        {object}
  * @property    {Date}      updatedAt
- * @property    {string}    pricesForDate
+ * @property    {string}    pricesForDate   Format YYYY-MM-DD
  * @property    {EnergyPrice[]}  data
  */
 
@@ -25,8 +25,8 @@
  * @typedef     EnergyPrice
  * @type        {object}
  * @property    {Date}      date
- * @property    {number}    price
- * @property    {number}    hour
+ * @property    {number}    price   cent, like: 0.05
+ * @property    {number}    hour    0-23
  */
 
 /**

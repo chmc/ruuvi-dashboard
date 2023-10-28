@@ -6,7 +6,6 @@ describe('energyPricesService', () => {
   describe('getEnergyPrices()', () => {
     beforeAll(() => {
       jest.useFakeTimers()
-      jest.setSystemTime(new Date('2023-10-24T12:11:00'))
       jest.resetModules()
     })
 
@@ -16,7 +15,8 @@ describe('energyPricesService', () => {
 
     it('should return object with energy prices for today', async () => {
       // Arrange
-      const json = `
+      jest.setSystemTime(new Date('2023-10-27T12:11:00'))
+      const apiResponseJson = `
       [{
         "Rank": 1,
         "DateTime": "2023-10-27T00:00:00+03:00",
@@ -43,12 +43,44 @@ describe('energyPricesService', () => {
       }]`
       jest.spyOn(storage, 'loadOrDefault').mockResolvedValue(undefined)
       jest.spyOn(storage, 'save').mockImplementation(jest.fn)
-      jest
-        .spyOn(energyPricesFromApi, 'getEnergyPricesFromApi')
-        .mockResolvedValue(json)
+      const getEnergyPricesFromApiSpy = jest.spyOn(
+        energyPricesFromApi,
+        'getEnergyPricesFromApi'
+      )
+      getEnergyPricesFromApiSpy.mockResolvedValue(apiResponseJson)
 
       // Act
       const result = await energyPricesService.getEnergyPrices(undefined)
+
+      // Assert
+      expect(getEnergyPricesFromApiSpy).toBeCalledTimes(1)
+      expect(result).toMatchSnapshot()
+    })
+
+    it('should return current energy prices and not get new', async () => {
+      // Arrange
+      jest.setSystemTime(new Date('2023-10-24T12:11:00'))
+
+      /** @type {EnergyPrices} */
+      const energyPrices = {
+        updatedAt: new Date('2023-10-24T12:00:00'),
+        todayEnergyPrices: {
+          updatedAt: new Date('2023-10-24T12:00:00'),
+          pricesForDate: '2023-10-24',
+          data: [
+            {
+              date: new Date('2023-10-24T12:00:00'),
+              price: 0.05,
+              hour: 12,
+            },
+          ],
+        },
+      }
+      jest.spyOn(storage, 'loadOrDefault').mockResolvedValue(undefined)
+      jest.spyOn(storage, 'save').mockImplementation(jest.fn)
+
+      // Act
+      const result = await energyPricesService.getEnergyPrices(energyPrices)
 
       // Assert
       expect(result).toMatchSnapshot()
