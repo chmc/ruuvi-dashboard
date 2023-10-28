@@ -89,24 +89,19 @@ const getTodayAndTomorrowDates = () => {
  */
 const allowUpdateEnergyPrices = (energyPrices, currentDateObject) => {
   try {
-    // Calculate the difference in hours
-    const updatedAt =
-      energyPrices?.todayEnergyPrices?.updatedAt ?? new Date('1900-01-01')
-    const timeDifferenceInMilliseconds = new Date() - updatedAt
-    const hoursDifference = timeDifferenceInMilliseconds / (1000 * 60 * 60)
+    const updatedAt = getUpdatedAtOrMinDate(energyPrices)
+    const hoursDifference = calculateHoursDifferenceInDates(updatedAt)
     console.log('Last energy prices updated: ', hoursDifference)
 
-    if (!energyPrices || !energyPrices.todayEnergyPrices) {
-      return true
-    }
     if (
-      currentDateObject.getHours() > 12 &&
-      hoursDifference > 0.5 &&
-      !energyPrices.tomorrowEnergyPrices
+      isEnergyPricesObjectOrtodayMissing(energyPrices) ||
+      isCloseToTomorrowPrices(
+        energyPrices,
+        currentDateObject,
+        hoursDifference
+      ) ||
+      isCurrentPricesTooOld(hoursDifference)
     ) {
-      return true
-    }
-    if (hoursDifference > 4) {
       return true
     }
     return false
@@ -115,6 +110,62 @@ const allowUpdateEnergyPrices = (energyPrices, currentDateObject) => {
     return false
   }
 }
+
+/**
+ * @param {EnergyPrices=} energyPrices
+ * @returns {Date}
+ */
+const getUpdatedAtOrMinDate = (energyPrices) =>
+  energyPrices?.todayEnergyPrices?.updatedAt ?? new Date('1900-01-01')
+
+/**
+ * @param {Date} updatedAt
+ * @returns {number}
+ */
+const calculateHoursDifferenceInDates = (updatedAt) => {
+  const timeDifferenceInMilliseconds = new Date() - updatedAt
+  const hoursDifference = timeDifferenceInMilliseconds / (1000 * 60 * 60)
+  return hoursDifference
+}
+
+/**
+ *
+ * @param {EnergyPrices} energyPrices
+ * @returns {boolean}
+ */
+const isEnergyPricesObjectOrtodayMissing = (energyPrices) => {
+  if (!energyPrices || !energyPrices.todayEnergyPrices) {
+    return true
+  }
+  return false
+}
+
+/**
+ * @param {EnergyPrices} energyPrices
+ * @param {Date} currentDateObject
+ * @param {number} hoursDifference
+ * @returns {boolean}
+ */
+const isCloseToTomorrowPrices = (
+  energyPrices,
+  currentDateObject,
+  hoursDifference
+) => {
+  if (
+    currentDateObject.getHours() > 12 &&
+    hoursDifference > 0.5 &&
+    !energyPrices.tomorrowEnergyPrices
+  ) {
+    return true
+  }
+  return false
+}
+
+/**
+ * @param {number} hoursDifference
+ * @returns {boolean}
+ */
+const isCurrentPricesTooOld = (hoursDifference) => hoursDifference > 4
 
 module.exports = {
   getEnergyPrices,
