@@ -4,10 +4,10 @@ import Box from '@mui/material/Box'
 import { getSunrise, getSunset } from 'sunrise-sunset-js'
 import RuuviCard from './components/RuuviCard'
 import InOutCard from './components/InOutCard'
-import configs from './configs'
-import formatters from './utils/formatters'
 import WeatherForecastCard from './components/WeatherForecastCard'
 import EnergyPricesCard from './components/EnergyPricesCard'
+import configs from './configs'
+import apiService from './services/api'
 
 const App = () => {
   const [ruuviDatas, setRuuviDatas] = useState(null)
@@ -21,9 +21,7 @@ const App = () => {
   useEffect(() => {
     const fetchRuuviData = async () => {
       try {
-        const response = await fetch('/api/ruuvi')
-        const json = await response.json()
-        setRuuviDatas(json)
+        setRuuviDatas(await apiService.fetchRuuviData())
       } catch (error) {
         console.log('fetchRuuviData ERROR: ', error)
       }
@@ -31,20 +29,7 @@ const App = () => {
 
     const fetchWeatherData = async () => {
       try {
-        const response = await fetch(
-          `https://api.openweathermap.org/data/2.5/forecast?lat=60.1695&lon=24.9355&units=metric&appid=${configs.openweatherApiKey}`
-        )
-        const json = await response.json()
-        const weather = json.list
-          .filter((item) => item.dt_txt.includes('12:00:00'))
-          .map((daily) => ({
-            date: daily.dt_txt,
-            weekDay: formatters.toDayOfWeekUI(daily.dt_txt),
-            temp: daily.main.temp,
-            wind: daily.wind.speed,
-            iconUrl: `https://openweathermap.org/img/wn/${daily.weather[0].icon}@2x.png`,
-          }))
-        setDailyWeatherList(weather)
+        setDailyWeatherList(await apiService.fetchWeatherData())
       } catch (error) {
         console.log('fetchWeatherData ERROR: ', error)
       }
@@ -52,10 +37,7 @@ const App = () => {
 
     const fetchEnergyPrices = async () => {
       try {
-        const response = await fetch('/api/energyprices')
-        const text = await response.text()
-        const json = JSON.parse(text)
-        console.log('energy: ', json)
+        const json = await apiService.fetchEnergyPrices()
         setTodayEnergyPrices(json.todayEnergyPrices)
         setTomorrowEnergyPrices(json.tomorrowEnergyPrices)
       } catch (error) {
@@ -65,11 +47,7 @@ const App = () => {
 
     const fetchMinMaxTemperatures = async () => {
       try {
-        const response = await fetch('/api/todayminmaxtemperature')
-        const text = await response.text()
-        const json = JSON.parse(text)
-        console.log('minmax: ', json)
-        setTodayMinMaxTemperature(json)
+        setTodayMinMaxTemperature(await apiService.fetchMinMaxTemperatures)
       } catch (error) {
         console.log('fetMinMaxTemperatures ERROR: ', error)
       }
