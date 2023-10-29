@@ -2,16 +2,8 @@ const sensorService = require('./sensor')
 
 describe('sensorService', () => {
   describe('getSensorData()', () => {
-    beforeAll(() => {
-      // Set the environment variable before importing your module
-      process.env.REACT_APP_RUUVITAG_MACS = 'mac1,mac2'
-    })
-
-    // Restore the original environment variable after the tests
-    afterAll(() => {
-      // Clear the environment variable after the tests
-      delete process.env.REACT_APP_RUUVITAG_MACS
-    })
+    /** @type {string[]} */
+    const macIds = ['mac1', 'mac2']
 
     it('should return original sensor data because cached is empty', () => {
       // Arrange
@@ -31,7 +23,7 @@ describe('sensorService', () => {
       }
 
       // Act
-      const act = sensorService.getSensorData(sensorDataCollection, {})
+      const act = sensorService.getSensorData(sensorDataCollection, {}, macIds)
 
       // Assert
       expect(act).toMatchSnapshot()
@@ -55,7 +47,11 @@ describe('sensorService', () => {
       }
 
       // Act
-      const act = sensorService.getSensorData(sensorDataCollection, undefined)
+      const act = sensorService.getSensorData(
+        sensorDataCollection,
+        undefined,
+        macIds
+      )
 
       // Assert
       expect(act).toMatchSnapshot()
@@ -91,7 +87,8 @@ describe('sensorService', () => {
       // Act
       const act = sensorService.getSensorData(
         sensorDataCollection,
-        cachedSensorDataCollection
+        cachedSensorDataCollection,
+        macIds
       )
 
       // Assert
@@ -118,7 +115,8 @@ describe('sensorService', () => {
       // Act
       const act = sensorService.getSensorData(
         undefined,
-        cachedSensorDataCollection
+        cachedSensorDataCollection,
+        macIds
       )
 
       // Assert

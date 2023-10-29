@@ -3,10 +3,13 @@ const express = require('express')
 const { spawn } = require('child_process')
 const NodeCache = require('node-cache')
 const temperatureService = require('./services/temperature')
-const simulatorUtils = require('./utils/simulator')
 const energyPricesService = require('./services/energyPrices')
+const sensorService = require('./services/sensor')
+const simulatorUtils = require('./utils/simulator')
 const bluetoothUtils = require('./utils/bluetooth')
 const storage = require('./storage')
+/** @type {Configs} */
+const configs = require('../src/configs')
 require('dotenv').config()
 
 const app = express()
@@ -28,9 +31,11 @@ app.get('/api/ruuvi', (req, res) => {
 
 app.post('/api/ruuvi', (req, res) => {
   console.log(new Date().toLocaleString(), 'post call received')
-  /** @type {SensorDataCollection} */
   try {
-    const sensorDataCollection = req.body
+    const sensorDataCollection = sensorService.getSensorData(
+      req.body,
+      configs.macIds
+    )
     cache.set(cacheKeys.ruuvi, sensorDataCollection)
 
     const todayminmaxtemperature = temperatureService.getTodayMinMaxTemperature(

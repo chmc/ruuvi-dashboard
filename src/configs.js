@@ -6,7 +6,9 @@ const ruuviTags = macIds.map((mac, index) => ({
   name: macNames[index],
 }))
 
+/** @type {Configs} */
 const configs = {
+  macIds,
   ruuviTags,
   mainIndoorMac: process.env.REACT_APP_MAIN_INDOOR_RUUVITAG_MAC,
   mainOutdoorMac: process.env.REACT_APP_MAIN_OUTDOOR_RUUVITAG_MAC,

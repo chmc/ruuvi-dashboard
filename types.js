@@ -38,6 +38,15 @@
  */
 
 /**
+ * @typedef {Object} Configs
+ * @property {string[]} macIds
+ * @property {RuuviTag[]} ruuviTags
+ * @property {string} mainIndoorMac
+ * @property {string} mainOutdoorMac
+ * @property {string} openweatherApiKey
+ */
+
+/**
  * @typedef {Object} RuuviTag
  * @property {string} mac
  * @property {string} name
