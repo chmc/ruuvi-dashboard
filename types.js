@@ -38,6 +38,12 @@
  */
 
 /**
+ * @typedef {Object} RuuviTag
+ * @property {string} mac
+ * @property {string} name
+ */
+
+/**
  * @typedef {Object.<string, SensorData>} SensorDataCollection
  */
 

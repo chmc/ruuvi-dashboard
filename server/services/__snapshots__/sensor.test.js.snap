@@ -1,0 +1,69 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`sensorService getSensorData() should get data from cache when all sensor data is missing 1`] = `
+Object {
+  "mac1": Object {
+    "humidity": 11,
+    "mac": "mac1",
+    "pressure": 33,
+    "temperature": 22,
+  },
+  "mac2": Object {
+    "humidity": 44,
+    "mac": "mac2",
+    "pressure": 66,
+    "temperature": 55,
+  },
+}
+`;
+
+exports[`sensorService getSensorData() should get data from cache when mac2 sensor data is missing 1`] = `
+Object {
+  "mac1": Object {
+    "humidity": 47.17,
+    "mac": "mac1",
+    "pressure": 1012.17,
+    "temperature": 20.74,
+  },
+  "mac2": Object {
+    "humidity": 12.34,
+    "mac": "mac2",
+    "pressure": 1234.5,
+    "temperature": 56.78,
+  },
+}
+`;
+
+exports[`sensorService getSensorData() should return original sensor data because cached is empty 1`] = `
+Object {
+  "mac1": Object {
+    "humidity": 47.17,
+    "mac": "mac1",
+    "pressure": 1012.17,
+    "temperature": 20.74,
+  },
+  "mac2": Object {
+    "humidity": 47.27,
+    "mac": "mac2",
+    "pressure": 1012.4,
+    "temperature": 21.37,
+  },
+}
+`;
+
+exports[`sensorService getSensorData() should return original sensor data because cached is undefined 1`] = `
+Object {
+  "mac1": Object {
+    "humidity": 47.17,
+    "mac": "mac1",
+    "pressure": 1012.17,
+    "temperature": 20.74,
+  },
+  "mac2": Object {
+    "humidity": 47.27,
+    "mac": "mac2",
+    "pressure": 1012.4,
+    "temperature": 21.37,
+  },
+}
+`;
