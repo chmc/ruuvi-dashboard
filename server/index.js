@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define */
 /* eslint-disable no-console */
 const express = require('express')
 const { spawn } = require('child_process')
@@ -8,8 +9,6 @@ const sensorService = require('./services/sensor')
 const simulatorUtils = require('./utils/simulator')
 const bluetoothUtils = require('./utils/bluetooth')
 const storage = require('./storage')
-/** @type {Configs} */
-const configs = require('../src/configs')
 require('dotenv').config()
 
 const app = express()
@@ -34,7 +33,7 @@ app.post('/api/ruuvi', (req, res) => {
   try {
     const sensorDataCollection = sensorService.getSensorData(
       req.body,
-      configs.macIds
+      getConfigMacIds()
     )
     cache.set(cacheKeys.ruuvi, sensorDataCollection)
 
@@ -174,3 +173,8 @@ if (!process.env.TEST) {
     // console.log(jsonData);
   }, 1000)
 }
+
+/**
+ * @returns {string[]}
+ */
+const getConfigMacIds = () => process.env.REACT_APP_RUUVITAG_MACS?.split(',')
