@@ -91,28 +91,36 @@ if (!process.env.TEST) {
   // eslint-disable-next-line no-inner-declarations
   function runRuuviScript() {
     const pythonProcess = spawn('python3', args)
-    const timeoutInSec = 65000
+    const timeoutInSec = 75000
 
     const timeoutId = setTimeout(() => {
       console.log(
+        new Date().toLocaleString(),
         'Python Ruuvi script execution timed out. Terminating process.'
       )
       pythonProcess.kill('SIGKILL')
     }, timeoutInSec)
 
     pythonProcess.stdout.on('data', (data) => {
-      console.log(`Python Ruuvi script output: ${data}`)
+      console.log(
+        new Date().toLocaleString(),
+        `Python Ruuvi script output: ${data}`
+      )
     })
 
     pythonProcess.stderr.on('data', (data) => {
-      console.log(`Python Ruuvi script ERROR: ${data}`)
-      console.log('Next reset bluetooth interface')
+      console.log(
+        new Date().toLocaleString(),
+        `Python Ruuvi script ERROR: ${data}`
+      )
+      console.log(new Date().toLocaleString(), 'Next reset bluetooth interface')
       bluetoothUtils.resetBluetoothInterface()
     })
 
     pythonProcess.on('close', (code) => {
       clearTimeout(timeoutId)
       console.log(
+        new Date().toLocaleString(),
         `Python Ruuvi script exited with code ${code}. Next run in 10sec.`
       )
       // Schedule the next run after completion
@@ -120,7 +128,11 @@ if (!process.env.TEST) {
     })
 
     pythonProcess.on('error', (err) => {
-      console.error('Error starting Python Ruuvi script:', err)
+      console.error(
+        new Date().toLocaleString(),
+        'Error starting Python Ruuvi script:',
+        err
+      )
     })
 
     pythonProcess.stdin.end()
@@ -128,9 +140,12 @@ if (!process.env.TEST) {
     pythonProcess.stderr.end()
   }
 
-  console.log('Wait 3sec before the first Ruuvi script run')
+  console.log(
+    new Date().toLocaleString(),
+    'Wait 3sec before the first Ruuvi script run'
+  )
   setTimeout(() => {
-    console.log('Call Ruuvi script')
+    console.log(new Date().toLocaleString(), 'Call Ruuvi script')
     runRuuviScript()
   }, 3000)
 } else {
