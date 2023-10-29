@@ -91,7 +91,7 @@ if (!process.env.TEST) {
   // eslint-disable-next-line no-inner-declarations
   function runRuuviScript() {
     const pythonProcess = spawn('python3', args)
-    const timeoutInSec = 75000
+    const timeoutInSec = 95000
 
     const timeoutId = setTimeout(() => {
       console.log(
