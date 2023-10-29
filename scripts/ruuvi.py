@@ -30,7 +30,7 @@ else:
     print(f'{current_datetime} - No MAC addresses provided.')
 
 # This should be enough that we find at least one result for each
-timeout_in_sec = 60
+timeout_in_sec = 70
 
 url = "http://localhost:3001/api/ruuvi"
 
