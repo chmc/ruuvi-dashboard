@@ -1,6 +1,6 @@
 # ruuvi-dashboard
 
-Collect RuuviTag info, React app and Raspberry pi
+Collect RuuviTag info, run system on Raspberry Pi and visualize using React app
 
 Inspired of this article  
 https://teuvovaisanen.fi/2019/09/09/ruuvitag-raspberry-pi-ja-telegram-bot/
@@ -11,31 +11,41 @@ https://github.com/ttu/ruuvitag-sensor/blob/master/install_guide_pi.md
 Example how to run React web app on Raspberry Pi and start it when machine starts  
 https://blog.cloudboost.io/how-to-run-a-nodejs-web-server-on-a-raspberry-pi-for-development-3ef9ac0fc02c
 
-Example to connect React and Express backend
+Example to connect React and Express backend  
 https://blog.logrocket.com/running-react-express-concurrently/
 
-Ruuvi
+Note to my self: Ruuvi
 
 - High battery level: 3193
 - Low battery level: 1897
 
 # Roadmap
 
-- Add tests to code
-- Refactor code
+#### Codebase
+
+- Add tests to code `(in progress)`
+- System wide JSDoc typing `(in progress)`
+- Refactor code `(in progress)`
+- Apply web socket instead of API polling
+
+#### UX
+
 - Refine and polish overall UI, add more icons etc
 - Visualize current hour energy price
 - Today hourly weather forecast
 - Outdoor temperature trend, rise/lower/stay same
-- pm2 logs to daily instead of one big, delete old files
-- Automate deployment using script
 - System monitor: Raspberry pi temp (safe under +70c), memory %, cpu %
-- Ruuvi battery level indicator
 - Integrate with Philips Hue
-- PWA support
+- Ruuvi battery level indicator
 - Mobile friendly UI, now it works best on pad size
 
-# Steps
+#### System
+
+- pm2 logs to daily instead of one big, delete old files
+- Automate deployment using script
+- PWA support
+
+# Steps to install and run app
 
 ### Enable Raspberry Pi remote access
 
@@ -85,6 +95,171 @@ Get raspberry pi temperature
 $ vcgencmd measure_temp
 --> temp=60.7'C
 ```
+
+### Clone React app repo to Raspberry Pi
+
+Clone repository
+
+```
+$ git clone https://github.com/chmc/ruuvi-dashboard.git
+```
+
+Go to root folder of app and execute following commands in that path
+
+```
+$ cd ./ruuvi-dashboard
+```
+
+Run ruuvitag_sensor to find all sensors and their MACs
+
+```
+$ python3 -m ruuvitag_sensor -f
+```
+
+Set configurations `.env`
+
+```
+$ cp .env.template .env
+$ nano .env
+```
+
+Install dependencies
+
+```
+$ npm install
+```
+
+Start app (frontend and backend)
+
+```
+$ npm start
+```
+
+You can now browse app with browser on localhost or by accessing local network IP
+
+### To automatically run app on Raspberry Pi
+
+Install pm2
+
+```
+$ sudo npm install pm2 -g
+```
+
+Set pm2 configurations `pm2.config.js`
+
+```
+$ cp pm2.config.js.template pm2.config.js
+$ nano pm2.config.js
+```
+
+Run the following command in your project directory to start your app with pm2:
+
+```
+$ pm2 start pm2.config.js
+```
+
+To grant execute permission to the directory, run:
+
+```
+chmod +x /home/your-name/repos/ruuvi-dashboard
+```
+
+To grant execute permission to the pm2.config.js file, run:
+
+```
+chmod +x /home/your-name/repos/ruuvi-dashboard/pm2.config.js
+```
+
+Create a systemd service unit file to manage the pm2 process
+
+```
+$ sudo nano /etc/systemd/system/ruuvi-dashboard.service
+```
+
+Paste the following content into the file, adjusting the ExecStart and WorkingDirectory to match your project:
+
+```
+[Unit]
+Description=ruuvi-dashboard
+
+[Service]
+Type=simple
+WorkingDirectory=/repos/ruuvi-dashboard
+ExecStart=/usr/local/bin/pm2 start /home/[user-name]/repos/ruuvi-dashboard/pm2.config.js
+ExecReload=/usr/local/bin/pm2 reload /home/[user-name]/repos/ruuvi-dashboard/pm2.config.js
+ExecStop=/usr/local/bin/pm2 stop /home/[user-name]/repos/ruuvi-dashboard/pm2.config.js
+User=your-username
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Run the following commands to enable and start new systemd service:
+
+```
+$ sudo systemctl enable ruuvi-dashboard
+$ sudo systemctl start ruuvi-dashboard
+```
+
+Check if service is running by using the following command:
+
+```
+$ systemctl status ruuvi-dashboard
+```
+
+`Note!` If automatic start doesn't work, you can start it manually
+
+```
+$ /home/your-name/repos/ruuvionpi/start.sh
+```
+
+To watch live logs use command
+
+```
+$ pm2 logs
+```
+
+To check monitor status incl. logs, memory/cpu usage etc use command
+
+```
+$ pm2 monit
+```
+
+To find jammed processes
+
+```
+$ ps aux | grep 'D'
+```
+
+If the ruuvi.py script gets stuck, use this command to kill them
+
+```
+$ pkill -f "python3 ./scripts/ruuvi.py"
+```
+
+### Troubleshooting
+
+If you get this error
+
+```
+Python Ruuvi script ERROR: Can't init device hci0: Connection timed out (110)
+```
+
+Try to resolve that error by resetting BLE
+
+```
+$ sudo hciconfig hci0 reset
+```
+
+If resetting BLE does not work Try running ruuvitag_sensor script
+
+```
+$ python3 -m ruuvitag_sensor -f
+```
+
+If none of these helps to enable bluetooth, `reboot raspberry pi` and try again
+
+## How the app (frontend and backend) was created
 
 ### Create react app
 
@@ -154,153 +329,3 @@ Update `package.json`
     "start": "concurrently \"npm run start:frontend\" \"npm run start:backend\""
 }
 ```
-
-### Clone React app repo to Raspberry Pi
-
-Clone repository
-
-```
-$ git clone https://github.com/chmc/ruuvionpi.git
-```
-
-Go to root folder of app and execute following commands in that path
-
-```
-$ cd ./ruuvionpi
-```
-
-Run ruuvitag_sensor to find all sensors and their MACs
-
-```
-$ python3 -m ruuvitag_sensor -f
-```
-
-Set configurations `.env`
-
-```
-$ cp .env.template .env
-$ nano .env
-```
-
-Install dependencies
-
-```
-$ npm install
-```
-
-Start app (frontend and backend)
-
-```
-$ npm start
-```
-
-You can now browse app with browser on localhost or by accessing local network IP
-
-### To automatically run app on Raspberry Pi
-
-Install pm2
-
-```
-$ sudo npm install pm2 -g
-```
-
-Run the following command in your project directory to start your app with pm2:
-
-```
-$ pm2 start pm2.config.js
-```
-
-To grant execute permission to the directory, run:
-
-```
-chmod +x /home/your-name/repos/ruuvionpi
-```
-
-To grant execute permission to the pm2.config.js file, run:
-
-```
-chmod +x /home/your-name/repos/ruuvionpi/pm2.config.js
-```
-
-Create a systemd service unit file to manage the pm2 process
-
-```
-$ sudo nano /etc/systemd/system/ruuvi-dashboard.service
-```
-
-Paste the following content into the file, adjusting the ExecStart and WorkingDirectory to match your project:
-
-```
-[Unit]
-Description=ruuvi-dashboard
-
-[Service]
-Type=simple
-WorkingDirectory=/repos/ruuvionpi
-ExecStart=/usr/local/bin/pm2 start /home/[user-name]/repos/ruuvionpi/pm2.config.js
-ExecReload=/usr/local/bin/pm2 reload /home/[user-name]/repos/ruuvionpi/pm2.config.js
-ExecStop=/usr/local/bin/pm2 stop /home/[user-name]/repos/ruuvionpi/pm2.config.js
-User=your-username
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Run the following commands to enable and start new systemd service:
-
-```
-$ sudo systemctl enable ruuvi-dashboard
-$ sudo systemctl start ruuvi-dashboard
-```
-
-Check if service is running by using the following command:
-
-```
-$ systemctl status ruuvi-dashboard
-```
-
-If automatic start doesn't work, you can start it manually
-
-```
-$ /home/your-name/repos/ruuvionpi/start.sh
-```
-
-To watch live logs use command
-
-```
-$ pm2 logs
-```
-
-To find jammed processes
-
-```
-$ ps aux | grep 'D'
-```
-
-If the ruuvi.py script gets stuck, use this command to kill them
-
-```
-$ pkill -f "python3 ./scripts/ruuvi.py"
-```
-
-### Troubleshooting
-
-If you get this error
-
-```
-Python Ruuvi script ERROR: Can't init device hci0: Connection timed out (110)
-```
-
-Try to resolve that error by resetting BLE
-
-```
-$ sudo hciconfig hci0 reset
-```
-
-If resetting BLE does not work Try running ruuvitag_sensor script
-
-```
-$ python3 -m ruuvitag_sensor -f
-```
-
-If none of these helps to enable bluetooth, reboot raspberry pi and try again
