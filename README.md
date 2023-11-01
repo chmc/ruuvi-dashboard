@@ -1,6 +1,18 @@
 # ruuvi-dashboard
 
-Collect RuuviTag info, run system on Raspberry Pi and visualize using React app
+Collect RuuviTag data, run system on Raspberry Pi and visualize using React app.  
+App integrates to other services like weather forecast.  
+Key points:
+
+- Collect RuuviTag data
+- Daily min/max outdoor weather
+- Weather forecast
+- Sunrise / sunset
+- Energy prices today and tomorrow
+- Beautiful layout
+- No database requirement
+
+![Ruuvi dashboard UI](assets/ruuvi-dashboard.png)
 
 Inspired of this article  
 https://teuvovaisanen.fi/2019/09/09/ruuvitag-raspberry-pi-ja-telegram-bot/
