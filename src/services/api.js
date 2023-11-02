@@ -32,9 +32,9 @@ const fetchWeatherData = async () => {
   )
 
   const officeHours = allWeathers.filter(
-    (item) => item.time > 6 && item.time < 19
+    (item) => item.time > 6 && item.time < 21
   )
-  const hourlyForecast = officeHours.slice(0, 4)
+  const hourlyForecast = officeHours.slice(0, 5)
 
   /** @type {WeatherForecast} */
   const forecast = {

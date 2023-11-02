@@ -9,16 +9,16 @@ import Chip from '@mui/material/Chip'
 import formatters from '../utils/formatters'
 
 /**
- * @typedef   WeatherForecastCard
+ * @typedef   HourlyWeatherForecastCard
  * @type      {Object}
- * @property  {Weather[]} dailyWeatherList
+ * @property  {Weather[]} weatherList
  */
 
 /**
- * @param {WeatherForecastCard} props
+ * @param {HourlyWeatherForecastCard} props
  */
-const WeatherForecastCard = ({ dailyWeatherList }) => {
-  if (!dailyWeatherList) {
+const HourlyWeatherForecastCard = ({ weatherList }) => {
+  if (!weatherList) {
     return null
   }
 
@@ -26,33 +26,33 @@ const WeatherForecastCard = ({ dailyWeatherList }) => {
     <Grid item xs={6}>
       <Card>
         <CardContent>
-          {dailyWeatherList.map((dailyWeather) => (
+          {weatherList.map((weather) => (
             <Box
               component="div"
               ml={0.8}
               mr={0.8}
               sx={{ display: 'inline-block' }}
-              key={dailyWeather.weekDay}
+              key={weather.weekDay + weather.time}
             >
               <Box display="flex" justifyContent="center" mb={-2.4}>
-                {dailyWeather.weekDay}
+                {weather.weekDay}: {weather.time}
               </Box>
               <Box display="flex" justifyContent="center">
-                <img src={dailyWeather.iconUrl} width={90} />
+                <img src={weather.iconUrl} width={90} />
               </Box>
               <Box display="flex" justifyContent="center" mt={-1}>
                 <Box mr={1}>
                   <Chip
                     size="small"
                     icon={<ThermostatIcon fontSize="small" color="primary" />}
-                    label={formatters.toTemperatureRoundUpUI(dailyWeather.temp)}
+                    label={formatters.toTemperatureRoundUpUI(weather.temp)}
                   />
                 </Box>
                 <Box>
                   <Chip
                     size="small"
                     icon={<AirIcon fontSize="small" color="primary" />}
-                    label={formatters.toTemperatureRoundUpUI(dailyWeather.wind)}
+                    label={formatters.toTemperatureRoundUpUI(weather.wind)}
                   />
                 </Box>
               </Box>
@@ -64,4 +64,4 @@ const WeatherForecastCard = ({ dailyWeatherList }) => {
   )
 }
 
-export default WeatherForecastCard
+export default HourlyWeatherForecastCard

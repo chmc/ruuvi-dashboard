@@ -61,6 +61,12 @@ const toShortTimeUI = (date) =>
   `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`
 
 /**
+ * @param {number}    hour
+ * @returns {string}  In format H:00
+ */
+const toSharpTimeUI = (hour) => `${hour}:00`
+
+/**
  * @param {number} wind
  * @returns {string}
  */
@@ -96,6 +102,7 @@ const uiFormatter = {
   toDayOfWeekUI,
   toWindUI,
   toShortTimeUI,
+  toSharpTimeUI,
   toLocalDate,
   toLocalTime,
 }
