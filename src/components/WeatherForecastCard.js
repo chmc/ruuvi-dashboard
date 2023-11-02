@@ -8,6 +8,15 @@ import AirIcon from '@mui/icons-material/Air'
 import Chip from '@mui/material/Chip'
 import formatters from '../utils/formatters'
 
+/**
+ * @typedef   WeatherForecastCard
+ * @type      {Object}
+ * @property  {Weather[]} dailyWeatherList
+ */
+
+/**
+ * @param {WeatherForecastCard} props
+ */
 const WeatherForecastCard = ({ dailyWeatherList }) => {
   if (!dailyWeatherList) {
     return null

@@ -6,21 +6,44 @@ const fetchRuuviData = async () => {
   return response.json()
 }
 
+/**
+ * @returns {WeatherForecast}
+ */
 const fetchWeatherData = async () => {
   const response = await fetch(
     `https://api.openweathermap.org/data/2.5/forecast?lat=60.1695&lon=24.9355&units=metric&appid=${configs.openweatherApiKey}`
   )
+  /** @type {WeatherData} */
   const json = await response.json()
-  const weather = json.list
-    .filter((item) => item.dt_txt.includes('12:00:00'))
-    .map((daily) => ({
-      date: daily.dt_txt,
-      weekDay: formatters.toDayOfWeekUI(daily.dt_txt),
-      temp: daily.main.temp,
-      wind: daily.wind.speed,
-      iconUrl: `https://openweathermap.org/img/wn/${daily.weather[0].icon}@2x.png`,
-    }))
-  return weather
+
+  /** @type {Weather[]} */
+  const allWeathers = json.list.map((daily) => ({
+    dateTimeUtcTxt: daily.dt_txt,
+    dateTxt: formatters.toLocalDate(daily.dt),
+    time: formatters.toLocalTime(daily.dt),
+    weekDay: formatters.toDayOfWeekUI(daily.dt_txt),
+    temp: daily.main.temp,
+    wind: daily.wind.speed,
+    iconUrl: `https://openweathermap.org/img/wn/${daily.weather[0].icon}@2x.png`,
+  }))
+
+  const dailyForecast = allWeathers.filter(
+    (item) => item.time > 10 && item.time < 13
+  )
+
+  const officeHours = allWeathers.filter(
+    (item) => item.time > 6 && item.time < 19
+  )
+  const hourlyForecast = officeHours.slice(0, 4)
+
+  /** @type {WeatherForecast} */
+  const forecast = {
+    dailyForecast,
+    hourlyForecast,
+  }
+  console.log(forecast)
+
+  return forecast
 }
 
 const fetchEnergyPrices = async () => {

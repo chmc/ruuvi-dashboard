@@ -62,3 +62,20 @@
  * @property {number} minTemperature
  * @property {number} maxTemperature
  */
+
+/**
+ * @typedef {Object} WeatherForecast
+ * @property {Weather[]} hourlyForecast
+ * @property {Weather[]} dailyForecast
+ */
+
+/**
+ * @typedef {Object} Weather
+ * @property {string} dateTimeUtcTxt    Date and time in UTC
+ * @property {string} dateTxt           YYYY/MM/DD
+ * @property {number} time              Hour part of local time
+ * @property {string} weekDay           Finnish weekday name NN
+ * @property {number} temp
+ * @property {number} wind
+ * @property {string} iconUrl
+ */

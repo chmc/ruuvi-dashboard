@@ -9,8 +9,15 @@ import EnergyPricesCard from './components/EnergyPricesCard'
 import configs from './configs'
 import apiService from './services/api'
 
+/**
+ * @typedef {WeatherData[] | null} DailyWeatherList
+ * @typedef {function(WeatherData[]): void} SetDailyWeatherList
+ */
+
 const App = () => {
   const [ruuviDatas, setRuuviDatas] = useState(null)
+
+  /** @type {[DailyWeatherList, SetDailyWeatherList]} */
   const [dailyWeatherList, setDailyWeatherList] = useState(null)
   const [todayEnergyPrices, setTodayEnergyPrices] = useState(null)
   const [tomorrowEnergyPrices, setTomorrowEnergyPrices] = useState(null)
@@ -29,7 +36,8 @@ const App = () => {
 
     const fetchWeatherData = async () => {
       try {
-        setDailyWeatherList(await apiService.fetchWeatherData())
+        const weatherForecast = await apiService.fetchWeatherData()
+        setDailyWeatherList(weatherForecast.dailyForecast)
       } catch (error) {
         console.log('fetchWeatherData ERROR: ', error)
       }
