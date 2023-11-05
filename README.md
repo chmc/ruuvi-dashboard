@@ -149,6 +149,12 @@ $ npm start
 
 You can now browse app with browser on localhost or by accessing local network IP
 
+Give write permissions to appStorage.json file
+
+```
+$ sudo chmod +w server/appStorage.json
+```
+
 ### To automatically run app on Raspberry Pi
 
 Install pm2
