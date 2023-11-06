@@ -6,6 +6,7 @@ module.exports = {
       args: 'start',
       cwd: '/home/your-name/repos/ruuvi-dashboard/',
       watch: true, // (optional)
+      ignore_watch: ['server/appStorage.json'],  
     },
   ],
 }
