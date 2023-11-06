@@ -44,6 +44,7 @@ const WeatherForecastCard = ({ dailyWeatherList }) => {
                 <Box mr={1}>
                   <Chip
                     size="small"
+                    sx={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
                     icon={<ThermostatIcon fontSize="small" color="primary" />}
                     label={formatters.toTemperatureRoundUpUI(dailyWeather.temp)}
                   />
@@ -51,6 +52,7 @@ const WeatherForecastCard = ({ dailyWeatherList }) => {
                 <Box>
                   <Chip
                     size="small"
+                    sx={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
                     icon={<AirIcon fontSize="small" color="primary" />}
                     label={formatters.toTemperatureRoundUpUI(dailyWeather.wind)}
                   />

@@ -84,7 +84,7 @@ const InOutCard = ({ ruuviDatas, todayMinMaxTemperature, sunrise, sunset }) => {
                     p={0.75}
                     pr={1.25}
                     display="flex"
-                    bgcolor="rgba(255, 255, 255, 0.16)"
+                    bgcolor="rgba(255, 255, 255, 0.05)"
                     borderRadius={4}
                     fontSize="small"
                     alignItems="center"
@@ -99,7 +99,7 @@ const InOutCard = ({ ruuviDatas, todayMinMaxTemperature, sunrise, sunset }) => {
                     p={0.75}
                     pr={1.25}
                     display="flex"
-                    bgcolor="rgba(255, 255, 255, 0.16)"
+                    bgcolor="rgba(255, 255, 255, 0.05)"
                     borderRadius={4}
                     fontSize="small"
                     alignItems="center" // Use alignItems for vertical centering
