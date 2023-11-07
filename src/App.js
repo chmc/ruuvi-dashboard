@@ -11,19 +11,15 @@ import configs from './configs'
 import apiService from './services/api'
 
 /**
- * @typedef {WeatherData[] | null} DailyWeatherList
- * @typedef {function(WeatherData[]): void} SetDailyWeatherList
- * @typedef {WeatherData[] | null} HourlyForecast
- * @typedef {function(WeatherData[]): void} SetHourlyForecast
+ * @typedef {WeatherForecast | null} weatherForecast
+ * @typedef {function(WeatherData[]): void} setWeatherForecast
  */
 
 const App = () => {
   const [ruuviDatas, setRuuviDatas] = useState(null)
 
-  /** @type {[DailyWeatherList, SetDailyWeatherList]} */
-  const [dailyWeatherList, setDailyWeatherList] = useState(null)
-  /** @type {[HourlyForecast, SetHourlyForecast]} */
-  const [hourlyForecast, setHourlyForecast] = useState(null)
+  /** @type {[weatherForecast, setWeatherForecast]} */
+  const [weatherForecast, setWeatherForecast] = useState(null)
   const [todayEnergyPrices, setTodayEnergyPrices] = useState(null)
   const [tomorrowEnergyPrices, setTomorrowEnergyPrices] = useState(null)
   const [todayMinMaxTemperature, setTodayMinMaxTemperature] = useState(null)
@@ -42,8 +38,7 @@ const App = () => {
     const fetchWeatherData = async () => {
       try {
         const weatherForecast = await apiService.fetchWeatherData()
-        setDailyWeatherList(weatherForecast.dailyForecast)
-        setHourlyForecast(weatherForecast.hourlyForecast)
+        setWeatherForecast(weatherForecast)
       } catch (error) {
         console.log('fetchWeatherData ERROR: ', error)
       }
@@ -109,8 +104,7 @@ const App = () => {
               ruuviData={ruuviDatas[macItem.mac]}
             />
           ))}
-        <HourlyWeatherForecastCard weatherList={hourlyForecast} />
-        <WeatherForecastCard dailyWeatherList={dailyWeatherList} />
+        <WeatherForecastCard weatherForecast={weatherForecast} />
         <EnergyPricesCard
           title="Sähkön hinta tänään c/kWh"
           noPricesText="Odotellaan tämän päivän sähkön hintoja..."

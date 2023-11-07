@@ -27,14 +27,14 @@ const fetchWeatherData = async () => {
     iconUrl: `https://openweathermap.org/img/wn/${daily.weather[0].icon}@2x.png`,
   }))
 
-  const dailyForecast = allWeathers.filter(
-    (item) => item.time > 10 && item.time < 13
-  )
+  const dailyForecast = allWeathers
+    .filter((item) => item.time > 10 && item.time < 13)
+    .slice(1)
 
   const officeHours = allWeathers.filter(
-    (item) => item.time > 6 && item.time < 21
+    (item) => item.time > 6 && item.time < 20
   )
-  const hourlyForecast = officeHours.slice(0, 5)
+  const hourlyForecast = officeHours.slice(0, 4)
 
   /** @type {WeatherForecast} */
   const forecast = {
