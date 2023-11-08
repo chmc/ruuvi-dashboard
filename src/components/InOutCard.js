@@ -43,18 +43,23 @@ const InOutCard = ({ ruuviDatas, todayMinMaxTemperature, sunrise, sunset }) => {
                   <ThermostatIcon fontSize="small" color="primary" />
                 </Box>
               </Typography>
-              <Box mt={1}>
+              <Box display="flex" mt={0.5}>
                 <Box display="flex" alignItems="center">
                   <WbSunny fontSize="small" color="primary" />
                   <Typography variant="body1" color="text.secondary" ml={1}>
                     {uiFormatter.toShortTimeUI(sunrise)}
                   </Typography>
                 </Box>
-                <Box display="flex" alignItems="center" mb={-0.9}>
-                  <WbTwilight fontSize="small" color="primary" />
-                  <Typography variant="body1" color="text.secondary" ml={1}>
+                <Box display="flex" alignItems="center">
+                  <Typography
+                    variant="body1"
+                    color="text.secondary"
+                    ml={1}
+                    mr={1}
+                  >
                     {uiFormatter.toShortTimeUI(sunset)}
                   </Typography>
+                  <WbTwilight fontSize="small" color="primary" />
                 </Box>
               </Box>
             </CardContent>
@@ -74,12 +79,12 @@ const InOutCard = ({ ruuviDatas, todayMinMaxTemperature, sunrise, sunset }) => {
                 </Box>
               </Typography>
               {todayMinMaxTemperature && (
-                <Box display="flex" mt={2.1}>
+                <Box display="flex" mt={0.5} mb={-1}>
                   <Box
                     p={0.75}
                     pr={1.25}
                     display="flex"
-                    bgcolor="rgba(255, 255, 255, 0.16)"
+                    bgcolor="rgba(255, 255, 255, 0.05)"
                     borderRadius={4}
                     fontSize="small"
                     alignItems="center"
@@ -94,7 +99,7 @@ const InOutCard = ({ ruuviDatas, todayMinMaxTemperature, sunrise, sunset }) => {
                     p={0.75}
                     pr={1.25}
                     display="flex"
-                    bgcolor="rgba(255, 255, 255, 0.16)"
+                    bgcolor="rgba(255, 255, 255, 0.05)"
                     borderRadius={4}
                     fontSize="small"
                     alignItems="center" // Use alignItems for vertical centering

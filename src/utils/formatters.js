@@ -61,10 +61,38 @@ const toShortTimeUI = (date) =>
   `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`
 
 /**
+ * @param {number}    hour
+ * @returns {string}  In format H:00
+ */
+const toSharpTimeUI = (hour) => `${hour}:00`
+
+/**
  * @param {number} wind
  * @returns {string}
  */
 const toWindUI = (wind) => wind.toFixed(1)
+
+/**
+ * @param {number} unixDateTime
+ * @returns {string} Format YYYY/MM/DD
+ */
+const toLocalDate = (unixDateTime) => {
+  const date = new Date(unixDateTime * 1000)
+  return `${date.getFullYear()}/${date.getMonth() + 1}/${date
+    .getDate()
+    .toString()
+    .padStart(2, '0')}`
+}
+
+/**
+ *
+ * @param {number} unixDateTime
+ * @returns {number}
+ */
+const toLocalTime = (unixDateTime) => {
+  const date = new Date(unixDateTime * 1000)
+  return date.getHours()
+}
 
 const uiFormatter = {
   toTemperatureUI,
@@ -74,6 +102,9 @@ const uiFormatter = {
   toDayOfWeekUI,
   toWindUI,
   toShortTimeUI,
+  toSharpTimeUI,
+  toLocalDate,
+  toLocalTime,
 }
 
 export default uiFormatter

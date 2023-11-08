@@ -6,12 +6,23 @@ import RuuviCard from './components/RuuviCard'
 import InOutCard from './components/InOutCard'
 import WeatherForecastCard from './components/WeatherForecastCard'
 import EnergyPricesCard from './components/EnergyPricesCard'
+import CurrentEnergyPriceCard from './components/CurrentEnergyPriceCard'
 import configs from './configs'
 import apiService from './services/api'
 
+/**
+ * @typedef {WeatherForecast | null} weatherForecast
+ * @typedef {function(WeatherForecast): void} setWeatherForecast
+ * @typedef {EnergyPrice[] | null} todayEnergyPrices
+ * @typedef {function(energyPrice[]): void} setTodayEnergyPrices
+ */
+
 const App = () => {
   const [ruuviDatas, setRuuviDatas] = useState(null)
-  const [dailyWeatherList, setDailyWeatherList] = useState(null)
+
+  /** @type {[weatherForecast, setWeatherForecast]} */
+  const [weatherForecast, setWeatherForecast] = useState(null)
+  /** @type {[todayEnergyPrices, setTodayEnergyPrices]} */
   const [todayEnergyPrices, setTodayEnergyPrices] = useState(null)
   const [tomorrowEnergyPrices, setTomorrowEnergyPrices] = useState(null)
   const [todayMinMaxTemperature, setTodayMinMaxTemperature] = useState(null)
@@ -29,7 +40,8 @@ const App = () => {
 
     const fetchWeatherData = async () => {
       try {
-        setDailyWeatherList(await apiService.fetchWeatherData())
+        const weatherForecast = await apiService.fetchWeatherData()
+        setWeatherForecast(weatherForecast)
       } catch (error) {
         console.log('fetchWeatherData ERROR: ', error)
       }
@@ -47,7 +59,7 @@ const App = () => {
 
     const fetchMinMaxTemperatures = async () => {
       try {
-        setTodayMinMaxTemperature(await apiService.fetchMinMaxTemperatures)
+        setTodayMinMaxTemperature(await apiService.fetchMinMaxTemperatures())
       } catch (error) {
         console.log('fetMinMaxTemperatures ERROR: ', error)
       }
@@ -81,6 +93,12 @@ const App = () => {
   return (
     <Box m={2}>
       <Grid container spacing={2}>
+        <InOutCard
+          ruuviDatas={ruuviDatas}
+          todayMinMaxTemperature={todayMinMaxTemperature}
+          sunrise={sunrise}
+          sunset={sunset}
+        />
         {ruuviDatas &&
           configs.ruuviTags.map((macItem) => (
             <RuuviCard
@@ -89,13 +107,8 @@ const App = () => {
               ruuviData={ruuviDatas[macItem.mac]}
             />
           ))}
-        <InOutCard
-          ruuviDatas={ruuviDatas}
-          todayMinMaxTemperature={todayMinMaxTemperature}
-          sunrise={sunrise}
-          sunset={sunset}
-        />
-        <WeatherForecastCard dailyWeatherList={dailyWeatherList} />
+        <CurrentEnergyPriceCard energyPrices={todayEnergyPrices} />
+        <WeatherForecastCard weatherForecast={weatherForecast} />
         <EnergyPricesCard
           title="Sähkön hinta tänään c/kWh"
           noPricesText="Odotellaan tämän päivän sähkön hintoja..."
