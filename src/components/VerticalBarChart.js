@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define */
 import React from 'react'
 import {
   Chart as ChartJS,
@@ -64,10 +65,11 @@ const VerticalBarChart = ({ title, dataset, labels, fullData }) => {
   /**
    * @param {number} price
    * @param {number} index
+   * @param {Date} today
    * @returns {string}
    */
-  const getBackgroundColor = (price, index) => {
-    if (fullData[index].date < today) {
+  const getBackgroundColor = (price, index, today) => {
+    if (isEnergyPricePastTime(index, today)) {
       return 'gray'
     }
     return energyPriceColorUtils.getByPrice(
@@ -76,13 +78,25 @@ const VerticalBarChart = ({ title, dataset, labels, fullData }) => {
     )
   }
 
+  /**
+   * @param {number} index
+   * @param {Date} today
+   * @returns {string}
+   */
+  const isEnergyPricePastTime = (index, today) => {
+    if (fullData[index].date < today) {
+      return true
+    }
+    return false
+  }
+
   const data2 = {
     labels,
     datasets: [
       {
         data: dataset,
         backgroundColor: dataset.map((value, index) =>
-          getBackgroundColor(value, index)
+          getBackgroundColor(value, index, today)
         ),
       },
     ],
