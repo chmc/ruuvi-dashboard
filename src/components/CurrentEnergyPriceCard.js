@@ -3,7 +3,6 @@ import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
-import uiFormatter from '../utils/formatters'
 
 /**
  * @typedef   CurrentEnergyPrice
@@ -15,9 +14,7 @@ import uiFormatter from '../utils/formatters'
  * @param {CurrentEnergyPrice} props
  */
 const CurrentEnergyPrice = ({ energyPrices }) => {
-  // console.log('current energy price', energyPrices)
   if (!energyPrices) {
-    // console.log('return null')
     return null
   }
 
