@@ -3,6 +3,8 @@ import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
+import { useTheme } from '@mui/material/styles'
+import energyPriceColorUtils from '../utils/energyPriceColor'
 
 /**
  * @typedef   CurrentEnergyPrice
@@ -14,6 +16,8 @@ import Box from '@mui/material/Box'
  * @param {CurrentEnergyPrice} props
  */
 const CurrentEnergyPrice = ({ energyPrices }) => {
+  const theme = useTheme()
+
   if (!energyPrices) {
     return null
   }
@@ -27,13 +31,17 @@ const CurrentEnergyPrice = ({ energyPrices }) => {
   const nextPrice = energyPrices.find(
     (energyPrice) => energyPrice.hour === hourNext
   )
+  const currentPriceColor = energyPriceColorUtils.getByPrice(
+    currentPrice.price,
+    theme.palette.energyPriceColors
+  )
 
   return (
     <Grid item xs={2}>
       <Card>
         <CardContent>
           <Box display="flex" justifyContent="center">
-            <Typography variant="h4" component="div">
+            <Typography variant="h4" component="div" color={currentPriceColor}>
               {currentPrice.price}
             </Typography>
           </Box>
