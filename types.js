@@ -79,3 +79,18 @@
  * @property {number} wind
  * @property {string} iconUrl
  */
+
+/**
+ * @typedef {Object} EnergyPriceColorSet
+ * @property {EnergyColorDefinition} color1
+ * @property {EnergyColorDefinition} color2
+ * @property {EnergyColorDefinition} color3
+ * @property {EnergyColorDefinition} color4
+ * @property {EnergyColorDefinition} color5
+ * @property {EnergyColorDefinition} color6
+ */
+
+/**
+ * @typedef {Object} EnergyColorDefinition
+ * @property {string} main
+ */

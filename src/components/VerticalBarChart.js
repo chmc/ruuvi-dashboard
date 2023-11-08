@@ -10,9 +10,13 @@ import {
 } from 'chart.js'
 import { Bar } from 'react-chartjs-2'
 import ChartDataLabels from 'chartjs-plugin-datalabels'
+import { useTheme } from '@mui/material/styles'
+import energyPriceColorUtils from '../utils/energyPriceColor'
 
 // https://www.chartjs.org/docs/latest/charts/bar.html
 const VerticalBarChart = ({ title, dataset, labels, fullData }) => {
+  const theme = useTheme()
+
   ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -57,32 +61,19 @@ const VerticalBarChart = ({ title, dataset, labels, fullData }) => {
   const today = new Date()
   today.setHours(today.getHours() - 1)
 
-  const getBackgroundColor = (value, index) => {
+  /**
+   * @param {number} price
+   * @param {number} index
+   * @returns {string}
+   */
+  const getBackgroundColor = (price, index) => {
     if (fullData[index].date < today) {
       return 'gray'
     }
-    if (value <= 5) {
-      // Green
-      return 'rgba(0, 204, 136, 0.5)'
-    }
-    if (value > 5 && value <= 8) {
-      // A lighter green transitioning to yellow
-      return 'rgba(158, 229, 112, 0.5)'
-    }
-    if (value > 8 && value <= 13) {
-      // Yellow
-      return 'rgba(255, 221, 51, 0.5)'
-    }
-    if (value > 13 && value <= 20) {
-      // A lighter yellow transitioning to red
-      return 'rgba(255, 98, 98, 0.8)'
-    }
-    if (value > 20 && value <= 25) {
-      // Dark Red
-      return 'rgba(255, 30, 30, 0.7)'
-    }
-    // Dark Red solid
-    return 'rgba(255, 30, 30, 1)'
+    return energyPriceColorUtils.getByPrice(
+      price,
+      theme.palette.energyPriceColors
+    )
   }
 
   const data2 = {
