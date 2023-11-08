@@ -5,14 +5,16 @@ import { getSunrise, getSunset } from 'sunrise-sunset-js'
 import RuuviCard from './components/RuuviCard'
 import InOutCard from './components/InOutCard'
 import WeatherForecastCard from './components/WeatherForecastCard'
-import HourlyWeatherForecastCard from './components/HourlyWeatherForecastCard'
 import EnergyPricesCard from './components/EnergyPricesCard'
+import CurrentEnergyPriceCard from './components/CurrentEnergyPriceCard'
 import configs from './configs'
 import apiService from './services/api'
 
 /**
  * @typedef {WeatherForecast | null} weatherForecast
- * @typedef {function(WeatherData[]): void} setWeatherForecast
+ * @typedef {function(WeatherForecast): void} setWeatherForecast
+ * @typedef {EnergyPrice[] | null} todayEnergyPrices
+ * @typedef {function(energyPrice[]): void} setTodayEnergyPrices
  */
 
 const App = () => {
@@ -20,6 +22,7 @@ const App = () => {
 
   /** @type {[weatherForecast, setWeatherForecast]} */
   const [weatherForecast, setWeatherForecast] = useState(null)
+  /** @type {[todayEnergyPrices, setTodayEnergyPrices]} */
   const [todayEnergyPrices, setTodayEnergyPrices] = useState(null)
   const [tomorrowEnergyPrices, setTomorrowEnergyPrices] = useState(null)
   const [todayMinMaxTemperature, setTodayMinMaxTemperature] = useState(null)
@@ -104,6 +107,7 @@ const App = () => {
               ruuviData={ruuviDatas[macItem.mac]}
             />
           ))}
+        <CurrentEnergyPriceCard energyPrices={todayEnergyPrices} />
         <WeatherForecastCard weatherForecast={weatherForecast} />
         <EnergyPricesCard
           title="Sähkön hinta tänään c/kWh"
