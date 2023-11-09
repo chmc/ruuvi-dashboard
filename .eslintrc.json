@@ -1,90 +1,88 @@
 {
-    "env": {
-      "node": true,
-      "es2021": true,
-      "jest/globals": true
+  "env": {
+    "node": true,
+    "es2021": true,
+    "jest/globals": true
+  },
+  "extends": ["plugin:react/recommended", "airbnb", "airbnb/hooks", "prettier"],
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
     },
-    "extends": ["plugin:react/recommended", "airbnb", "airbnb/hooks", "prettier"],
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-      "ecmaFeatures": {
-        "jsx": true
-      },
-      "ecmaVersion": "latest",
-      "sourceType": "module"
-    },
-    "plugins": ["react", "@typescript-eslint", "prettier", "jest"],
-    "rules": {
-      "prettier/prettier": [
-        "error",
-        {
-          "endOfLine": "auto"
-        }
-      ],
-      "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": "error",
-      "react/jsx-filename-extension": [
-        1,
-        {
-          "extensions": [".js", ".jsx"]
-        }
-      ],
-      "import/extensions": [
-        "error",
-        "ignorePackages",
-        {
-          "js": "never",
-          "jsx": "never"
-        }
-      ],
-      "import/no-extraneous-dependencies": [
-        "error",
-        {
-          "devDependencies": true
-        }
-      ],
-      "no-plusplus": 0,
-      "no-console": "warn",
-      "react/react-in-jsx-scope": "off",
-      "react/require-default-props": "off",
-      "no-param-reassign": [
-        "error",
-        {
-          "props": true,
-          "ignorePropertyModificationsFor": ["state"]
-        }
-      ],
-      "react/function-component-definition": [
-        "error",
-        {
-          "namedComponents": "arrow-function"
-        }
-      ],
-      "no-unused-vars": "off",
-      "no-shadow": "off",
-      "react/prop-types": "off"
-    },
-    "overrides": [
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "plugins": ["react", "prettier", "jest"],
+  "rules": {
+    "prettier/prettier": [
+      "error",
       {
-        "files": ["*.ts", "*.tsx"],
-        "rules": {
-          "no-undef": "off"
-        }
+        "endOfLine": "auto"
       }
     ],
-    "settings": {
-      "import/resolver": {
-        "node": {
-          "extensions": [".js", ".jsx", ".ts", ".tsx"]
-        },
-        "alias": {
-          "map": [
-            ["@", "./src"],
-            ["@test", "./test"]
-          ],
-          "extensions": [".js", ".jsx", ".ts", ".tsx"]
-        }
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "error",
+    "react/jsx-filename-extension": [
+      1,
+      {
+        "extensions": [".js", ".jsx"]
+      }
+    ],
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        "js": "never",
+        "jsx": "never"
+      }
+    ],
+    "import/no-extraneous-dependencies": [
+      "error",
+      {
+        "devDependencies": true
+      }
+    ],
+    "no-plusplus": 0,
+    "no-console": "warn",
+    "react/react-in-jsx-scope": "off",
+    "react/require-default-props": "off",
+    "no-param-reassign": [
+      "error",
+      {
+        "props": true,
+        "ignorePropertyModificationsFor": ["state"]
+      }
+    ],
+    "react/function-component-definition": [
+      "error",
+      {
+        "namedComponents": "arrow-function"
+      }
+    ],
+    "no-unused-vars": "off",
+    "no-shadow": "off",
+    "react/prop-types": "off"
+  },
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {
+        // Remove TypeScript-specific rules
+      }
+    }
+  ],
+  "settings": {
+    "import/resolver": {
+      "node": {
+        "extensions": [".js", ".jsx"]
+      },
+      "alias": {
+        "map": [
+          ["@", "./src"],
+          ["@test", "./test"]
+        ],
+        "extensions": [".js", ".jsx"]
       }
     }
   }
-  
+}
