@@ -33,6 +33,7 @@ app.post('/api/ruuvi', (req, res) => {
   try {
     const sensorDataCollection = sensorService.getSensorData(
       req.body,
+      cache.get(cacheKeys.ruuvi),
       getConfigMacIds()
     )
     cache.set(cacheKeys.ruuvi, sensorDataCollection)
