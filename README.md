@@ -285,6 +285,33 @@ $ python3 -m ruuvitag_sensor -f
 
 If none of these helps to enable bluetooth, `reboot raspberry pi` and try again
 
+If you encounter problems to run `npm install`, try increasing swap file size. Modify the /etc/dphys-swapfile configuration file. Open the file and change the CONF_SWAPSIZE parameter to increase the swap space.  
+Find configuration
+
+```
+CONF_SWAPSIZE=100
+```
+
+Increase it to
+
+```
+CONF_SWAPSIZE=2048
+```
+
+After making changes, restart the swap service
+
+```
+sudo /etc/init.d/dphys-swapfile stop
+sudo /etc/init.d/dphys-swapfile start
+```
+
+If running `npm install` doesn't work, try using yarn
+
+```
+npm install -g yarn
+yarn install --max-old-space-size=4096
+```
+
 ## How the app (frontend and backend) was created
 
 ### Create react app
