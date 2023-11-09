@@ -24,7 +24,9 @@ const CurrentEnergyPrice = ({ energyPrices }) => {
 
   const today = new Date()
   const hourNow = today.getHours()
-  const hourNext = today.getHours() + 1
+  console.log('hourNow', hourNow)
+  const hourNext = today.getHours() + 1 === 24 ? 0 : today.getHours() + 1
+  console.log('hour next', hourNext)
   const currentPrice = energyPrices.find(
     (energyPrice) => energyPrice.hour === hourNow
   )
@@ -52,7 +54,7 @@ const CurrentEnergyPrice = ({ energyPrices }) => {
           </Box>
           <Box display="flex" justifyContent="center" mt={2.8}>
             <Typography variant="p" component="div">
-              Next: {nextPrice.price} c/kWh
+              {hourNext}.00: {nextPrice.price} c/kWh
             </Typography>
           </Box>
         </CardContent>
