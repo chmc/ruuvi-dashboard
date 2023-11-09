@@ -186,13 +186,14 @@ $ pm2 start pm2.config.js
 To grant execute permission to the directory, run:
 
 ```
-chmod +x /home/your-name/repos/ruuvi-dashboard
+chmod +x /home/user-name/repos/ruuvi-dashboard
 ```
 
-To grant execute permission to the pm2.config.js file, run:
+To grant execute permission to the pm2.config.js and start.sh files, run:
 
 ```
-chmod +x /home/your-name/repos/ruuvi-dashboard/pm2.config.js
+chmod +x /home/user-name/repos/ruuvi-dashboard/pm2.config.js
+chmod +x /home/user-name/repos/ruuvi-dashboard/start.sh
 ```
 
 Create a systemd service unit file to manage the pm2 process
@@ -209,10 +210,10 @@ Description=ruuvi-dashboard
 
 [Service]
 Type=simple
-WorkingDirectory=/repos/ruuvi-dashboard
-ExecStart=/usr/local/bin/pm2 start /home/[user-name]/repos/ruuvi-dashboard/pm2.config.js
-ExecReload=/usr/local/bin/pm2 reload /home/[user-name]/repos/ruuvi-dashboard/pm2.config.js
-ExecStop=/usr/local/bin/pm2 stop /home/[user-name]/repos/ruuvi-dashboard/pm2.config.js
+WorkingDirectory=/home/user-name/repos/ruuvi-dashboard
+ExecStart=/usr/local/bin/pm2 start /home/user-name/repos/ruuvi-dashboard/pm2.config.js
+ExecReload=/usr/local/bin/pm2 reload /home/user-name/repos/ruuvi-dashboard/pm2.config.js
+ExecStop=/usr/local/bin/pm2 stop /home/user-name/repos/ruuvi-dashboard/pm2.config.js
 User=your-username
 
 [Install]
@@ -235,7 +236,7 @@ $ systemctl status ruuvi-dashboard
 `Note!` If automatic start doesn't work, you can start it manually
 
 ```
-$ /home/your-name/repos/ruuvionpi/start.sh
+$ /home/user-name/repos/ruuvionpi/start.sh
 ```
 
 To watch live logs use command
