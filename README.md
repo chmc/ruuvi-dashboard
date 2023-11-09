@@ -170,6 +170,13 @@ $ cp pm2.config.js.template pm2.config.js
 $ nano pm2.config.js
 ```
 
+Set repository folder in start script configurations `start.sh`
+
+```
+$ cp start.sh.template start.sh
+$ nano start.sh
+```
+
 Run the following command in your project directory to start your app with pm2:
 
 ```
