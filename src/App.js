@@ -65,28 +65,38 @@ const App = () => {
       }
     }
 
+    const fetchDataForEvery10sec = async () => {
+      try {
+        await Promise.all([fetchRuuviData(), fetchMinMaxTemperatures()])
+      } catch (error) {
+        console.error('Error fetching data: ', error)
+      }
+    }
+
     // eslint-disable-next-line no-console
-    fetchWeatherData().catch(console.error)
-    // eslint-disable-next-line no-console
-    fetchRuuviData().catch(console.error)
+    fetchDataForEvery10sec().catch(console.error)
     // eslint-disable-next-line no-console
     fetchEnergyPrices().catch(console.error)
-    // eslint-disable-next-line no-console
-    fetchMinMaxTemperatures().catch(console.error)
 
-    const ruuviIntervalId = setInterval(() => {
+    const every10secIntervalId = setInterval(() => {
       // Every 10sec
-      fetchRuuviData()
-      fetchMinMaxTemperatures()
+      fetchDataForEvery10sec()
     }, 10000)
+
     const energyPricesIntervalId = setInterval(() => {
       fetchEnergyPrices()
       // Every 30mins
     }, 30 * 60 * 1000)
 
+    const weatherIntervalId = setInterval(() => {
+      fetchWeatherData()
+      // Every 60mins
+    }, 60 * 60 * 1000)
+
     return () => {
-      clearInterval(ruuviIntervalId)
+      clearInterval(every10secIntervalId)
       clearInterval(energyPricesIntervalId)
+      clearInterval(weatherIntervalId)
     }
   }, [])
 
