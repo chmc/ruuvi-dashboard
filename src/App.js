@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+/* eslint-disable no-use-before-define */
+import { useEffect, useState, useCallback } from 'react'
 import Grid from '@mui/material/Grid'
 import Box from '@mui/material/Box'
 import { getSunrise, getSunset } from 'sunrise-sunset-js'
@@ -29,76 +30,78 @@ const App = () => {
   const sunrise = getSunrise(60.1703524, 24.9589753)
   const sunset = getSunset(60.1703524, 24.9589753)
 
+  const fetchEnergyPrices = useCallback(async () => {
+    try {
+      const json = await apiService.fetchEnergyPrices()
+      setTodayEnergyPrices(json.todayEnergyPrices)
+      setTomorrowEnergyPrices(json.tomorrowEnergyPrices)
+    } catch (error) {
+      console.log('fetchEnergyPrices ERROR: ', error)
+    }
+  }, [])
+
+  const fetchMinMaxTemperatures = async () => {
+    try {
+      setTodayMinMaxTemperature(await apiService.fetchMinMaxTemperatures())
+    } catch (error) {
+      console.log('fetchMinMaxTemperatures ERROR: ', error)
+    }
+  }
+
+  const fetchDataForEvery10sec = useCallback(async () => {
+    try {
+      await Promise.all([fetchRuuviData(), fetchMinMaxTemperatures()])
+    } catch (error) {
+      console.error('Error fetching data: ', error)
+    }
+  }, [])
+
+  const fetchRuuviData = async () => {
+    try {
+      setRuuviDatas(await apiService.fetchRuuviData())
+    } catch (error) {
+      console.log('fetchRuuviData ERROR: ', error)
+    }
+  }
+
+  const fetchWeatherData = useCallback(async () => {
+    try {
+      const weatherForecast = await apiService.fetchWeatherData()
+      setWeatherForecast(weatherForecast)
+    } catch (error) {
+      console.log('fetchWeatherData ERROR: ', error)
+    }
+  }, [])
+
+  const setupIntervals = useCallback(() => {
+    const every10secIntervalId = setInterval(fetchDataForEvery10sec, 10000)
+
+    const energyPricesIntervalId = setInterval(() => {
+      fetchEnergyPrices()
+    }, 30 * 60 * 1000)
+
+    const weatherIntervalId = setInterval(() => {
+      fetchWeatherData()
+    }, 60 * 60 * 1000)
+
+    return [every10secIntervalId, energyPricesIntervalId, weatherIntervalId]
+  }, [fetchDataForEvery10sec, fetchEnergyPrices, fetchWeatherData])
+
   useEffect(() => {
-    const fetchRuuviData = async () => {
-      try {
-        setRuuviDatas(await apiService.fetchRuuviData())
-      } catch (error) {
-        console.log('fetchRuuviData ERROR: ', error)
-      }
-    }
-
-    const fetchWeatherData = async () => {
-      try {
-        const weatherForecast = await apiService.fetchWeatherData()
-        setWeatherForecast(weatherForecast)
-      } catch (error) {
-        console.log('fetchWeatherData ERROR: ', error)
-      }
-    }
-
-    const fetchEnergyPrices = async () => {
-      try {
-        const json = await apiService.fetchEnergyPrices()
-        setTodayEnergyPrices(json.todayEnergyPrices)
-        setTomorrowEnergyPrices(json.tomorrowEnergyPrices)
-      } catch (error) {
-        console.log('fetchEnergyPrices ERROR: ', error)
-      }
-    }
-
-    const fetchMinMaxTemperatures = async () => {
-      try {
-        setTodayMinMaxTemperature(await apiService.fetchMinMaxTemperatures())
-      } catch (error) {
-        console.log('fetMinMaxTemperatures ERROR: ', error)
-      }
-    }
-
-    const fetchDataForEvery10sec = async () => {
-      try {
-        await Promise.all([fetchRuuviData(), fetchMinMaxTemperatures()])
-      } catch (error) {
-        console.error('Error fetching data: ', error)
-      }
-    }
-
     // eslint-disable-next-line no-console
     fetchDataForEvery10sec().catch(console.error)
     // eslint-disable-next-line no-console
     fetchEnergyPrices().catch(console.error)
 
-    const every10secIntervalId = setInterval(() => {
-      // Every 10sec
-      fetchDataForEvery10sec()
-    }, 10000)
-
-    const energyPricesIntervalId = setInterval(() => {
-      fetchEnergyPrices()
-      // Every 30mins
-    }, 30 * 60 * 1000)
-
-    const weatherIntervalId = setInterval(() => {
-      fetchWeatherData()
-      // Every 60mins
-    }, 60 * 60 * 1000)
+    const [every10secIntervalId, energyPricesIntervalId, weatherIntervalId] =
+      setupIntervals()
 
     return () => {
       clearInterval(every10secIntervalId)
       clearInterval(energyPricesIntervalId)
       clearInterval(weatherIntervalId)
     }
-  }, [])
+  }, [fetchDataForEvery10sec, fetchEnergyPrices, setupIntervals])
 
   return (
     <Box m={2}>
