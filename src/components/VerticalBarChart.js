@@ -12,10 +12,19 @@ import {
 import { Bar } from 'react-chartjs-2'
 import ChartDataLabels from 'chartjs-plugin-datalabels'
 import { useTheme } from '@mui/material/styles'
+import Box from '@mui/material/Box'
+import Typography from '@mui/material/Typography'
 import energyPriceColorUtils from '../utils/energyPriceColor'
 
 // https://www.chartjs.org/docs/latest/charts/bar.html
-const VerticalBarChart = ({ title, dataset, labels, fullData }) => {
+const VerticalBarChart = ({
+  title,
+  dataset,
+  labels,
+  fullData,
+  showLabels,
+  headerControls,
+}) => {
   const theme = useTheme()
 
   ChartJS.register(
@@ -36,11 +45,7 @@ const VerticalBarChart = ({ title, dataset, labels, fullData }) => {
         display: false,
       },
       title: {
-        display: true,
-        text: title,
-        padding: {
-          bottom: 23,
-        },
+        display: false,
       },
       tooltips: {
         callbacks: {
@@ -49,8 +54,53 @@ const VerticalBarChart = ({ title, dataset, labels, fullData }) => {
       },
       datalabels: {
         anchor: 'end',
-        align: 'top',
-        formatter: (value, context) => value,
+        align: (context) => {
+          // If showLabels array is provided and this label should be hidden, return default
+          if (showLabels && !showLabels[context.dataIndex]) {
+            return 'top'
+          }
+          // Alternate between alignments for visible labels to avoid collision
+          if (showLabels) {
+            // Count visible labels up to this point
+            let visibleCount = 0
+            for (let i = 0; i <= context.dataIndex; i++) {
+              if (showLabels[i]) {
+                visibleCount++
+              }
+            }
+            // Alternate between top and higher position
+            return visibleCount % 2 === 0 ? 'top' : 'top'
+          }
+          return 'top'
+        },
+        offset: (context) => {
+          // If showLabels array is provided and this label should be hidden, return 0
+          if (showLabels && !showLabels[context.dataIndex]) {
+            return 0
+          }
+          // Alternate offset for visible labels using 3 levels
+          if (showLabels) {
+            let visibleCount = 0
+            for (let i = 0; i <= context.dataIndex; i++) {
+              if (showLabels[i]) {
+                visibleCount++
+              }
+            }
+            // Cycle through three different vertical positions
+            const level = visibleCount % 3
+            if (level === 0) return 0
+            if (level === 1) return 20
+            return 40
+          }
+          return 0
+        },
+        formatter: (value, context) => {
+          // If showLabels array is provided, only show labels at specified indices
+          if (showLabels && !showLabels[context.dataIndex]) {
+            return null
+          }
+          return value
+        },
         font: {
           color: 'white',
           weight: 'bold',
@@ -102,6 +152,27 @@ const VerticalBarChart = ({ title, dataset, labels, fullData }) => {
     ],
   }
 
-  return <Bar options={options} data={data2} height={49} />
+  return (
+    <>
+      {headerControls && (
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={0.5}
+          flexWrap="wrap"
+          gap={0.5}
+        >
+          <Typography component="div" sx={{ fontSize: '12px' }}>
+            {title}
+          </Typography>
+          <Box display="flex" gap={0.5} flexWrap="wrap">
+            {headerControls}
+          </Box>
+        </Box>
+      )}
+      <Bar options={options} data={data2} height={44} />
+    </>
+  )
 }
 export default VerticalBarChart

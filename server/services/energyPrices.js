@@ -25,6 +25,12 @@ const getEnergyPrices = async (energyPrices) => {
         hour: new Date(daily.DateTime).getHours(),
       }))
 
+      console.log('Total energy prices from API:', allEnergyPrices.length)
+      console.log('First price:', allEnergyPrices[0])
+      console.log('Last price:', allEnergyPrices[allEnergyPrices.length - 1])
+      console.log('Current date for filtering:', currentDateObject)
+      console.log('Tomorrow date for filtering:', tomorrowDateObject)
+
       const todayEnergyPrices = allEnergyPrices.filter((energyPrice) =>
         dateUtils.isSameDate(energyPrice.date, currentDateObject)
       )
@@ -32,6 +38,9 @@ const getEnergyPrices = async (energyPrices) => {
       const tomorrowEnergyPrices = allEnergyPrices.filter((energyPrice) =>
         dateUtils.isSameDate(energyPrice.date, tomorrowDateObject)
       )
+
+      console.log('Today energy prices filtered:', todayEnergyPrices.length)
+      console.log('Tomorrow energy prices filtered:', tomorrowEnergyPrices.length)
 
       const appStorage = await storage.loadOrDefault()
       const updatedAppStorage = {
