@@ -112,7 +112,10 @@ ssh "$RASP_USER@$RASP_HOST" "bash -s" << EOF
     if ! npm install; then
         echo "[WARNING] npm install failed, trying to fix..."
         echo "[STEP] Cleaning npm cache and node_modules..."
-        rm -rf node_modules package-lock.json
+        # Stop PM2 first to release any file locks
+        pm2 stop ruuvi-dashboard 2>/dev/null || true
+        # Force remove with sudo if needed
+        rm -rf node_modules package-lock.json 2>/dev/null || sudo rm -rf node_modules package-lock.json
         npm cache clean --force
         echo "[STEP] Retrying npm install..."
         npm install
