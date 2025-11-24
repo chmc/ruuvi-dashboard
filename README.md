@@ -50,9 +50,9 @@ Note to my self: Ruuvi
 
 #### System
 
-- pm2 logs to daily instead of one big, delete old files
-- Automate deployment using script
 - PWA support
+- Automated log rotation for systemd journal
+- Remote deployment improvements
 
 # Quick Start for Raspberry Pi
 

@@ -1,3 +1,0 @@
-#!/bin/bash
-cd /home/user-name/repos/ruuvi-dashboard
-/usr/local/bin/pm2 start pm2.config.js
