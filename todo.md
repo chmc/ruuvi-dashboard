@@ -118,26 +118,27 @@ scanner.start()
 
 ## Phase 4: Remove Python Script and Cleanup
 
-**Status**: In Progress
+**Status**: Complete
 **Goal**: Remove all Python dependencies and clean up codebase
 
 ### Tasks
 
 - [x] 4.1 Remove Python script invocation from server/index.js
 - [x] 4.2 Delete `scripts/ruuvi.py`
-- [ ] 4.3 Update bluetooth.js utility or remove if unused
+- [x] 4.3 Remove unused bluetooth.js utility
 - [x] 4.4 Remove unnecessary child_process spawn code
-- [ ] 4.5 Update package.json scripts (remove Python references)
-- [ ] 4.6 Update documentation
+- [x] 4.5 Update package.json scripts (remove `startall` Python reference)
+- [x] 4.6 Update documentation (README.md)
 
 ### Files Deleted
 
 - `scripts/ruuvi.py` - Removed
+- `server/utils/bluetooth.js` - Removed (was unused)
 
-### Files to Modify
+### Files Modified
 
-- `server/utils/bluetooth.js` - Evaluate and update/remove (currently unused)
-- `package.json` - Clean up `startall` script (still references Python)
+- `package.json` - Removed `startall` script
+- `README.md` - Removed Python references, added BLE permissions setup
 
 ---
 
@@ -207,7 +208,7 @@ BLE_SCAN_TIMEOUT=90000
 | 1. BLE Infrastructure | Complete | 2025-11-24 | 2025-11-24 |
 | 2. RuuviTag Parser | Complete | 2025-11-24 | 2025-11-24 |
 | 3. Server Integration | Complete | 2025-11-24 | 2025-11-24 |
-| 4. Cleanup | In Progress | 2025-11-24 | - |
+| 4. Cleanup | Complete | 2025-11-24 | 2025-11-24 |
 | 5. Testing | Pending | - | - |
 
 ---

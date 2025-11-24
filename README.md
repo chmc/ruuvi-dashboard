@@ -14,11 +14,8 @@ Key points:
 
 ![Ruuvi dashboard UI](assets/ruuvi-dashboard.png)
 
-Inspired of this article  
+Inspired of this article
 https://teuvovaisanen.fi/2019/09/09/ruuvitag-raspberry-pi-ja-telegram-bot/
-
-Raspberry Pi installation guide  
-https://github.com/ttu/ruuvitag-sensor/blob/master/install_guide_pi.md
 
 Example how to run React web app on Raspberry Pi and start it when machine starts  
 https://blog.cloudboost.io/how-to-run-a-nodejs-web-server-on-a-raspberry-pi-for-development-3ef9ac0fc02c
@@ -82,10 +79,15 @@ Install latest version of Node.js
 sudo n latest
 ```
 
-### Install Python and ruuvitag-sensor
+### Setup BLE permissions for Node.js
 
-Follow the instructions from here  
-https://github.com/ttu/ruuvitag-sensor/blob/master/install_guide_pi.md
+On Linux (Raspberry Pi), Node.js needs permissions to access BLE. Run:
+
+```
+$ sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)
+```
+
+Or run the app with sudo (not recommended for production).
 
 ### Useful Ubuntu commands
 
@@ -122,11 +124,7 @@ Go to root folder of app and execute following commands in that path
 $ cd ./ruuvi-dashboard
 ```
 
-Run ruuvitag_sensor to find all sensors and their MACs
-
-```
-$ python3 -m ruuvitag_sensor -f
-```
+Find your RuuviTag MAC addresses (printed on the sensor or use a BLE scanner app)
 
 Set configurations `.env`
 
@@ -257,33 +255,15 @@ To find jammed processes
 $ ps aux | grep 'D'
 ```
 
-If the ruuvi.py script gets stuck, use this command to kill them
-
-```
-$ pkill -f "python3 ./scripts/ruuvi.py"
-```
-
 ### Troubleshooting
 
-If you get this error
-
-```
-Python Ruuvi script ERROR: Can't init device hci0: Connection timed out (110)
-```
-
-Try to resolve that error by resetting BLE
+If you get BLE connection errors, try resetting the Bluetooth interface:
 
 ```
 $ sudo hciconfig hci0 reset
 ```
 
-If resetting BLE does not work Try running ruuvitag_sensor script
-
-```
-$ python3 -m ruuvitag_sensor -f
-```
-
-If none of these helps to enable bluetooth, `reboot raspberry pi` and try again
+If resetting BLE does not work, `reboot raspberry pi` and try again
 
 If you encounter problems to run `npm install`, try increasing swap file size. Modify the /etc/dphys-swapfile configuration file. Open the file and change the CONF_SWAPSIZE parameter to increase the swap space.  
 Find configuration
