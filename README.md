@@ -54,9 +54,19 @@ Note to my self: Ruuvi
 - Automate deployment using script
 - PWA support
 
-# Steps to install and run app
+# Quick Start for Raspberry Pi
 
-### Enable Raspberry Pi remote access
+For a streamlined setup experience, see **[raspberrypi.instructions.md](raspberrypi.instructions.md)** which includes an automated setup script:
+
+```bash
+git clone https://github.com/chmc/ruuvi-dashboard.git
+cd ruuvi-dashboard
+./scripts/setup-raspberry-pi.sh
+```
+
+The script handles all dependencies, BLE permissions, and optionally sets up auto-start on boot.
+
+## Enable Raspberry Pi remote access
 
 In GUI OS
 
@@ -65,231 +75,40 @@ In GUI OS
 - Enable `VNC` for RealVNC Viewer connection
 - Enable `SSH` for terminal connection
 
-### Update Node.js on Raspberry Pi Through Node Module
+---
 
-Install npm
+For manual setup or troubleshooting, see the detailed instructions in [raspberrypi.instructions.md](raspberrypi.instructions.md).
 
-```
-sudo npm install -g n
-```
+---
 
-Install latest version of Node.js
+# Local Development
 
-```
-sudo n latest
-```
-
-### Setup BLE permissions for Node.js
-
-On Linux (Raspberry Pi), Node.js needs permissions to access BLE. Run:
-
-```
-$ sudo setcap cap_net_raw+eip $(eval readlink -f `which node`)
+```bash
+git clone https://github.com/chmc/ruuvi-dashboard.git
+cd ruuvi-dashboard
+pnpm install
+pnpm start
 ```
 
-Or run the app with sudo (not recommended for production).
+The app runs in simulator mode when no real RuuviTags are detected.
 
-### Useful Ubuntu commands
+---
 
-Shutdown raspberry pi
+# Useful Commands
 
-```
-$ sudo shutdown -h now
-```
+```bash
+# Raspberry Pi
+sudo reboot                    # Reboot
+vcgencmd measure_temp          # Check CPU temperature
 
-Reboot raspberry pi
+# Bluetooth
+sudo hciconfig hci0 up         # Enable Bluetooth
+sudo hciconfig hci0 reset      # Reset Bluetooth
 
-```
-$ sudo reboot --force
-```
-
-Get raspberry pi temperature
-
-```
-$ vcgencmd measure_temp
---> temp=60.7'C
-```
-
-### Clone React app repo to Raspberry Pi
-
-Clone repository
-
-```
-$ git clone https://github.com/chmc/ruuvi-dashboard.git
-```
-
-Go to root folder of app and execute following commands in that path
-
-```
-$ cd ./ruuvi-dashboard
-```
-
-Find your RuuviTag MAC addresses (printed on the sensor or use a BLE scanner app)
-
-Set configurations `.env`
-
-```
-$ cp .env.template .env
-$ nano .env
-```
-
-Install dependencies
-
-```
-$ npm install
-```
-
-Start app (frontend and backend)
-
-```
-$ npm start
-```
-
-You can now browse app with browser on localhost or by accessing local network IP
-
-Give write permissions to appStorage.json file
-
-```
-$ sudo chmod +w server/appStorage.json
-```
-
-### To automatically run app on Raspberry Pi
-
-Install pm2
-
-```
-$ sudo npm install pm2 -g
-```
-
-Set pm2 configurations `pm2.config.js`
-
-```
-$ cp pm2.config.js.template pm2.config.js
-$ nano pm2.config.js
-```
-
-Set repository folder in start script configurations `start.sh`
-
-```
-$ cp start.sh.template start.sh
-$ nano start.sh
-```
-
-Run the following command in your project directory to start your app with pm2:
-
-```
-$ pm2 start pm2.config.js
-```
-
-To grant execute permission to the directory, run:
-
-```
-chmod +x /home/user-name/repos/ruuvi-dashboard
-```
-
-To grant execute permission to the pm2.config.js and start.sh files, run:
-
-```
-chmod +x /home/user-name/repos/ruuvi-dashboard/pm2.config.js
-chmod +x /home/user-name/repos/ruuvi-dashboard/start.sh
-```
-
-Create a systemd service unit file to manage the pm2 process
-
-```
-$ sudo nano /etc/systemd/system/ruuvi-dashboard.service
-```
-
-Paste the following content into the file, adjusting the ExecStart and WorkingDirectory to match your project:
-
-```
-[Unit]
-Description=ruuvi-dashboard
-
-[Service]
-Type=simple
-WorkingDirectory=/home/user-name/repos/ruuvi-dashboard
-ExecStart=/usr/local/bin/pm2 start /home/user-name/repos/ruuvi-dashboard/pm2.config.js
-ExecReload=/usr/local/bin/pm2 reload /home/user-name/repos/ruuvi-dashboard/pm2.config.js
-ExecStop=/usr/local/bin/pm2 stop /home/user-name/repos/ruuvi-dashboard/pm2.config.js
-User=your-username
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Run the following commands to enable and start new systemd service:
-
-```
-$ sudo systemctl enable ruuvi-dashboard
-$ sudo systemctl start ruuvi-dashboard
-```
-
-Check if service is running by using the following command:
-
-```
-$ systemctl status ruuvi-dashboard
-```
-
-`Note!` If automatic start doesn't work, you can start it manually
-
-```
-$ /home/user-name/repos/ruuvionpi/start.sh
-```
-
-To watch live logs use command
-
-```
-$ pm2 logs
-```
-
-To check monitor status incl. logs, memory/cpu usage etc use command
-
-```
-$ pm2 monit
-```
-
-To find jammed processes
-
-```
-$ ps aux | grep 'D'
-```
-
-### Troubleshooting
-
-If you get BLE connection errors, try resetting the Bluetooth interface:
-
-```
-$ sudo hciconfig hci0 reset
-```
-
-If resetting BLE does not work, `reboot raspberry pi` and try again
-
-If you encounter problems to run `npm install`, try increasing swap file size. Modify the /etc/dphys-swapfile configuration file. Open the file and change the CONF_SWAPSIZE parameter to increase the swap space.  
-Find configuration
-
-```
-CONF_SWAPSIZE=100
-```
-
-Increase it to
-
-```
-CONF_SWAPSIZE=2048
-```
-
-After making changes, restart the swap service
-
-```
-sudo /etc/init.d/dphys-swapfile stop
-sudo /etc/init.d/dphys-swapfile start
-```
-
-If running `npm install` doesn't work, try using yarn
-
-```
-npm install -g yarn
-yarn install --max-old-space-size=4096
+# Service management (if installed)
+sudo systemctl status ruuvi-dashboard
+sudo systemctl restart ruuvi-dashboard
+sudo journalctl -u ruuvi-dashboard -f
 ```
 
 ## How the app (frontend and backend) was created
