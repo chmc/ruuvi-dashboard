@@ -27,6 +27,20 @@ const toPressureUI = (pressure) =>
   pressure ? Math.round(pressure.toFixed(0)).toString() : '-'
 
 /**
+ * Convert pressure to Finnish weather word with icon
+ * @param {number=} pressure in hPa
+ * @returns {string}
+ */
+const toPressureWeather = (pressure) => {
+  if (!pressure) return '-'
+  if (pressure < 990) return '▼ Myrsky'
+  if (pressure < 1005) return '↓ Sade'
+  if (pressure < 1015) return '○ Pilvi'
+  if (pressure < 1025) return '↑ Pouta'
+  return '★ Aurinko'
+}
+
+/**
  * @param {string} dateString
  * @returns {string}
  */
@@ -99,6 +113,7 @@ const uiFormatter = {
   toTemperatureRoundUpUI,
   toHumidityUI,
   toPressureUI,
+  toPressureWeather,
   toDayOfWeekUI,
   toWindUI,
   toShortTimeUI,

@@ -85,7 +85,10 @@ describe('RuuviScanner', () => {
       expect(dataCallback).toHaveBeenCalledTimes(1)
 
       // Non-matching MAC - should not emit
-      const nonMatchingParsedData = { ...mockParsedData, mac: '99:99:99:99:99:99' }
+      const nonMatchingParsedData = {
+        ...mockParsedData,
+        mac: '99:99:99:99:99:99',
+      }
       ruuviParser.parse.mockReturnValue(nonMatchingParsedData)
       ruuviParser.toSensorData.mockReturnValue({
         ...mockSensorData,
