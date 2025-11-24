@@ -24,7 +24,7 @@
   "scripts": {
     "start:frontend": "react-scripts start",
     "start:backend": "nodemon server/index.js",
-    "start": "concurrently \"npm run start:frontend\" \"npm run start:backend\"",
+    "start": "concurrently \"pnpm run start:frontend\" \"pnpm run start:backend\"",
     "build": "react-scripts build",
     "_test": "react-scripts test",
     "test": "jest",
