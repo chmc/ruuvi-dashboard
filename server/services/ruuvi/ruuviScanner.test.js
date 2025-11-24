@@ -49,11 +49,54 @@ describe('RuuviScanner', () => {
       expect(typeof scanner.getSensorData).toBe('function')
     })
 
-    it('should accept MAC addresses in options', () => {
-      const macs = ['AA:BB:CC:DD:EE:FF', '11:22:33:44:55:66']
+    it('should accept MAC addresses in options and filter after parsing', () => {
+      // MAC filtering is now done after parsing (for macOS compatibility)
+      // so we don't call bleScanner.setMacFilter anymore
+      const macs = ['AA:BB:CC:DD:EE:FF']
       scanner = ruuviScanner.createScanner({ macs })
+      scanner.start()
 
-      expect(mockBleScanner.setMacFilter).toHaveBeenCalledWith(macs)
+      // Set up mock data
+      const mockParsedData = {
+        dataFormat: 5,
+        temperature: 24.3,
+        humidity: 53.49,
+        pressure: 100044,
+        mac: 'aa:bb:cc:dd:ee:ff',
+      }
+      const mockSensorData = {
+        data_format: 5,
+        humidity: 53.49,
+        temperature: 24.3,
+        pressure: 100044,
+        mac: 'aa:bb:cc:dd:ee:ff',
+      }
+      ruuviParser.parse.mockReturnValue(mockParsedData)
+      ruuviParser.toSensorData.mockReturnValue(mockSensorData)
+
+      const dataCallback = jest.fn()
+      scanner.on('data', dataCallback)
+
+      // Matching MAC - should emit
+      discoverHandler({
+        id: 'randomuuid1',
+        advertisement: { manufacturerData: Buffer.from([0x99, 0x04, 0x05]) },
+      })
+      expect(dataCallback).toHaveBeenCalledTimes(1)
+
+      // Non-matching MAC - should not emit
+      const nonMatchingParsedData = { ...mockParsedData, mac: '99:99:99:99:99:99' }
+      ruuviParser.parse.mockReturnValue(nonMatchingParsedData)
+      ruuviParser.toSensorData.mockReturnValue({
+        ...mockSensorData,
+        mac: '99:99:99:99:99:99',
+      })
+
+      discoverHandler({
+        id: 'randomuuid2',
+        advertisement: { manufacturerData: Buffer.from([0x99, 0x04, 0x05]) },
+      })
+      expect(dataCallback).toHaveBeenCalledTimes(1) // Still 1, not 2
     })
   })
 

@@ -1,4 +1,11 @@
 /**
+ * Normalize MAC address to lowercase for consistent lookups
+ * @param {string} mac
+ * @returns {string}
+ */
+const normalizeMac = (mac) => mac?.toLowerCase() || ''
+
+/**
  *  @param {SensorDataCollection} sensorData
  *  @param {SensorDataCollection} cachedSensorData
  *  @param {string[]} macIds
@@ -14,11 +21,16 @@ const getSensorData = (sensorData, cachedSensorData, macIds) => {
   // Ensure sensorData is an object
   const current = sensorData || {}
 
+  // Use normalized (lowercase) MAC addresses for consistent lookups
+  // since scanner produces lowercase MACs from RuuviTag payload
   return macIds.reduce(
-    (updatedSensorData, macId) => ({
-      ...updatedSensorData,
-      [macId]: current[macId] || cached[macId],
-    }),
+    (updatedSensorData, macId) => {
+      const normalizedMac = normalizeMac(macId)
+      return {
+        ...updatedSensorData,
+        [normalizedMac]: current[normalizedMac] || cached[normalizedMac],
+      }
+    },
     { ...current }
   )
 }

@@ -32,6 +32,13 @@ const getMacAddress = (peripheral, parsedData) => {
 }
 
 /**
+ * Normalize MAC address to lowercase
+ * @param {string} mac
+ * @returns {string}
+ */
+const normalizeMac = (mac) => mac?.toLowerCase() || ''
+
+/**
  * Create a RuuviTag scanner instance
  * @param {object} options
  * @param {string[]} options.macs - MAC addresses to filter by
@@ -44,10 +51,8 @@ const createScanner = (options = {}) => {
   /** @type {SensorDataCollection} */
   let sensorDataCollection = {}
 
-  // Set MAC filter if provided
-  if (options.macs && options.macs.length > 0) {
-    scanner.setMacFilter(options.macs)
-  }
+  // Store normalized MAC filter (filtering done after parsing on macOS)
+  const macFilter = (options.macs || []).map(normalizeMac).filter(Boolean)
 
   /**
    * Handle peripheral discovery from BLE scanner
@@ -71,8 +76,13 @@ const createScanner = (options = {}) => {
         return
       }
 
-      // Get MAC address
+      // Get MAC address (from parsed data - reliable on all platforms)
       const mac = getMacAddress(peripheral, parsedData)
+
+      // Apply MAC filter if set (filter here since macOS doesn't expose real MACs)
+      if (macFilter.length > 0 && !macFilter.includes(mac)) {
+        return
+      }
 
       // Update collection
       sensorDataCollection[mac] = sensorData
@@ -157,7 +167,8 @@ const createScanner = (options = {}) => {
      * @param {string[]} macs
      */
     setMacFilter(macs) {
-      scanner.setMacFilter(macs)
+      macFilter.length = 0
+      macFilter.push(...macs.map(normalizeMac).filter(Boolean))
     },
   }
 }

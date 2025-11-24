@@ -3,6 +3,13 @@
 const dateUtils = require('../utils/date')
 
 /**
+ * Normalize MAC address to lowercase for consistent lookups
+ * @param {string} mac
+ * @returns {string}
+ */
+const normalizeMac = (mac) => mac?.toLowerCase() || ''
+
+/**
  * @param {SensorDataCollection} sensorDataCollection
  * @param {TodayMinMaxTemperature} todayMinMaxTemperature
  */
@@ -12,8 +19,10 @@ const getTodayMinMaxTemperature = (
 ) => {
   try {
     console.log('getTodayMinMaxTemperature start')
-    const mainOutdoorRuuviTagMac =
+    // Normalize MAC to lowercase for consistent lookups
+    const mainOutdoorRuuviTagMac = normalizeMac(
       process.env.REACT_APP_MAIN_OUTDOOR_RUUVITAG_MAC
+    )
 
     if (isSensorDataMissing(sensorDataCollection)) {
       return todayMinMaxTemperature
@@ -88,9 +97,7 @@ const isSensorDataMissing = (sensorDataCollection) => {
 const isSensorDataMissingForMac = (sensorDataCollection, sensorMac) => {
   if (!sensorDataCollection[sensorMac]) {
     console.log(
-      'getTodayMinMaxTemperature() sensorDataCollection for mac: "',
-      process.env.REACT_APP_MAIN_OUTDOOR_RUUVITAG_MAC,
-      '" is missing. Sensor data is:',
+      `getTodayMinMaxTemperature() sensorDataCollection for mac "${sensorMac}" is missing. Sensor data is:`,
       sensorDataCollection
     )
     return true

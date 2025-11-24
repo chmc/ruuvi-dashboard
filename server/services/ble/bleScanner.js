@@ -68,13 +68,12 @@ const createScanner = () => {
    */
   const handleDiscover = (peripheral) => {
     const manufacturerData = peripheral.advertisement?.manufacturerData
+    const mac = getPeripheralMac(peripheral)
 
     // Only process RuuviTag devices
     if (!isRuuviDevice(manufacturerData)) {
       return
     }
-
-    const mac = getPeripheralMac(peripheral)
 
     // Apply MAC filter if set
     if (macFilter.length > 0 && !macFilter.includes(mac)) {
@@ -89,12 +88,15 @@ const createScanner = () => {
    * @param {string} state
    */
   const handleStateChange = (state) => {
+    console.log(`BLE state changed: ${state}`)
     if (state === 'poweredOn' && !scanning) {
       // Start scanning for all devices, allow duplicates for continuous updates
+      console.log('BLE powered on - starting scan...')
       noble.startScanning([], true)
       scanning = true
       emitter.emit('scanStart')
     } else if (state !== 'poweredOn' && scanning) {
+      console.log(`BLE not powered on (${state}) - stopping scan`)
       scanning = false
       emitter.emit('scanStop', { reason: 'stateChange', state })
     }
@@ -111,14 +113,18 @@ const createScanner = () => {
         noble = require('@abandonware/noble')
       }
 
+      console.log(`BLE initial state: ${noble.state}`)
       noble.on('stateChange', handleStateChange)
       noble.on('discover', handleDiscover)
 
       // If already powered on, start scanning immediately
       if (noble.state === 'poweredOn') {
+        console.log('BLE already powered on - starting scan immediately')
         noble.startScanning([], true)
         scanning = true
         emitter.emit('scanStart')
+      } else {
+        console.log(`Waiting for BLE to power on (current: ${noble.state})...`)
       }
     },
 
