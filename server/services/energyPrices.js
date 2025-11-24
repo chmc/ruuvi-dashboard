@@ -40,7 +40,10 @@ const getEnergyPrices = async (energyPrices) => {
       )
 
       console.log('Today energy prices filtered:', todayEnergyPrices.length)
-      console.log('Tomorrow energy prices filtered:', tomorrowEnergyPrices.length)
+      console.log(
+        'Tomorrow energy prices filtered:',
+        tomorrowEnergyPrices.length
+      )
 
       const appStorage = await storage.loadOrDefault()
       const updatedAppStorage = {

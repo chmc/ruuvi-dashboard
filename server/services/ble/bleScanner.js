@@ -107,6 +107,7 @@ const createScanner = () => {
     start() {
       // Lazy load noble to allow mocking in tests
       if (!noble) {
+        // eslint-disable-next-line global-require
         noble = require('@abandonware/noble')
       }
 

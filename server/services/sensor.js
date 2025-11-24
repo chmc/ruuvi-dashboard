@@ -6,7 +6,7 @@
 const getSensorData = (sensorData, cachedSensorData, macIds) => {
   // Ensure cachedSensorData defaults to empty object if undefined
   const cached = cachedSensorData || {}
-  
+
   if (!sensorData) {
     return cached
   }

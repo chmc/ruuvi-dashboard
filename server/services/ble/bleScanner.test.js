@@ -1,6 +1,4 @@
-const bleScanner = require('./bleScanner')
-
-// Mock noble
+// Mock noble before importing bleScanner (which requires it)
 jest.mock('@abandonware/noble', () => ({
   on: jest.fn(),
   removeListener: jest.fn(),
@@ -9,7 +7,10 @@ jest.mock('@abandonware/noble', () => ({
   state: 'poweredOn',
 }))
 
+/* eslint-disable import/order */
+const bleScanner = require('./bleScanner')
 const noble = require('@abandonware/noble')
+/* eslint-enable import/order */
 
 describe('BleScanner', () => {
   let scanner
@@ -37,10 +38,7 @@ describe('BleScanner', () => {
     it('should register stateChange handler on noble', () => {
       scanner.start()
 
-      expect(noble.on).toHaveBeenCalledWith(
-        'stateChange',
-        expect.any(Function)
-      )
+      expect(noble.on).toHaveBeenCalledWith('stateChange', expect.any(Function))
     })
 
     it('should register discover handler on noble', () => {
@@ -65,7 +63,10 @@ describe('BleScanner', () => {
     it('should not start scanning when noble state is not poweredOn', () => {
       // Override the default state to poweredOff
       const originalState = noble.state
-      Object.defineProperty(noble, 'state', { value: 'poweredOff', writable: true })
+      Object.defineProperty(noble, 'state', {
+        value: 'poweredOff',
+        writable: true,
+      })
 
       noble.on.mockImplementation((event, callback) => {
         if (event === 'stateChange') {
@@ -78,7 +79,10 @@ describe('BleScanner', () => {
       expect(noble.startScanning).not.toHaveBeenCalled()
 
       // Restore original state
-      Object.defineProperty(noble, 'state', { value: originalState, writable: true })
+      Object.defineProperty(noble, 'state', {
+        value: originalState,
+        writable: true,
+      })
     })
   })
 

@@ -12,6 +12,7 @@ require('dotenv').config()
 // Only import ruuviScanner when not in test mode (requires native BLE module)
 let ruuviScanner = null
 if (!process.env.TEST && !process.env.SIMULATE) {
+  // eslint-disable-next-line global-require
   ruuviScanner = require('./services/ruuvi/ruuviScanner')
 }
 
@@ -146,7 +147,9 @@ if (process.env.TEST || process.env.SIMULATE) {
   scanner.on('data', ({ mac, sensorData }) => {
     console.log(
       new Date().toLocaleString(),
-      `Sensor ${mac}: ${sensorData.temperature.toFixed(1)}°C, ${sensorData.humidity.toFixed(1)}%`
+      `Sensor ${mac}: ${sensorData.temperature.toFixed(
+        1
+      )}°C, ${sensorData.humidity.toFixed(1)}%`
     )
   })
 

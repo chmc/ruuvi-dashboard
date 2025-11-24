@@ -93,7 +93,9 @@ const parseDataFormat5 = (data) => {
 
   // Power info: 11 bits battery voltage + 5 bits tx power
   const powerInfo = data.readUInt16BE(15)
+  // eslint-disable-next-line no-bitwise
   const batteryRaw = (powerInfo >> 5) & 0x7ff // Top 11 bits
+  // eslint-disable-next-line no-bitwise
   const txPowerRaw = powerInfo & 0x1f // Bottom 5 bits
   const batteryVoltage = batteryRaw + 1600 // Add 1600mV offset
   const txPower = txPowerRaw * 2 - 40 // Convert to dBm
