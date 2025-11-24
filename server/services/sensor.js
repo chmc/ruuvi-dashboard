@@ -4,16 +4,22 @@
  *  @param {string[]} macIds
  */
 const getSensorData = (sensorData, cachedSensorData, macIds) => {
+  // Ensure cachedSensorData defaults to empty object if undefined
+  const cached = cachedSensorData || {}
+  
   if (!sensorData) {
-    return cachedSensorData
+    return cached
   }
+
+  // Ensure sensorData is an object
+  const current = sensorData || {}
 
   return macIds.reduce(
     (updatedSensorData, macId) => ({
       ...updatedSensorData,
-      [macId]: sensorData[macId] || cachedSensorData[macId],
+      [macId]: current[macId] || cached[macId],
     }),
-    { ...sensorData }
+    { ...current }
   )
 }
 
