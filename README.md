@@ -66,6 +66,22 @@ cd ruuvi-dashboard
 
 The script handles all dependencies, BLE permissions, and optionally sets up auto-start on boot.
 
+## Deploying Updates
+
+After initial setup, use the deployment script to update your Raspberry Pi installation:
+
+```bash
+cd ruuvi-dashboard
+./scripts/deploy.sh
+```
+
+This script will:
+- Pull latest code from git
+- Install/update dependencies
+- Regenerate systemd environment file
+- Restart the service
+- Verify service is running
+
 ## Enable Raspberry Pi remote access
 
 In GUI OS
