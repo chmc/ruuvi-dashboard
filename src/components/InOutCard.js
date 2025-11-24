@@ -34,7 +34,11 @@ const InOutCard = ({ ruuviDatas, todayMinMaxTemperature, sunrise, sunset }) => {
         <Grid item xs={6}>
           <Card>
             <CardContent>
-              <Typography variant="h5" component="div">
+              <Typography
+                variant="subtitle1"
+                component="div"
+                fontWeight="medium"
+              >
                 Sisällä
               </Typography>
               <Typography variant="h5" color="text.secondary">
@@ -69,7 +73,11 @@ const InOutCard = ({ ruuviDatas, todayMinMaxTemperature, sunrise, sunset }) => {
         <Grid item xs={6}>
           <Card>
             <CardContent>
-              <Typography variant="h5" component="div">
+              <Typography
+                variant="subtitle1"
+                component="div"
+                fontWeight="medium"
+              >
                 Ulkona
               </Typography>
               <Typography variant="h5" color="text.secondary">

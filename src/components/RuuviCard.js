@@ -54,7 +54,7 @@ const RuuviCard = ({ ruuvi, ruuviData }) => {
     <Grid item xs={2}>
       <Card>
         <CardContent>
-          <Typography variant="h5" component="div">
+          <Typography variant="subtitle1" component="div" fontWeight="medium">
             {ruuvi.name}
           </Typography>
           <Typography variant="body2" color="text.secondary">
