@@ -80,8 +80,9 @@ const App = () => {
       fetchMinMaxTemperatures()
     }, 10000)
     const energyPricesIntervalId = setInterval(() => {
-      fetchEnergyPrices()
       // Every 30mins
+      fetchEnergyPrices()
+      fetchWeatherData()
     }, 30 * 60 * 1000)
 
     return () => {
