@@ -285,22 +285,23 @@ setup_systemd_service() {
         return 1
     fi
 
-    # Create wrapper script that loads environment and runs server
-    cat > "$CURRENT_DIR/scripts/start-service.sh" << 'SCRIPT'
-#!/bin/bash
-cd "$(dirname "$0")/.."
-
-# Load environment variables from .env
-if [[ -f .env ]]; then
-    export $(grep -v '^#' .env | xargs)
-fi
-
-# Run the backend server directly with node
-exec node server/index.js
-SCRIPT
-
-    chmod +x "$CURRENT_DIR/scripts/start-service.sh"
-    print_success "Created service wrapper script"
+    # Convert .env to systemd EnvironmentFile format
+    # Systemd requires: KEY=value (no spaces around =)
+    if [[ -f "$CURRENT_DIR/.env" ]]; then
+        # Create systemd-compatible env file:
+        # - Remove comments and empty lines
+        # - Remove 'export ' prefix
+        # - Remove spaces around '='
+        grep -v '^#' "$CURRENT_DIR/.env" | \
+            grep -v '^[[:space:]]*$' | \
+            sed 's/^export //' | \
+            sed 's/[[:space:]]*=[[:space:]]*/=/' > "$CURRENT_DIR/.env.systemd"
+        print_success "Created .env.systemd for service"
+        ENV_FILE_LINE="EnvironmentFile=$CURRENT_DIR/.env.systemd"
+    else
+        print_warning "No .env file found - service will use defaults"
+        ENV_FILE_LINE="# No .env file"
+    fi
 
     sudo tee /etc/systemd/system/ruuvi-dashboard.service > /dev/null << EOF
 [Unit]
@@ -312,18 +313,31 @@ Wants=bluetooth.target
 Type=simple
 User=$CURRENT_USER
 WorkingDirectory=$CURRENT_DIR
-ExecStart=$CURRENT_DIR/scripts/start-service.sh
+
+# Load environment from .env file
+$ENV_FILE_LINE
+Environment=NODE_ENV=production
+
+# Run node directly with absolute path
+ExecStart=$NODE_PATH $CURRENT_DIR/server/index.js
+
 Restart=on-failure
 RestartSec=10
-Environment=NODE_ENV=production
-Environment=PATH=/usr/local/bin:/usr/bin:/bin
 
-# Grant BLE capabilities to this service
-AmbientCapabilities=CAP_NET_RAW
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ruuvi-dashboard
 
 [Install]
 WantedBy=multi-user.target
 EOF
+
+    print_success "Created systemd service"
+
+    # Grant BLE capabilities to node binary (more reliable than AmbientCapabilities)
+    print_step "Ensuring BLE permissions for node..."
+    sudo setcap cap_net_raw+eip "$NODE_PATH" 2>/dev/null || print_warning "Could not set capabilities on node"
 
     sudo systemctl daemon-reload
     sudo systemctl enable ruuvi-dashboard
@@ -344,6 +358,12 @@ EOF
     echo "  sudo systemctl stop ruuvi-dashboard"
     echo "  sudo systemctl restart ruuvi-dashboard"
     echo "  sudo journalctl -u ruuvi-dashboard -f"
+    echo ""
+    echo "Note: If you update .env later, regenerate the systemd env file:"
+    echo "  ./scripts/setup-raspberry-pi.sh  # Run setup again (safe)"
+    echo "  # OR manually:"
+    echo "  grep -v '^#' .env | grep -v '^\$' | sed 's/^export //' | sed 's/ *= */=/' > .env.systemd"
+    echo "  sudo systemctl restart ruuvi-dashboard"
 }
 
 # Main script
