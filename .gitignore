@@ -403,6 +403,7 @@ FodyWeavers.xsd
 /node_modules
 /.pnp
 .pnp.js
+pnpm-workspace.yaml
 
 # testing
 /coverage
