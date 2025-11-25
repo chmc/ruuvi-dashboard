@@ -32,8 +32,8 @@ const isEnabled = (namespace, level) => {
   if (debugEnv) {
     if (debugEnv === '*') return true
     if (debugEnv === 'server:*') return namespace.startsWith('server:')
-    return debugEnv.split(',').some(pattern => {
-      const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$')
+    return debugEnv.split(',').some((pattern) => {
+      const regex = new RegExp(`^${pattern.replace(/\*/g, '.*')}$`)
       return regex.test(namespace)
     })
   }
@@ -104,7 +104,7 @@ const createLogger = (namespace) => {
       if (isEnabled(namespace, 'debug')) {
         console.log(`${timestamp()} ${prefix}`, ...args)
       }
-    }
+    },
   }
 }
 

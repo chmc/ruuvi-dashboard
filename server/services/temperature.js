@@ -58,17 +58,14 @@ const getTodayMinMaxTemperature = (
 /**
  * @param {SensorDataCollection} sensorDataCollection
  */
-const isSensorDataMissing = (sensorDataCollection) => {
-  return !sensorDataCollection
-}
+const isSensorDataMissing = (sensorDataCollection) => !sensorDataCollection
 
 /**
  * @param {SensorDataCollection} sensorDataCollection
  * @param {string} sensorMac
  */
-const isSensorDataMissingForMac = (sensorDataCollection, sensorMac) => {
-  return !sensorDataCollection[sensorMac]
-}
+const isSensorDataMissingForMac = (sensorDataCollection, sensorMac) =>
+  !sensorDataCollection[sensorMac]
 
 /**
  * @param {TodayMinMaxTemperature} todayMinMaxTemperature

@@ -33,8 +33,8 @@ const isEnabled = (namespace) => {
   if (debugEnv) {
     if (debugEnv === '*') return true
     if (debugEnv === 'app:*') return namespace.startsWith('app:')
-    return debugEnv.split(',').some(pattern => {
-      const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$')
+    return debugEnv.split(',').some((pattern) => {
+      const regex = new RegExp(`^${pattern.replace(/\*/g, '.*')}$`)
       return regex.test(namespace)
     })
   }
@@ -90,7 +90,7 @@ export const createLogger = (namespace) => {
       if (isEnabled(`${namespace}:debug`)) {
         console.log(prefix, ...args)
       }
-    }
+    },
   }
 }
 
