@@ -66,5 +66,10 @@
     "nodemon": "^3.0.1",
     "prettier": "^2.8.8"
   },
+  "pnpm": {
+    "overrides": {
+      "webpack-dev-server": "4.15.2"
+    }
+  },
   "proxy": "http://localhost:3001/"
 }
