@@ -60,12 +60,6 @@ app.get('/api/ruuvi', (req, res) => {
  * 3. Clean up resources when client disconnects
  */
 app.get('/api/sensor-stream', (req, res) => {
-  console.log(
-    new Date().toLocaleString(),
-    'SSE client connected. Active connections:',
-    sseConnections.size + 1
-  )
-
   // Set SSE headers
   res.setHeader('Content-Type', 'text/event-stream')
   res.setHeader('Cache-Control', 'no-cache')
@@ -133,11 +127,6 @@ app.get('/api/sensor-stream', (req, res) => {
 
   // Clean up resources when client disconnects
   req.on('close', () => {
-    console.log(
-      new Date().toLocaleString(),
-      'SSE client disconnected. Active connections:',
-      sseConnections.size - 1
-    )
     clearInterval(updateInterval)
     clearInterval(heartbeatInterval)
     sseConnections.delete(connection)
@@ -155,7 +144,6 @@ app.get('/api/sensor-stream', (req, res) => {
 
 // Keep POST endpoint for backward compatibility (e.g., external data sources)
 app.post('/api/ruuvi', (req, res) => {
-  console.log(new Date().toLocaleString(), 'POST /api/ruuvi received')
   try {
     const sensorDataCollection = sensorService.getSensorData(
       req.body,
@@ -175,12 +163,10 @@ app.post('/api/ruuvi', (req, res) => {
 })
 
 app.get('/api/energyprices', async (req, res) => {
-  console.log(new Date().toLocaleString(), 'Energy prices called')
   /** @type {EnergyPrices=} */
   let cachedEnergyPrices = cache.get(cacheKeys.energyPrices)
 
   if (!cachedEnergyPrices) {
-    console.log('Not in cache, try load store')
     const appStorage = await storage.loadOrDefaultSync()
     cachedEnergyPrices = {
       updatedAt: appStorage.todayEnergyPrices?.updatedAt,
@@ -302,14 +288,9 @@ if (process.env.TEST || process.env.SIMULATE) {
     updateSensorCache(mergedData)
   })
 
-  // Handle individual sensor data (for logging)
+  // Handle individual sensor data
   scanner.on('data', ({ mac, sensorData }) => {
-    console.log(
-      new Date().toLocaleString(),
-      `Sensor ${mac}: ${sensorData.temperature.toFixed(
-        1
-      )}°C, ${sensorData.humidity.toFixed(1)}%`
-    )
+    // Data is handled by collection event
   })
 
   // Handle errors
@@ -318,12 +299,8 @@ if (process.env.TEST || process.env.SIMULATE) {
   })
 
   // Start scanning with a delay to allow BLE adapter to initialize
-  console.log(
-    new Date().toLocaleString(),
-    'Wait 3sec before starting RuuviTag scanner'
-  )
   setTimeout(() => {
-    console.log(new Date().toLocaleString(), 'Starting RuuviTag BLE scanner')
+    console.log('Starting RuuviTag BLE scanner...')
     scanner.start()
   }, 3000)
 

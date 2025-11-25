@@ -37,13 +37,8 @@ export const useMinMaxTemperature = (options = {}) => {
 
   return usePolling(
     async () => {
-      try {
-        const minMaxData = await apiService.fetchMinMaxTemperatures()
-        return minMaxData
-      } catch (error) {
-        console.error('fetchMinMaxTemperatures ERROR:', error)
-        throw error
-      }
+      const minMaxData = await apiService.fetchMinMaxTemperatures()
+      return minMaxData
     },
     {
       enabled,

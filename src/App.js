@@ -41,9 +41,6 @@ const App = () => {
     {
       interval: 30 * 60 * 1000, // 30 minutes
       fetchOnMount: true,
-      onError: (key, error) => {
-        console.log(`${key} fetch ERROR:`, error)
-      },
     }
   )
 
@@ -51,9 +48,6 @@ const App = () => {
   const { data: todayMinMaxTemperature, error: minMaxError } =
     useMinMaxTemperature({
       interval: 10000, // 10 seconds
-      onError: (error) => {
-        console.log('fetchMinMaxTemperatures ERROR:', error)
-      },
     })
 
   // Extract data from multi-polling results
@@ -70,30 +64,19 @@ const App = () => {
     }
   }, [sensorStreamData])
 
-  // Log SSE connection status and errors
-  useEffect(() => {
-    if (sensorError) {
-      console.log('SSE connection error:', sensorError)
-    }
-    if (isSensorConnected) {
-      console.log('SSE connected successfully')
-    }
-  }, [isSensorConnected, sensorError])
-
-  // Log external data polling errors
+  // Log only critical errors (SSE connection errors are already logged in the hook)
   useEffect(() => {
     if (externalErrors?.weather) {
-      console.log('Weather polling error:', externalErrors.weather)
+      console.error('Weather polling error:', externalErrors.weather)
     }
     if (externalErrors?.energyPrices) {
-      console.log('Energy prices polling error:', externalErrors.energyPrices)
+      console.error('Energy prices polling error:', externalErrors.energyPrices)
     }
   }, [externalErrors])
 
-  // Log min/max temperature errors
   useEffect(() => {
     if (minMaxError) {
-      console.log('Min/max temperature polling error:', minMaxError)
+      console.error('Min/max temperature error:', minMaxError)
     }
   }, [minMaxError])
 

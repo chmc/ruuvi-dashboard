@@ -89,7 +89,6 @@ export const useSensorStream = (url, options = {}) => {
     cleanup()
 
     try {
-      console.log(`Connecting to SSE endpoint: ${url}`)
       // eslint-disable-next-line no-undef
       const eventSource = new EventSource(url)
       eventSourceRef.current = eventSource
@@ -98,7 +97,6 @@ export const useSensorStream = (url, options = {}) => {
        * Handle connection open
        */
       eventSource.onopen = () => {
-        console.log('SSE connection established')
         setIsConnected(true)
         setError(null)
 
@@ -171,7 +169,6 @@ export const useSensorStream = (url, options = {}) => {
             maxReconnectAttempts === Infinity ? '∞' : maxReconnectAttempts
           })...`
           setError(errorMessage)
-          console.log(errorMessage)
 
           if (onError) {
             onError(err)
@@ -222,7 +219,6 @@ export const useSensorStream = (url, options = {}) => {
    * Resets reconnection attempts and establishes a new connection
    */
   const reconnect = useCallback(() => {
-    console.log('Manual reconnection triggered')
     reconnectAttemptRef.current = 0
     setReconnectAttempt(0)
     currentDelayRef.current = reconnectInterval
@@ -317,7 +313,6 @@ export const useSensorStreamWithFallback = (url, options = {}) => {
       return undefined
     }
 
-    console.log('Using polling fallback for sensor data')
     setIsConnected(true)
 
     const fetchData = async () => {
@@ -359,9 +354,7 @@ export const useSensorStreamWithFallback = (url, options = {}) => {
     data,
     isConnected,
     error,
-    reconnect: () => {
-      console.log('Polling mode - no reconnection needed')
-    },
+    reconnect: () => {},
     reconnectAttempt: 0,
     isSupported: true,
   }

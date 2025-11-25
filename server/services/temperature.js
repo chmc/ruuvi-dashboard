@@ -18,7 +18,6 @@ const getTodayMinMaxTemperature = (
   todayMinMaxTemperature
 ) => {
   try {
-    console.log('getTodayMinMaxTemperature start')
     // Normalize MAC to lowercase for consistent lookups
     const mainOutdoorRuuviTagMac = normalizeMac(
       process.env.REACT_APP_MAIN_OUTDOOR_RUUVITAG_MAC
@@ -36,13 +35,6 @@ const getTodayMinMaxTemperature = (
 
     const { temperature } = sensorDataCollection[mainOutdoorRuuviTagMac]
 
-    console.log(
-      'getTodayMinMaxTemperature, sensorData temperature: ',
-      temperature,
-      'todayMinMaxTemperature: ',
-      todayMinMaxTemperature
-    )
-
     const minMaxObj = getNewObjectIfTodayMinMaxIsMissing(
       todayMinMaxTemperature,
       temperature
@@ -55,20 +47,7 @@ const getTodayMinMaxTemperature = (
       temperature
     )
 
-    console.log(
-      'getTodayMinMaxTemperature return min: ',
-      minTemperature,
-      'max: ',
-      maxTemperature
-    )
-
     const ret = { ...minMax, minTemperature, maxTemperature }
-    console.log(
-      'getTodayMinMaxTemperature original cache: ',
-      todayMinMaxTemperature,
-      'return object: ',
-      ret
-    )
     return ret
   } catch (error) {
     console.error('getTodayMinMaxTemperature failed: ', error)
@@ -80,14 +59,7 @@ const getTodayMinMaxTemperature = (
  * @param {SensorDataCollection} sensorDataCollection
  */
 const isSensorDataMissing = (sensorDataCollection) => {
-  if (!sensorDataCollection) {
-    console.log(
-      'getTodayMinMaxTemperature() sensorDataCollection not available, it is:',
-      sensorDataCollection
-    )
-    return true
-  }
-  return false
+  return !sensorDataCollection
 }
 
 /**
@@ -95,14 +67,7 @@ const isSensorDataMissing = (sensorDataCollection) => {
  * @param {string} sensorMac
  */
 const isSensorDataMissingForMac = (sensorDataCollection, sensorMac) => {
-  if (!sensorDataCollection[sensorMac]) {
-    console.log(
-      `getTodayMinMaxTemperature() sensorDataCollection for mac "${sensorMac}" is missing. Sensor data is:`,
-      sensorDataCollection
-    )
-    return true
-  }
-  return false
+  return !sensorDataCollection[sensorMac]
 }
 
 /**

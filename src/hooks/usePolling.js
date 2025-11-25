@@ -87,7 +87,6 @@ export const usePolling = (fetchFunction, options = {}) => {
     async (isRetry = false) => {
       // Prevent concurrent fetches
       if (isCurrentlyFetchingRef.current) {
-        console.log('Fetch already in progress, skipping...')
         return
       }
 
@@ -131,11 +130,6 @@ export const usePolling = (fetchFunction, options = {}) => {
         if (currentRetryAttemptRef.current < retryAttempts && !isRetry) {
           currentRetryAttemptRef.current += 1
 
-          const retryMsg = `Retry attempt ${
-            currentRetryAttemptRef.current
-          }/${retryAttempts} in ${retryDelay / 1000}s...`
-          console.log(retryMsg)
-
           if (onRetry) {
             onRetry(currentRetryAttemptRef.current, retryAttempts)
           }
@@ -163,7 +157,6 @@ export const usePolling = (fetchFunction, options = {}) => {
    * Resets retry attempts and triggers immediate fetch
    */
   const refetch = useCallback(() => {
-    console.log('Manual refetch triggered')
     currentRetryAttemptRef.current = 0
     executeFetch(false)
   }, [executeFetch])
@@ -176,7 +169,6 @@ export const usePolling = (fetchFunction, options = {}) => {
       return
     }
 
-    console.log(`Starting polling with interval: ${interval}ms`)
     setIsPolling(true)
 
     // Fetch immediately if fetchOnMount is true
