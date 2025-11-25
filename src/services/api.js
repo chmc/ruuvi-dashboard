@@ -41,7 +41,6 @@ const fetchWeatherData = async () => {
     dailyForecast,
     hourlyForecast,
   }
-  console.log(forecast)
 
   return forecast
 }
@@ -50,7 +49,6 @@ const fetchEnergyPrices = async () => {
   const response = await fetch('/api/energyprices')
   const text = await response.text()
   const json = JSON.parse(text)
-  console.log('energy: ', json)
   return json
 }
 
@@ -58,7 +56,6 @@ const fetchMinMaxTemperatures = async () => {
   const response = await fetch('/api/todayminmaxtemperature')
   const text = await response.text()
   const json = JSON.parse(text)
-  console.log('minmax: ', json)
   return json
 }
 
