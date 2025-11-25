@@ -36,7 +36,24 @@ if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../build')))
 }
 
-app.listen(port, () => console.log(`Listening on port ${port}`))
+const server = app.listen(port, () => console.log(`Listening on port ${port}`))
+
+// Graceful error handling for port conflicts
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error('\n❌ ERROR: Port conflict detected\n')
+    console.error(`Port ${port} is already in use by another process.\n`)
+    console.error('To fix this issue, try one of the following:\n')
+    console.error(`  1. Kill the existing process:`)
+    console.error(`     lsof -ti:${port} | xargs kill -9\n`)
+    console.error(`  2. Use a different port:`)
+    console.error(`     PORT=3002 pnpm start:backend\n`)
+    console.error(`  3. Add PORT to your .env file:`)
+    console.error(`     echo "PORT=${port}" >> .env\n`)
+    process.exit(1)
+  }
+  throw err
+})
 
 app.get('/api/ruuvi', (req, res) => {
   res.send(cache.get(cacheKeys.ruuvi))

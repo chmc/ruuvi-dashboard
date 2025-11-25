@@ -1,4 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { createLogger } from '../utils/logger'
+
+const log = createLogger('app:polling')
 
 /**
  * Custom React hook for periodic API polling with automatic error handling,
@@ -113,7 +116,7 @@ export const usePolling = (fetchFunction, options = {}) => {
           }
         }
       } catch (err) {
-        console.error('Polling fetch error:', err)
+        log.error('Polling fetch error:', err)
 
         if (!isMountedRef.current) {
           return
@@ -140,7 +143,7 @@ export const usePolling = (fetchFunction, options = {}) => {
             }
           }, retryDelay)
         } else if (currentRetryAttemptRef.current >= retryAttempts) {
-          console.error(`Max retry attempts (${retryAttempts}) reached`)
+          log.error(`Max retry attempts (${retryAttempts}) reached`)
         }
       } finally {
         if (isMountedRef.current) {
@@ -272,7 +275,7 @@ export const useMultiPolling = (fetchFunctions, options = {}) => {
           const result = await fetchFn()
           newData[key] = result
         } catch (err) {
-          console.error(`Multi-polling error for ${key}:`, err)
+          log.error(`Multi-polling error for ${key}:`, err)
           newErrors[key] = err.message || 'Failed to fetch data'
 
           if (onError) {
@@ -300,7 +303,7 @@ export const useMultiPolling = (fetchFunctions, options = {}) => {
   const refetchOne = useCallback(
     async (key) => {
       if (!fetchFunctions[key] || !isMountedRef.current) {
-        console.warn(`No fetch function found for key: ${key}`)
+        log.warn(`No fetch function found for key: ${key}`)
         return
       }
 
@@ -315,7 +318,7 @@ export const useMultiPolling = (fetchFunctions, options = {}) => {
           })
         }
       } catch (err) {
-        console.error(`Refetch error for ${key}:`, err)
+        log.error(`Refetch error for ${key}:`, err)
         if (isMountedRef.current) {
           setErrors((prev) => ({ ...prev, [key]: err.message }))
         }

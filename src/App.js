@@ -12,6 +12,9 @@ import apiService from './services/api'
 import { useSensorStream } from './hooks/useSensorStream'
 import { useMultiPolling } from './hooks/usePolling'
 import { useMinMaxTemperature } from './hooks/useMinMaxTemperature'
+import { createLogger } from './utils/logger'
+
+const log = createLogger('app:main')
 
 /**
  * @typedef {WeatherForecast | null} weatherForecast
@@ -67,16 +70,16 @@ const App = () => {
   // Log only critical errors (SSE connection errors are already logged in the hook)
   useEffect(() => {
     if (externalErrors?.weather) {
-      console.error('Weather polling error:', externalErrors.weather)
+      log.error('Weather polling error:', externalErrors.weather)
     }
     if (externalErrors?.energyPrices) {
-      console.error('Energy prices polling error:', externalErrors.energyPrices)
+      log.error('Energy prices polling error:', externalErrors.energyPrices)
     }
   }, [externalErrors])
 
   useEffect(() => {
     if (minMaxError) {
-      console.error('Min/max temperature error:', minMaxError)
+      log.error('Min/max temperature error:', minMaxError)
     }
   }, [minMaxError])
 

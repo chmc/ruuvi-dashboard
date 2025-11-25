@@ -1,4 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { createLogger } from '../utils/logger'
+
+const log = createLogger('app:sse')
 
 /**
  * Custom React hook for Server-Sent Events (SSE) integration with automatic reconnection
@@ -81,7 +84,7 @@ export const useSensorStream = (url, options = {}) => {
   const connect = useCallback(() => {
     // Don't connect if disabled or EventSource not supported
     if (!enabled || !isEventSourceSupported) {
-      console.warn('SSE connection disabled or not supported')
+      log.warn('SSE connection disabled or not supported')
       return
     }
 
@@ -122,8 +125,7 @@ export const useSensorStream = (url, options = {}) => {
             onData(parsedData)
           }
         } catch (err) {
-          console.error('Failed to parse SSE data:', err)
-          console.error('Raw data:', event.data)
+          log.error('Failed to parse SSE data:', err)
           setError('Failed to parse server data')
 
           if (onError) {
@@ -136,7 +138,7 @@ export const useSensorStream = (url, options = {}) => {
        * Handle connection errors and implement reconnection logic
        */
       eventSource.onerror = (err) => {
-        console.error('SSE connection error:', err)
+        log.error('SSE connection error:', err)
         setIsConnected(false)
 
         // Close the current connection
@@ -183,7 +185,7 @@ export const useSensorStream = (url, options = {}) => {
           const errorMessage =
             'Maximum reconnection attempts reached. Please refresh the page.'
           setError(errorMessage)
-          console.error(errorMessage)
+          log.error(errorMessage)
 
           if (onError) {
             onError(new Error(errorMessage))
