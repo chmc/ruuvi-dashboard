@@ -131,10 +131,10 @@ sudo journalctl -u ruuvi-dashboard -f
 
 ### Create react app
 
-App will be created inside `ruuvionpi` folder
+App will be created inside `ruuvi-dashboard` folder
 
 ```
-$ npx create-react-app ruuvionpi
+$ npx create-react-app ruuvi-dashboard
 ```
 
 Tip. If you have troubles running npx command, make install npm globally

@@ -375,7 +375,7 @@ main() {
     check_raspberry_pi
 
     # Check if we're in the project directory
-    if [[ ! -f package.json ]] || ! grep -q "ruuvionpi" package.json 2>/dev/null; then
+    if [[ ! -f package.json ]] || ! grep -q "ruuvi-dashboard" package.json 2>/dev/null; then
         print_error "Please run this script from the ruuvi-dashboard project directory."
         echo ""
         echo "If you haven't cloned the repo yet:"
