@@ -9,6 +9,9 @@ import EnergyPricesCard from './components/EnergyPricesCard'
 import CurrentEnergyPriceCard from './components/CurrentEnergyPriceCard'
 import configs from './configs'
 import apiService from './services/api'
+import { useSensorStream } from './hooks/useSensorStream'
+import { useMultiPolling } from './hooks/usePolling'
+import { useMinMaxTemperature } from './hooks/useMinMaxTemperature'
 
 /**
  * @typedef {WeatherForecast | null} weatherForecast
@@ -19,77 +22,80 @@ import apiService from './services/api'
 
 const App = () => {
   const [ruuviDatas, setRuuviDatas] = useState(null)
-
-  /** @type {[weatherForecast, setWeatherForecast]} */
-  const [weatherForecast, setWeatherForecast] = useState(null)
-  /** @type {[todayEnergyPrices, setTodayEnergyPrices]} */
-  const [todayEnergyPrices, setTodayEnergyPrices] = useState(null)
-  const [tomorrowEnergyPrices, setTomorrowEnergyPrices] = useState(null)
-  const [todayMinMaxTemperature, setTodayMinMaxTemperature] = useState(null)
   const sunrise = getSunrise(60.1703524, 24.9589753)
   const sunset = getSunset(60.1703524, 24.9589753)
 
+  // Use SSE for real-time sensor data
+  const {
+    data: sensorStreamData,
+    isConnected: isSensorConnected,
+    error: sensorError,
+  } = useSensorStream('/api/sensor-stream')
+
+  // Use modern polling hooks for energy prices and weather (30-minute intervals)
+  const { data: externalData, errors: externalErrors } = useMultiPolling(
+    {
+      weather: async () => apiService.fetchWeatherData(),
+      energyPrices: async () => apiService.fetchEnergyPrices(),
+    },
+    {
+      interval: 30 * 60 * 1000, // 30 minutes
+      fetchOnMount: true,
+      onError: (key, error) => {
+        console.log(`${key} fetch ERROR:`, error)
+      },
+    }
+  )
+
+  // Use specialized hook for min/max temperature (10-second intervals)
+  const { data: todayMinMaxTemperature, error: minMaxError } =
+    useMinMaxTemperature({
+      interval: 10000, // 10 seconds
+      onError: (error) => {
+        console.log('fetchMinMaxTemperatures ERROR:', error)
+      },
+    })
+
+  // Extract data from multi-polling results
+  const weatherForecast = externalData?.weather || null
+  const todayEnergyPrices =
+    externalData?.energyPrices?.todayEnergyPrices || null
+  const tomorrowEnergyPrices =
+    externalData?.energyPrices?.tomorrowEnergyPrices || null
+
+  // Update ruuviDatas when SSE stream data changes
   useEffect(() => {
-    const fetchRuuviData = async () => {
-      try {
-        setRuuviDatas(await apiService.fetchRuuviData())
-      } catch (error) {
-        console.log('fetchRuuviData ERROR: ', error)
-      }
+    if (sensorStreamData) {
+      setRuuviDatas(sensorStreamData)
     }
+  }, [sensorStreamData])
 
-    const fetchWeatherData = async () => {
-      try {
-        const weatherForecast = await apiService.fetchWeatherData()
-        setWeatherForecast(weatherForecast)
-      } catch (error) {
-        console.log('fetchWeatherData ERROR: ', error)
-      }
+  // Log SSE connection status and errors
+  useEffect(() => {
+    if (sensorError) {
+      console.log('SSE connection error:', sensorError)
     }
-
-    const fetchEnergyPrices = async () => {
-      try {
-        const json = await apiService.fetchEnergyPrices()
-        setTodayEnergyPrices(json.todayEnergyPrices)
-        setTomorrowEnergyPrices(json.tomorrowEnergyPrices)
-      } catch (error) {
-        console.log('fetchEnergyPrices ERROR: ', error)
-      }
+    if (isSensorConnected) {
+      console.log('SSE connected successfully')
     }
+  }, [isSensorConnected, sensorError])
 
-    const fetchMinMaxTemperatures = async () => {
-      try {
-        setTodayMinMaxTemperature(await apiService.fetchMinMaxTemperatures())
-      } catch (error) {
-        console.log('fetMinMaxTemperatures ERROR: ', error)
-      }
+  // Log external data polling errors
+  useEffect(() => {
+    if (externalErrors?.weather) {
+      console.log('Weather polling error:', externalErrors.weather)
     }
-
-    // eslint-disable-next-line no-console
-    fetchWeatherData().catch(console.error)
-    // eslint-disable-next-line no-console
-    fetchRuuviData().catch(console.error)
-    // eslint-disable-next-line no-console
-    fetchEnergyPrices().catch(console.error)
-    // eslint-disable-next-line no-console
-    fetchMinMaxTemperatures().catch(console.error)
-
-    const ruuviIntervalId = setInterval(() => {
-      // Every 10sec
-      fetchRuuviData()
-      fetchMinMaxTemperatures()
-    }, 10000)
-    const energyPricesIntervalId = setInterval(() => {
-      // Every 30mins
-      fetchEnergyPrices()
-      fetchWeatherData()
-    }, 30 * 60 * 1000)
-
-    return () => {
-      clearInterval(ruuviIntervalId)
-      clearInterval(energyPricesIntervalId)
+    if (externalErrors?.energyPrices) {
+      console.log('Energy prices polling error:', externalErrors.energyPrices)
     }
-  }, [])
+  }, [externalErrors])
+
+  // Log min/max temperature errors
+  useEffect(() => {
+    if (minMaxError) {
+      console.log('Min/max temperature polling error:', minMaxError)
+    }
+  }, [minMaxError])
 
   return (
     <Box m={2}>
