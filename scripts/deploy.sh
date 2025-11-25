@@ -49,7 +49,12 @@ print_step "Installing dependencies..."
 pnpm install
 print_success "Dependencies installed"
 
-# Step 3: Restart service (if systemd service exists)
+# Step 3: Build frontend for production
+print_step "Building React frontend..."
+pnpm run build
+print_success "Frontend built"
+
+# Step 4: Restart service (if systemd service exists)
 if systemctl is-enabled ruuvi-dashboard &>/dev/null; then
     print_step "Restarting systemd service..."
 

@@ -25,7 +25,15 @@ const cacheKeys = {
   todayMinMax: 'todayMinMax',
 }
 
+const path = require('path')
+
 app.use(express.json())
+
+// Serve static files from React build in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../build')))
+}
+
 app.listen(port, () => console.log(`Listening on port ${port}`))
 
 app.get('/api/ruuvi', (req, res) => {
@@ -82,6 +90,13 @@ app.get('/api/energyprices', async (req, res) => {
 app.get('/api/todayminmaxtemperature', async (req, res) => {
   res.send(cache.get(cacheKeys.todayMinMax))
 })
+
+// Catch-all route to serve React app for any non-API routes (must be after API routes)
+if (process.env.NODE_ENV === 'production') {
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../build/index.html'))
+  })
+}
 
 /**
  * Update sensor data cache and temperature min/max

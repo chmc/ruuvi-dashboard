@@ -195,7 +195,19 @@ EOF
     echo "  nano .env"
 }
 
-# Step 10: Verify installation
+# Step 10: Build frontend for production
+build_frontend() {
+    print_step "Building React frontend for production..."
+
+    if pnpm run build; then
+        print_success "Frontend built successfully"
+    else
+        print_error "Failed to build frontend"
+        exit 1
+    fi
+}
+
+# Step 11: Verify installation
 verify_installation() {
     print_step "Verifying installation..."
 
@@ -249,7 +261,7 @@ verify_installation() {
     sleep 2
 }
 
-# Step 11: Setup systemd service (optional, only if verification passed)
+# Step 12: Setup systemd service (optional, only if verification passed)
 setup_systemd_service() {
     if [[ "$VERIFICATION_PASSED" != "true" ]]; then
         print_warning "Skipping systemd setup - verification did not pass"
@@ -394,6 +406,7 @@ main() {
     grant_bluetooth_permissions
     enable_bluetooth
     configure_env
+    build_frontend
     verify_installation
     setup_systemd_service
 
