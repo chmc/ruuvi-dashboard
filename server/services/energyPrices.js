@@ -13,7 +13,6 @@ const getEnergyPrices = async (energyPrices) => {
   try {
     const { currentDate, currentDateObject, tomorrowDate, tomorrowDateObject } =
       getTodayAndTomorrowDates()
-    console.log('Updated at ', energyPrices?.todayEnergyPrices?.updatedAt)
 
     if (allowUpdateEnergyPrices(energyPrices, currentDateObject)) {
       console.log('Get new energy prices')
@@ -71,7 +70,6 @@ const getEnergyPrices = async (energyPrices) => {
       }
     }
 
-    console.log('Use energy prices from cache')
     return {
       updatedAt: energyPrices.todayEnergyPrices.updatedAt,
       todayEnergyPrices: energyPrices.todayEnergyPrices,
@@ -103,7 +101,6 @@ const allowUpdateEnergyPrices = (energyPrices, currentDateObject) => {
   try {
     const updatedAt = getUpdatedAtOrMinDate(energyPrices)
     const hoursDifference = calculateHoursDifferenceInDates(updatedAt)
-    console.log('Last energy prices updated: ', hoursDifference)
 
     if (
       isEnergyPricesObjectOrtodayMissing(energyPrices) ||

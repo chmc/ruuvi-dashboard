@@ -74,18 +74,15 @@ app.get('/api/sensor-stream', (req, res) => {
     const initialData = cache.get(cacheKeys.ruuvi)
     if (initialData) {
       res.write(`data: ${JSON.stringify(initialData)}\n\n`)
-      res.flush() // Ensure data is sent immediately
     } else {
       // Send empty collection if no data available yet
       res.write(`data: ${JSON.stringify({ sensors: [] })}\n\n`)
-      res.flush()
     }
   } catch (error) {
     console.error('Error sending initial SSE data:', error)
     res.write(
       `data: ${JSON.stringify({ error: 'Failed to load initial data' })}\n\n`
     )
-    res.flush()
   }
 
   // Store connection metadata
@@ -102,7 +99,6 @@ app.get('/api/sensor-stream', (req, res) => {
       const sensorData = cache.get(cacheKeys.ruuvi)
       if (sensorData) {
         res.write(`data: ${JSON.stringify(sensorData)}\n\n`)
-        res.flush()
         connection.lastSent = Date.now()
       }
     } catch (error) {
@@ -118,7 +114,6 @@ app.get('/api/sensor-stream', (req, res) => {
   const heartbeatInterval = setInterval(() => {
     try {
       res.write(': heartbeat\n\n')
-      res.flush()
     } catch (error) {
       console.error('Error sending heartbeat:', error)
       clearInterval(heartbeatInterval)
@@ -210,7 +205,6 @@ const broadcastToSSEClients = (sensorDataCollection) => {
   sseConnections.forEach((connection) => {
     try {
       connection.res.write(dataString)
-      connection.res.flush()
       // eslint-disable-next-line no-param-reassign
       connection.lastSent = Date.now()
     } catch (error) {
