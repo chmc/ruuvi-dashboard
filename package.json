@@ -22,9 +22,9 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start:frontend": "react-scripts start",
+    "start:frontend": "PORT=3000 BROWSER=none react-scripts start",
     "start:backend": "nodemon server/index.js",
-    "start": "concurrently \"pnpm run start:frontend\" \"pnpm run start:backend\"",
+    "start": "concurrently --kill-others-on-fail \"pnpm run start:backend\" \"sleep 2 && pnpm run start:frontend\"",
     "build": "react-scripts build",
     "_test": "react-scripts test",
     "test": "jest",

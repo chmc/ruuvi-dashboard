@@ -18,7 +18,7 @@ if (!process.env.TEST && !process.env.SIMULATE) {
 }
 
 const app = express()
-const port = process.env.PORT || 3001
+const port = process.env.BACKEND_PORT || process.env.PORT || 3001
 const cache = new NodeCache()
 const cacheKeys = {
   ruuvi: 'ruuvi',
