@@ -2,8 +2,8 @@
 // (RuuviTag scanner returns lowercase MACs from the payload)
 const normalizeMac = (mac) => mac?.toLowerCase() || ''
 
-const macIds = process.env.REACT_APP_RUUVITAG_MACS?.split(',').map(normalizeMac)
-const macNames = process.env.REACT_APP_RUUVITAG_NAMES?.split(',')
+const macIds = import.meta.env.VITE_RUUVITAG_MACS?.split(',').map(normalizeMac)
+const macNames = import.meta.env.VITE_RUUVITAG_NAMES?.split(',')
 
 const ruuviTags = macIds.map((mac, index) => ({
   mac,
@@ -14,9 +14,9 @@ const ruuviTags = macIds.map((mac, index) => ({
 const configs = {
   macIds,
   ruuviTags,
-  mainIndoorMac: normalizeMac(process.env.REACT_APP_MAIN_INDOOR_RUUVITAG_MAC),
-  mainOutdoorMac: normalizeMac(process.env.REACT_APP_MAIN_OUTDOOR_RUUVITAG_MAC),
-  openweatherApiKey: process.env.REACT_APP_OPENWEATHERMAP_APIKEY,
+  mainIndoorMac: normalizeMac(import.meta.env.VITE_MAIN_INDOOR_RUUVITAG_MAC),
+  mainOutdoorMac: normalizeMac(import.meta.env.VITE_MAIN_OUTDOOR_RUUVITAG_MAC),
+  openweatherApiKey: import.meta.env.VITE_OPENWEATHERMAP_APIKEY,
 }
 
 export default configs

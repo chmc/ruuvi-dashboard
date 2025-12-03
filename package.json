@@ -17,25 +17,17 @@
     "react": "^18.2.0",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1",
     "sunrise-sunset-js": "^2.2.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start:frontend": "react-scripts start",
+    "start:frontend": "vite",
     "start:backend": "nodemon server/index.js",
     "start": "concurrently \"pnpm run start:frontend\" \"pnpm run start:backend\"",
-    "build": "react-scripts build",
-    "_test": "react-scripts test",
+    "build": "vite build",
+    "preview": "vite preview",
     "test": "jest",
-    "eject": "react-scripts eject",
-    "lint": "eslint --ext .js --ignore-path .gitignore ."
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+    "lint": "eslint --ext .js,.jsx --ignore-path .gitignore ."
   },
   "browserslist": {
     "production": [
@@ -50,10 +42,10 @@
     ]
   },
   "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "@vitejs/plugin-react": "^5.1.1",
     "eslint": "^8.51.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-prettier": "^9.0.0",
@@ -65,15 +57,13 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "jest": "^27.5.1",
     "nodemon": "^3.0.1",
-    "prettier": "^2.8.8"
+    "prettier": "^2.8.8",
+    "vite": "^7.2.6"
   },
-  "proxy": "http://localhost:3001/",
   "pnpm": {
-    "overrides": {
-      "webpack-dev-server": "^4.15.2"
-    },
     "onlyBuiltDependencies": [
-      "@abandonware/noble"
+      "@abandonware/noble",
+      "esbuild"
     ]
   }
 }
