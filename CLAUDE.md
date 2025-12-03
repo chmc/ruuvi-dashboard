@@ -6,6 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Ruuvi Dashboard is a home monitoring dashboard that displays RuuviTag sensor data (temperature, humidity, pressure) alongside weather forecasts and Finnish energy prices. It runs on Raspberry Pi with a React frontend and Express backend.
 
+## RULES
+- Always follow TDD principle when doing implementation work
+
 ## Commands
 
 ```bash
