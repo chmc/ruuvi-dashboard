@@ -2,6 +2,7 @@
 /* eslint-disable no-console */
 const express = require('express')
 const NodeCache = require('node-cache')
+const path = require('path')
 const temperatureService = require('./services/temperature')
 const energyPricesService = require('./services/energyPrices')
 const sensorService = require('./services/sensor')
@@ -24,8 +25,6 @@ const cacheKeys = {
   energyPrices: 'energyPrices',
   todayMinMax: 'todayMinMax',
 }
-
-const path = require('path')
 
 app.use(express.json())
 

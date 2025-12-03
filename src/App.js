@@ -34,7 +34,8 @@ const App = () => {
       try {
         setRuuviDatas(await apiService.fetchRuuviData())
       } catch (error) {
-        console.log('fetchRuuviData ERROR: ', error)
+        // eslint-disable-next-line no-console
+        console.error('fetchRuuviData ERROR: ', error)
       }
     }
 
@@ -43,7 +44,8 @@ const App = () => {
         const weatherForecast = await apiService.fetchWeatherData()
         setWeatherForecast(weatherForecast)
       } catch (error) {
-        console.log('fetchWeatherData ERROR: ', error)
+        // eslint-disable-next-line no-console
+        console.error('fetchWeatherData ERROR: ', error)
       }
     }
 
@@ -53,7 +55,8 @@ const App = () => {
         setTodayEnergyPrices(json.todayEnergyPrices)
         setTomorrowEnergyPrices(json.tomorrowEnergyPrices)
       } catch (error) {
-        console.log('fetchEnergyPrices ERROR: ', error)
+        // eslint-disable-next-line no-console
+        console.error('fetchEnergyPrices ERROR: ', error)
       }
     }
 
@@ -61,7 +64,8 @@ const App = () => {
       try {
         setTodayMinMaxTemperature(await apiService.fetchMinMaxTemperatures())
       } catch (error) {
-        console.log('fetMinMaxTemperatures ERROR: ', error)
+        // eslint-disable-next-line no-console
+        console.error('fetchMinMaxTemperatures ERROR: ', error)
       }
     }
 

@@ -24,9 +24,7 @@ const CurrentEnergyPrice = ({ energyPrices }) => {
 
   const today = new Date()
   const hourNow = today.getHours()
-  console.log('hourNow', hourNow)
   const hourNext = today.getHours() + 1 === 24 ? 0 : today.getHours() + 1
-  console.log('hour next', hourNext)
   const currentPrice = energyPrices.find(
     (energyPrice) => energyPrice.hour === hourNow
   )

@@ -51,10 +51,6 @@ const EnergyPricesCard = ({ title, noPricesText, energyPrices }) => {
     }))
     .sort((a, b) => a.date - b.date)
 
-  console.log(`${title} - Raw energy prices count:`, energyPrices.length)
-  console.log(`${title} - First few prices:`, energyPrices.slice(0, 3))
-  console.log(`${title} - Sorted prices count:`, sortedEnergyPrices.length)
-
   /**
    * Aggregates 15-minute price data into hourly averages
    * @param {Array} prices - Array of energy price objects
@@ -138,12 +134,6 @@ const EnergyPricesCard = ({ title, noPricesText, energyPrices }) => {
     resolution === '1h'
       ? aggregateToHourlyAverages(sortedEnergyPrices)
       : sortedEnergyPrices
-
-  console.log(
-    `${title} - After aggregation (${resolution}):`,
-    processedEnergyPrices.length
-  )
-  console.log(`${title} - Processed prices:`, processedEnergyPrices)
 
   // Apply time range filter for 15min resolution
   if (resolution === '15min') {
