@@ -92,7 +92,7 @@ app.get('/api/todayminmaxtemperature', async (req, res) => {
 
 // Catch-all route to serve React app for any non-API routes (must be after API routes)
 if (process.env.NODE_ENV === 'production') {
-  app.get('*', (req, res) => {
+  app.get('/{*path}', (req, res) => {
     res.sendFile(path.join(__dirname, '../build/index.html'))
   })
 }
