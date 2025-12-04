@@ -67,6 +67,7 @@ npm install @abandonware/noble
 ### Data Format Reference
 
 **RuuviTag Data Format 5 (RAWv2)**:
+
 - Temperature: -163.84°C to +163.84°C (0.005°C resolution)
 - Humidity: 0% to 100% (0.0025% resolution)
 - Pressure: 50000 Pa to 115534 Pa (1 Pa resolution)
@@ -203,13 +204,13 @@ BLE_SCAN_TIMEOUT=90000
 
 ## Progress Tracking
 
-| Phase | Status | Started | Completed |
-|-------|--------|---------|-----------|
+| Phase                 | Status   | Started    | Completed  |
+| --------------------- | -------- | ---------- | ---------- |
 | 1. BLE Infrastructure | Complete | 2025-11-24 | 2025-11-24 |
-| 2. RuuviTag Parser | Complete | 2025-11-24 | 2025-11-24 |
+| 2. RuuviTag Parser    | Complete | 2025-11-24 | 2025-11-24 |
 | 3. Server Integration | Complete | 2025-11-24 | 2025-11-24 |
-| 4. Cleanup | Complete | 2025-11-24 | 2025-11-24 |
-| 5. Testing | Complete | 2025-11-24 | 2025-11-24 |
+| 4. Cleanup            | Complete | 2025-11-24 | 2025-11-24 |
+| 5. Testing            | Complete | 2025-11-24 | 2025-11-24 |
 
 ---
 

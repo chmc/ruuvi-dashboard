@@ -167,7 +167,9 @@ describe('apiService', () => {
     it('should throw error when fetch fails', async () => {
       global.fetch.mockRejectedValueOnce(new Error('Network error'))
 
-      await expect(apiService.fetchEnergyPrices()).rejects.toThrow('Network error')
+      await expect(apiService.fetchEnergyPrices()).rejects.toThrow(
+        'Network error'
+      )
     })
 
     it('should handle invalid JSON response', async () => {
@@ -200,7 +202,9 @@ describe('apiService', () => {
     it('should throw error when fetch fails', async () => {
       global.fetch.mockRejectedValueOnce(new Error('Network error'))
 
-      await expect(apiService.fetchMinMaxTemperatures()).rejects.toThrow('Network error')
+      await expect(apiService.fetchMinMaxTemperatures()).rejects.toThrow(
+        'Network error'
+      )
     })
 
     it('should handle invalid JSON response', async () => {

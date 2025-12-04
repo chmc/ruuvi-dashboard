@@ -10,7 +10,10 @@ jest.mock('../configs', () => ({
 // Mock formatters
 jest.mock('../utils/formatters', () => ({
   toTemperatureUI: jest.fn((temp) => (temp ? temp.toFixed(1) : '-')),
-  toShortTimeUI: jest.fn((date) => `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`),
+  toShortTimeUI: jest.fn(
+    (date) =>
+      `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`
+  ),
 }))
 
 describe('InOutCard', () => {

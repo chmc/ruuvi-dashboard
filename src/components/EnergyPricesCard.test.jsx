@@ -2,18 +2,20 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import EnergyPricesCard from './EnergyPricesCard'
 
 // Mock VerticalBarChart to simplify testing
-jest.mock('./VerticalBarChart', () => {
-  return function MockVerticalBarChart({ title, dataset, labels, headerControls }) {
-    return (
-      <div data-testid="vertical-bar-chart">
-        <div data-testid="chart-title">{title}</div>
-        <div data-testid="chart-dataset">{JSON.stringify(dataset)}</div>
-        <div data-testid="chart-labels">{JSON.stringify(labels)}</div>
-        <div data-testid="chart-controls">{headerControls}</div>
-      </div>
-    )
-  }
-})
+jest.mock(
+  './VerticalBarChart',
+  () =>
+    function MockVerticalBarChart({ title, dataset, labels, headerControls }) {
+      return (
+        <div data-testid="vertical-bar-chart">
+          <div data-testid="chart-title">{title}</div>
+          <div data-testid="chart-dataset">{JSON.stringify(dataset)}</div>
+          <div data-testid="chart-labels">{JSON.stringify(labels)}</div>
+          <div data-testid="chart-controls">{headerControls}</div>
+        </div>
+      )
+    }
+)
 
 describe('EnergyPricesCard', () => {
   beforeEach(() => {
@@ -51,18 +53,22 @@ describe('EnergyPricesCard', () => {
 
     render(<EnergyPricesCard {...defaultProps} energyPrices={energyPrices} />)
 
-    expect(screen.getByTestId('chart-title')).toHaveTextContent('Energy Prices Today')
+    expect(screen.getByTestId('chart-title')).toHaveTextContent(
+      'Energy Prices Today'
+    )
   })
 
   it('should render resolution toggle buttons', () => {
-    const energyPrices = [
-      { hour: 0, price: 5.0, date: '2023-10-24T00:00:00' },
-    ]
+    const energyPrices = [{ hour: 0, price: 5.0, date: '2023-10-24T00:00:00' }]
 
     render(<EnergyPricesCard {...defaultProps} energyPrices={energyPrices} />)
 
-    expect(screen.getByRole('button', { name: '1 hour resolution' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '15 minute resolution' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: '1 hour resolution' })
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: '15 minute resolution' })
+    ).toBeInTheDocument()
   })
 
   it('should aggregate to hourly averages by default (1h resolution)', () => {
@@ -81,37 +87,51 @@ describe('EnergyPricesCard', () => {
   })
 
   it('should show time range buttons when 15min resolution is selected', () => {
-    const energyPrices = [
-      { hour: 0, price: 5.0, date: '2023-10-24T00:00:00' },
-    ]
+    const energyPrices = [{ hour: 0, price: 5.0, date: '2023-10-24T00:00:00' }]
 
     render(<EnergyPricesCard {...defaultProps} energyPrices={energyPrices} />)
 
     // Click 15min button
-    fireEvent.click(screen.getByRole('button', { name: '15 minute resolution' }))
+    fireEvent.click(
+      screen.getByRole('button', { name: '15 minute resolution' })
+    )
 
     // Time range buttons should appear
-    expect(screen.getByRole('button', { name: 'incoming prices' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'all prices' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '00-12 hours' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '06-18 hours' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '12-24 hours' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'incoming prices' })
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'all prices' })
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: '00-12 hours' })
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: '06-18 hours' })
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: '12-24 hours' })
+    ).toBeInTheDocument()
   })
 
   it('should hide time range buttons when switching back to 1h resolution', () => {
-    const energyPrices = [
-      { hour: 0, price: 5.0, date: '2023-10-24T00:00:00' },
-    ]
+    const energyPrices = [{ hour: 0, price: 5.0, date: '2023-10-24T00:00:00' }]
 
     render(<EnergyPricesCard {...defaultProps} energyPrices={energyPrices} />)
 
     // Switch to 15min
-    fireEvent.click(screen.getByRole('button', { name: '15 minute resolution' }))
-    expect(screen.getByRole('button', { name: 'all prices' })).toBeInTheDocument()
+    fireEvent.click(
+      screen.getByRole('button', { name: '15 minute resolution' })
+    )
+    expect(
+      screen.getByRole('button', { name: 'all prices' })
+    ).toBeInTheDocument()
 
     // Switch back to 1h
     fireEvent.click(screen.getByRole('button', { name: '1 hour resolution' }))
-    expect(screen.queryByRole('button', { name: 'all prices' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'all prices' })
+    ).not.toBeInTheDocument()
   })
 
   it('should sort energy prices by date', () => {
@@ -138,7 +158,9 @@ describe('EnergyPricesCard', () => {
     render(<EnergyPricesCard {...defaultProps} energyPrices={energyPrices} />)
 
     // Switch to 15min with 'incoming' filter (default)
-    fireEvent.click(screen.getByRole('button', { name: '15 minute resolution' }))
+    fireEvent.click(
+      screen.getByRole('button', { name: '15 minute resolution' })
+    )
 
     // Should only show future/current prices
     const datasetElement = screen.getByTestId('chart-dataset')
@@ -155,7 +177,9 @@ describe('EnergyPricesCard', () => {
     render(<EnergyPricesCard {...defaultProps} energyPrices={energyPrices} />)
 
     // Switch to 15min
-    fireEvent.click(screen.getByRole('button', { name: '15 minute resolution' }))
+    fireEvent.click(
+      screen.getByRole('button', { name: '15 minute resolution' })
+    )
     // Select 'all'
     fireEvent.click(screen.getByRole('button', { name: 'all prices' }))
 
@@ -173,7 +197,9 @@ describe('EnergyPricesCard', () => {
     render(<EnergyPricesCard {...defaultProps} energyPrices={energyPrices} />)
 
     // Switch to 15min
-    fireEvent.click(screen.getByRole('button', { name: '15 minute resolution' }))
+    fireEvent.click(
+      screen.getByRole('button', { name: '15 minute resolution' })
+    )
     // Select '00-12'
     fireEvent.click(screen.getByRole('button', { name: '00-12 hours' }))
 
@@ -190,9 +216,7 @@ describe('EnergyPricesCard', () => {
   })
 
   it('should not change resolution when clicking the same button', () => {
-    const energyPrices = [
-      { hour: 0, price: 5.0, date: '2023-10-24T00:00:00' },
-    ]
+    const energyPrices = [{ hour: 0, price: 5.0, date: '2023-10-24T00:00:00' }]
 
     render(<EnergyPricesCard {...defaultProps} energyPrices={energyPrices} />)
 
@@ -200,6 +224,8 @@ describe('EnergyPricesCard', () => {
     fireEvent.click(screen.getByRole('button', { name: '1 hour resolution' }))
 
     // Should still be in 1h mode (no time range buttons)
-    expect(screen.queryByRole('button', { name: 'all prices' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'all prices' })
+    ).not.toBeInTheDocument()
   })
 })

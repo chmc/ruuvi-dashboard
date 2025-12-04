@@ -24,9 +24,8 @@ const theme = createTheme({
   },
 })
 
-const renderWithTheme = (component) => {
-  return render(<ThemeProvider theme={theme}>{component}</ThemeProvider>)
-}
+const renderWithTheme = (component) =>
+  render(<ThemeProvider theme={theme}>{component}</ThemeProvider>)
 
 describe('CurrentEnergyPriceCard', () => {
   beforeEach(() => {

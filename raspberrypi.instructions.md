@@ -68,6 +68,7 @@ pnpm approve-builds
 ```
 
 Select these packages using space bar:
+
 - `@abandonware/bluetooth-hci-socket`
 - `@abandonware/noble`
 
@@ -128,6 +129,7 @@ pnpm start
 ```
 
 This starts both:
+
 - Frontend on port 3000
 - Backend on port 3001
 

@@ -37,7 +37,9 @@ describe('dateUtils', () => {
       // Result should be roughly 1 day after current time
       expect(result.getTime()).toBeGreaterThan(before.getTime())
       // Allow for small time difference during execution
-      expect(result.getTime() - before.getTime()).toBeGreaterThanOrEqual(24 * 60 * 60 * 1000 - 1000)
+      expect(result.getTime() - before.getTime()).toBeGreaterThanOrEqual(
+        24 * 60 * 60 * 1000 - 1000
+      )
     })
 
     it('should handle February 28 in non-leap year', () => {

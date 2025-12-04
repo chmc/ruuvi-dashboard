@@ -83,11 +83,14 @@ const App = () => {
       fetchRuuviData()
       fetchMinMaxTemperatures()
     }, 10000)
-    const energyPricesIntervalId = setInterval(() => {
-      // Every 30mins
-      fetchEnergyPrices()
-      fetchWeatherData()
-    }, 30 * 60 * 1000)
+    const energyPricesIntervalId = setInterval(
+      () => {
+        // Every 30mins
+        fetchEnergyPrices()
+        fetchWeatherData()
+      },
+      30 * 60 * 1000
+    )
 
     return () => {
       clearInterval(ruuviIntervalId)

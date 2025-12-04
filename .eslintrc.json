@@ -77,6 +77,12 @@
         "import/no-unresolved": "off",
         "import/no-extraneous-dependencies": "off"
       }
+    },
+    {
+      "files": ["**/*.test.js", "**/*.test.jsx"],
+      "rules": {
+        "react/jsx-props-no-spreading": "off"
+      }
     }
   ],
   "settings": {

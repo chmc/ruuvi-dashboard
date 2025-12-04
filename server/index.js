@@ -74,9 +74,8 @@ app.get('/api/energyprices', async (req, res) => {
       tomorrowEnergyPrices: appStorage.tomorrowEnergyPrices,
     }
   }
-  const energyPrices = await energyPricesService.getEnergyPrices(
-    cachedEnergyPrices
-  )
+  const energyPrices =
+    await energyPricesService.getEnergyPrices(cachedEnergyPrices)
   cache.set(cacheKeys.energyPrices, energyPrices)
 
   const energyPricesForClient = {

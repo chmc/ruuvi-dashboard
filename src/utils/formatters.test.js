@@ -104,9 +104,15 @@ describe('uiFormatter', () => {
 
   describe('toShortTimeUI', () => {
     it('should format time as H:MM', () => {
-      expect(uiFormatter.toShortTimeUI(new Date('2023-10-24T09:05:00'))).toBe('9:05')
-      expect(uiFormatter.toShortTimeUI(new Date('2023-10-24T14:30:00'))).toBe('14:30')
-      expect(uiFormatter.toShortTimeUI(new Date('2023-10-24T00:00:00'))).toBe('0:00')
+      expect(uiFormatter.toShortTimeUI(new Date('2023-10-24T09:05:00'))).toBe(
+        '9:05'
+      )
+      expect(uiFormatter.toShortTimeUI(new Date('2023-10-24T14:30:00'))).toBe(
+        '14:30'
+      )
+      expect(uiFormatter.toShortTimeUI(new Date('2023-10-24T00:00:00'))).toBe(
+        '0:00'
+      )
     })
   })
 

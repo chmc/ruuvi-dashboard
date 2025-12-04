@@ -76,6 +76,7 @@ cd ruuvi-dashboard
 ```
 
 This script will:
+
 - Pull latest code from git
 - Install/update dependencies
 - Regenerate systemd environment file

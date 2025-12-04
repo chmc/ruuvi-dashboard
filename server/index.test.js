@@ -51,17 +51,22 @@ const createTestApp = () => {
       )
       cache.set(cacheKeys.ruuvi, sensorDataCollection)
 
-      const todayminmaxtemperature = temperatureService.getTodayMinMaxTemperature(
-        sensorDataCollection,
-        cache.get(cacheKeys.todayMinMax)
-      )
+      const todayminmaxtemperature =
+        temperatureService.getTodayMinMaxTemperature(
+          sensorDataCollection,
+          cache.get(cacheKeys.todayMinMax)
+        )
       if (todayminmaxtemperature) {
         cache.set(cacheKeys.todayMinMax, todayminmaxtemperature)
       }
 
-      res.status(200).json({ message: 'Data received and processed successfully' })
+      res
+        .status(200)
+        .json({ message: 'Data received and processed successfully' })
     } catch (error) {
-      res.status(500).json({ error: 'An error occurred while processing the data' })
+      res
+        .status(500)
+        .json({ error: 'An error occurred while processing the data' })
     }
   })
 
@@ -76,7 +81,8 @@ const createTestApp = () => {
         tomorrowEnergyPrices: appStorage.tomorrowEnergyPrices,
       }
     }
-    const energyPrices = await energyPricesService.getEnergyPrices(cachedEnergyPrices)
+    const energyPrices =
+      await energyPricesService.getEnergyPrices(cachedEnergyPrices)
     cache.set(cacheKeys.energyPrices, energyPrices)
 
     const energyPricesForClient = {
@@ -147,7 +153,9 @@ describe('API Endpoints', () => {
         .set('Content-Type', 'application/json')
 
       expect(response.status).toBe(200)
-      expect(response.body).toEqual({ message: 'Data received and processed successfully' })
+      expect(response.body).toEqual({
+        message: 'Data received and processed successfully',
+      })
       expect(sensorService.getSensorData).toHaveBeenCalledWith(
         incomingData,
         undefined,
@@ -166,7 +174,9 @@ describe('API Endpoints', () => {
         .set('Content-Type', 'application/json')
 
       expect(response.status).toBe(500)
-      expect(response.body).toEqual({ error: 'An error occurred while processing the data' })
+      expect(response.body).toEqual({
+        error: 'An error occurred while processing the data',
+      })
     })
 
     it('should update min/max temperature cache', async () => {
@@ -197,10 +207,16 @@ describe('API Endpoints', () => {
     it('should return energy prices from service', async () => {
       const mockEnergyPrices = {
         todayEnergyPrices: {
-          data: [{ hour: 0, price: 5.5 }, { hour: 1, price: 4.2 }],
+          data: [
+            { hour: 0, price: 5.5 },
+            { hour: 1, price: 4.2 },
+          ],
         },
         tomorrowEnergyPrices: {
-          data: [{ hour: 0, price: 6.0 }, { hour: 1, price: 5.8 }],
+          data: [
+            { hour: 0, price: 6.0 },
+            { hour: 1, price: 5.8 },
+          ],
         },
       }
 
@@ -218,7 +234,10 @@ describe('API Endpoints', () => {
 
     it('should load from storage when cache is empty', async () => {
       const storedData = {
-        todayEnergyPrices: { data: [{ hour: 0, price: 7.0 }], updatedAt: new Date() },
+        todayEnergyPrices: {
+          data: [{ hour: 0, price: 7.0 }],
+          updatedAt: new Date(),
+        },
         tomorrowEnergyPrices: null,
       }
 
@@ -245,7 +264,9 @@ describe('API Endpoints', () => {
 
       await request(app).get('/api/energyprices')
 
-      expect(app.testCache.get(app.cacheKeys.energyPrices)).toEqual(mockEnergyPrices)
+      expect(app.testCache.get(app.cacheKeys.energyPrices)).toEqual(
+        mockEnergyPrices
+      )
     })
   })
 

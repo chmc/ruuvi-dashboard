@@ -1,36 +1,52 @@
 import { render, screen, waitFor, act } from '@testing-library/react'
 import App from './App'
 
+import apiService from './services/api'
+
 // Mock all child components
-jest.mock('./components/RuuviCard', () => {
-  return function MockRuuviCard({ ruuvi }) {
-    return <div data-testid="ruuvi-card">{ruuvi.name}</div>
-  }
-})
+jest.mock(
+  './components/RuuviCard',
+  () =>
+    function MockRuuviCard({ ruuvi }) {
+      return <div data-testid="ruuvi-card">{ruuvi.name}</div>
+    }
+)
 
-jest.mock('./components/InOutCard', () => {
-  return function MockInOutCard() {
-    return <div data-testid="in-out-card">InOutCard</div>
-  }
-})
+jest.mock(
+  './components/InOutCard',
+  () =>
+    function MockInOutCard() {
+      return <div data-testid="in-out-card">InOutCard</div>
+    }
+)
 
-jest.mock('./components/WeatherForecastCard', () => {
-  return function MockWeatherForecastCard() {
-    return <div data-testid="weather-forecast-card">WeatherForecastCard</div>
-  }
-})
+jest.mock(
+  './components/WeatherForecastCard',
+  () =>
+    function MockWeatherForecastCard() {
+      return <div data-testid="weather-forecast-card">WeatherForecastCard</div>
+    }
+)
 
-jest.mock('./components/EnergyPricesCard', () => {
-  return function MockEnergyPricesCard({ title }) {
-    return <div data-testid="energy-prices-card">{title}</div>
-  }
-})
+jest.mock(
+  './components/EnergyPricesCard',
+  () =>
+    function MockEnergyPricesCard({ title }) {
+      return <div data-testid="energy-prices-card">{title}</div>
+    }
+)
 
-jest.mock('./components/CurrentEnergyPriceCard', () => {
-  return function MockCurrentEnergyPriceCard() {
-    return <div data-testid="current-energy-price-card">CurrentEnergyPriceCard</div>
-  }
-})
+jest.mock(
+  './components/CurrentEnergyPriceCard',
+  () =>
+    function MockCurrentEnergyPriceCard() {
+      return (
+        <div data-testid="current-energy-price-card">
+          CurrentEnergyPriceCard
+        </div>
+      )
+    }
+)
 
 // Mock sunrise-sunset-js
 jest.mock('sunrise-sunset-js', () => ({
@@ -55,8 +71,6 @@ jest.mock('./services/api', () => ({
   fetchEnergyPrices: jest.fn(),
   fetchMinMaxTemperatures: jest.fn(),
 }))
-
-import apiService from './services/api'
 
 describe('App', () => {
   beforeEach(() => {
@@ -180,7 +194,9 @@ describe('App', () => {
     })
 
     await waitFor(() => {
-      expect(screen.getByTestId('current-energy-price-card')).toBeInTheDocument()
+      expect(
+        screen.getByTestId('current-energy-price-card')
+      ).toBeInTheDocument()
     })
   })
 
