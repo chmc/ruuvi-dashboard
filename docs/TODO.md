@@ -93,9 +93,9 @@ pnpm test && pnpm lint
 
 ---
 
-## Phase 2: ESLint 8 → 9 Migration (High Risk)
+## Phase 2: ESLint 8 → 9 Migration (High Risk) ✅ COMPLETED
 
-### Task 2.1: Migrate ESLint to Flat Config
+### Task 2.1: Migrate ESLint to Flat Config ✅
 
 **Risk:** High
 **Breaking Changes:**
@@ -153,7 +153,7 @@ pnpm lint && pnpm test
 
 ---
 
-### Task 2.2: Update eslint-plugin-react-hooks
+### Task 2.2: Update eslint-plugin-react-hooks ✅
 
 **Risk:** Medium
 **Dependency:** Requires ESLint 9 (Task 2.1)
@@ -365,8 +365,8 @@ For each task:
 - [x] **Task 1.1:** Upgrade Prettier 2 → 3 ✅ (2.8.8 → 3.7.4)
 - [x] **Task 1.2:** Upgrade eslint-plugin-prettier 4 → 5 ✅ (4.2.5 → 5.5.4)
 - [x] **Task 1.3:** Upgrade eslint-config-prettier 9 → 10 ✅ (9.1.2 → 10.1.8)
-- [ ] **Task 2.1:** Migrate ESLint to Flat Config + ESLint 9
-- [ ] **Task 2.2:** Update eslint-plugin-react-hooks
+- [x] **Task 2.1:** Migrate ESLint to Flat Config + ESLint 9 ✅ (8.57.1 → 9.x)
+- [x] **Task 2.2:** Update eslint-plugin-react-hooks ✅ (4.6.2 → 5.x)
 - [ ] **Task 3.1:** Audit MUI Component Usage
 - [ ] **Task 3.2:** Upgrade MUI v5 → v6
 - [ ] **Task 3.3:** Upgrade MUI v6 → v7
