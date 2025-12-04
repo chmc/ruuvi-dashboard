@@ -79,16 +79,35 @@ check_python() {
 check_nodejs() {
     print_step "Checking Node.js..."
 
-    if ! command -v node &> /dev/null; then
-        print_error "Node.js not found. Please install Node.js 18+ first."
-        echo "Recommended: curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -"
-        echo "             sudo apt-get install -y nodejs"
-        exit 1
+    REQUIRED_MAJOR=22
+
+    # Load Node.js version manager if available (reads .node-version automatically)
+    if command -v fnm &>/dev/null; then
+        eval "$(fnm env)"
+        fnm use --install-if-missing 2>/dev/null || true
+    elif [ -s "$HOME/.nvm/nvm.sh" ]; then
+        export NVM_DIR="$HOME/.nvm"
+        \. "$NVM_DIR/nvm.sh"
+        nvm use 2>/dev/null || true
     fi
 
-    NODE_VERSION=$(node --version | cut -d'v' -f2 | cut -d'.' -f1)
-    if [[ "$NODE_VERSION" -lt 18 ]]; then
-        print_error "Node.js 18+ required. Current version: $(node --version)"
+    NODE_MAJOR=$(node -v 2>/dev/null | sed 's/v//' | cut -d. -f1)
+
+    if [[ -z "$NODE_MAJOR" ]] || [[ "$NODE_MAJOR" -lt "$REQUIRED_MAJOR" ]]; then
+        print_error "Node.js $REQUIRED_MAJOR+ is required (found: $(node -v 2>/dev/null || echo 'none'))"
+        echo ""
+        echo "Install a Node.js version manager and Node $REQUIRED_MAJOR:"
+        echo ""
+        echo "  Option 1 - nvm (recommended for Raspberry Pi):"
+        echo "    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash"
+        echo "    source ~/.bashrc"
+        echo "    nvm install $REQUIRED_MAJOR"
+        echo ""
+        echo "  Option 2 - fnm (faster, requires 64-bit OS):"
+        echo "    curl -fsSL https://fnm.vercel.app/install | bash"
+        echo "    source ~/.bashrc"
+        echo "    fnm install $REQUIRED_MAJOR"
+        echo ""
         exit 1
     fi
 
@@ -173,19 +192,20 @@ configure_env() {
         return
     fi
 
-    if [[ -f .env.example ]]; then
-        cp .env.example .env
-        print_success "Created .env from .env.example"
+    if [[ -f .env.template ]]; then
+        cp .env.template .env
+        print_success "Created .env from .env.template"
     else
         cat > .env << 'EOF'
-# RuuviTag MAC addresses (comma-separated)
-REACT_APP_RUUVITAG_MACS=AA:BB:CC:DD:EE:FF,11:22:33:44:55:66
+# Backend server port
+BACKEND_PORT=3001
 
-# Main indoor sensor MAC
-REACT_APP_MAIN_INDOOR_RUUVITAG_MAC=AA:BB:CC:DD:EE:FF
-
-# Main outdoor sensor MAC
-REACT_APP_MAIN_OUTDOOR_RUUVITAG_MAC=11:22:33:44:55:66
+# RuuviTag configuration (used by both frontend and backend)
+VITE_RUUVITAG_MACS=AA:BB:CC:DD:EE:FF,11:22:33:44:55:66
+VITE_MAIN_INDOOR_RUUVITAG_MAC=AA:BB:CC:DD:EE:FF
+VITE_MAIN_OUTDOOR_RUUVITAG_MAC=11:22:33:44:55:66
+VITE_RUUVITAG_NAMES=Living room,Outdoor
+VITE_OPENWEATHERMAP_APIKEY=your-key
 EOF
         print_success "Created default .env file"
     fi
