@@ -39,7 +39,7 @@ if [[ ! -f package.json ]] || ! grep -q "ruuvi-dashboard" package.json 2>/dev/nu
     exit 1
 fi
 
-# Load fnm or nvm if available (reads .node-version automatically)
+# Load Node.js version manager if available (reads .node-version automatically)
 if command -v fnm &>/dev/null; then
     eval "$(fnm env)"
     fnm use --install-if-missing
@@ -49,9 +49,29 @@ elif [ -s "$HOME/.nvm/nvm.sh" ]; then
     nvm use
 fi
 
-# Verify Node.js version (Vite 7.x requires Node 20.19+ or 22.12+)
-NODE_VERSION=$(node -v)
-print_success "Using Node.js $NODE_VERSION"
+# Check Node.js version (Vite 7.x requires Node 20.19+ or 22.12+)
+REQUIRED_MAJOR=22
+NODE_MAJOR=$(node -v 2>/dev/null | sed 's/v//' | cut -d. -f1)
+
+if [[ -z "$NODE_MAJOR" ]] || [[ "$NODE_MAJOR" -lt "$REQUIRED_MAJOR" ]]; then
+    print_error "Node.js $REQUIRED_MAJOR+ is required (found: $(node -v 2>/dev/null || echo 'none'))"
+    echo ""
+    echo "Install a Node.js version manager and Node $REQUIRED_MAJOR:"
+    echo ""
+    echo "  Option 1 - nvm (recommended for Raspberry Pi):"
+    echo "    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash"
+    echo "    source ~/.bashrc"
+    echo "    nvm install $REQUIRED_MAJOR"
+    echo ""
+    echo "  Option 2 - fnm (faster, requires 64-bit OS):"
+    echo "    curl -fsSL https://fnm.vercel.app/install | bash"
+    echo "    source ~/.bashrc"
+    echo "    fnm install $REQUIRED_MAJOR"
+    echo ""
+    exit 1
+fi
+
+print_success "Using Node.js $(node -v)"
 
 # Step 1: Pull latest code
 print_step "Pulling latest code from git..."
