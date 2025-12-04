@@ -23,7 +23,7 @@ const HourlyWeatherForecastCard = ({ weatherList }) => {
   }
 
   return (
-    <Grid item xs={6}>
+    <Grid size={6}>
       <Card>
         <CardContent>
           {weatherList.map((weather) => (

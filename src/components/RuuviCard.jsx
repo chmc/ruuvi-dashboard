@@ -51,7 +51,7 @@ const RuuviCard = ({ ruuvi, ruuviData }) => {
   const weather = getPressureWeather(ruuviData?.pressure)
 
   return (
-    <Grid item xs={2}>
+    <Grid size={2}>
       <Card>
         <CardContent>
           <Typography variant="subtitle1" component="div" fontWeight="medium">

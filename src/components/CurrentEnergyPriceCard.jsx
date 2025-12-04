@@ -37,7 +37,7 @@ const CurrentEnergyPrice = ({ energyPrices }) => {
   )
 
   return (
-    <Grid item xs={2}>
+    <Grid size={2}>
       <Card>
         <CardContent>
           <Box display="flex" justifyContent="center">

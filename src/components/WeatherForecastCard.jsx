@@ -18,7 +18,7 @@ const WeatherForecastCard = ({ weatherForecast }) => {
   }
 
   return (
-    <Grid item xs={10}>
+    <Grid size={10}>
       <Card>
         <CardContent sx={{ display: 'flex', justifyContent: 'center' }}>
           {weatherForecast.hourlyForecast.map((weather) => (

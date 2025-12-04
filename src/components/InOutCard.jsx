@@ -29,9 +29,9 @@ const InOutCard = ({ ruuviDatas, todayMinMaxTemperature, sunrise, sunset }) => {
   const outdoorRuuvi = ruuviDatas[configs.mainOutdoorMac]
 
   return (
-    <Grid item xs={4}>
+    <Grid size={4}>
       <Grid container spacing={2}>
-        <Grid item xs={6}>
+        <Grid size={6}>
           <Card>
             <CardContent>
               <Typography
@@ -70,7 +70,7 @@ const InOutCard = ({ ruuviDatas, todayMinMaxTemperature, sunrise, sunset }) => {
           </Card>
         </Grid>
 
-        <Grid item xs={6}>
+        <Grid size={6}>
           <Card>
             <CardContent>
               <Typography

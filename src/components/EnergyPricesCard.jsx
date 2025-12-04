@@ -26,7 +26,7 @@ const EnergyPricesCard = ({ title, noPricesText, energyPrices }) => {
 
   if (!energyPrices) {
     return (
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Card display="flex">
           <Box
             height={149}
@@ -241,7 +241,7 @@ const EnergyPricesCard = ({ title, noPricesText, energyPrices }) => {
   })
 
   return (
-    <Grid item xs={12}>
+    <Grid size={12}>
       <Card>
         <CardContent sx={{ py: 1, '&:last-child': { pb: 1 } }}>
           <VerticalBarChart
