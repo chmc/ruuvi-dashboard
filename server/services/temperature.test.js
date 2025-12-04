@@ -5,7 +5,7 @@ describe('temperatureService', () => {
     // Set the environment variable before running your tests
     beforeAll(() => {
       // Set the environment variable before importing your module
-      process.env.REACT_APP_MAIN_OUTDOOR_RUUVITAG_MAC = 'mac1'
+      process.env.VITE_MAIN_OUTDOOR_RUUVITAG_MAC = 'mac1'
       jest.useFakeTimers()
       jest.setSystemTime(new Date('2023-10-24T12:11:00'))
 
@@ -16,7 +16,7 @@ describe('temperatureService', () => {
     // Restore the original environment variable after the tests
     afterAll(() => {
       // Clear the environment variable after the tests
-      delete process.env.REACT_APP_MAIN_OUTDOOR_RUUVITAG_MAC
+      delete process.env.VITE_MAIN_OUTDOOR_RUUVITAG_MAC
       jest.useRealTimers()
     })
 

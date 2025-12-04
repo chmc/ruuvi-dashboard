@@ -21,7 +21,7 @@ const getTodayMinMaxTemperature = (
     console.log('getTodayMinMaxTemperature start')
     // Normalize MAC to lowercase for consistent lookups
     const mainOutdoorRuuviTagMac = normalizeMac(
-      process.env.REACT_APP_MAIN_OUTDOOR_RUUVITAG_MAC
+      process.env.VITE_MAIN_OUTDOOR_RUUVITAG_MAC
     )
 
     if (isSensorDataMissing(sensorDataCollection)) {

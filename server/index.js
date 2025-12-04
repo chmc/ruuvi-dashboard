@@ -116,7 +116,7 @@ const updateSensorCache = (sensorDataCollection) => {
 /**
  * @returns {string[]}
  */
-const getConfigMacIds = () => process.env.RUUVITAG_MACS?.split(',')
+const getConfigMacIds = () => process.env.VITE_RUUVITAG_MACS?.split(',')
 
 // ============================================================================
 // Sensor Data Collection Mode Selection
@@ -141,7 +141,7 @@ if (process.env.TEST || process.env.SIMULATE) {
 
   if (!macs || macs.length === 0) {
     console.warn(
-      'WARNING: No MAC addresses configured. Set RUUVITAG_MACS environment variable.'
+      'WARNING: No MAC addresses configured. Set VITE_RUUVITAG_MACS environment variable.'
     )
   }
 
