@@ -39,14 +39,17 @@ if [[ ! -f package.json ]] || ! grep -q "ruuvi-dashboard" package.json 2>/dev/nu
     exit 1
 fi
 
-# Load Node.js version manager if available (reads .node-version automatically)
+# Load Node.js version manager if available
 if command -v fnm &>/dev/null; then
     eval "$(fnm env)"
-    fnm use --install-if-missing
+    fnm use --install-if-missing 2>/dev/null || true
 elif [ -s "$HOME/.nvm/nvm.sh" ]; then
     export NVM_DIR="$HOME/.nvm"
     \. "$NVM_DIR/nvm.sh"
-    nvm use
+    # nvm uses .nvmrc, not .node-version - use default or read .node-version
+    if [[ -f .node-version ]]; then
+        nvm use "$(cat .node-version)" 2>/dev/null || true
+    fi
 fi
 
 # Check Node.js version (Vite 7.x requires Node 20.19+ or 22.12+)

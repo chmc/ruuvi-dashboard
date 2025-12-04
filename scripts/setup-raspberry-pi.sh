@@ -81,14 +81,17 @@ check_nodejs() {
 
     REQUIRED_MAJOR=22
 
-    # Load Node.js version manager if available (reads .node-version automatically)
+    # Load Node.js version manager if available
     if command -v fnm &>/dev/null; then
         eval "$(fnm env)"
         fnm use --install-if-missing 2>/dev/null || true
     elif [ -s "$HOME/.nvm/nvm.sh" ]; then
         export NVM_DIR="$HOME/.nvm"
         \. "$NVM_DIR/nvm.sh"
-        nvm use 2>/dev/null || true
+        # nvm uses .nvmrc, not .node-version - use default or read .node-version
+        if [[ -f .node-version ]]; then
+            nvm use "$(cat .node-version)" 2>/dev/null || true
+        fi
     fi
 
     NODE_MAJOR=$(node -v 2>/dev/null | sed 's/v//' | cut -d. -f1)
