@@ -9,6 +9,9 @@ Ruuvi Dashboard is a home monitoring dashboard that displays RuuviTag sensor dat
 ## RULES
 
 - Always follow TDD principle when doing implementation work
+- If work is from TODO.md file
+  - When you start working mark task to in progress state
+  - When you finish task, mark it completed
 
 ## Commands
 
