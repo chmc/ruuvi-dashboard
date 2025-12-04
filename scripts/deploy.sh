@@ -39,6 +39,19 @@ if [[ ! -f package.json ]] || ! grep -q "ruuvi-dashboard" package.json 2>/dev/nu
     exit 1
 fi
 
+# Load nvm if available (needed for correct Node.js version)
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+# Check Node.js version (Vite 7.x requires Node 20.19+ or 22.12+)
+NODE_VERSION=$(node -v | sed 's/v//' | cut -d. -f1,2)
+REQUIRED_VERSION="20.19"
+if [[ "$(printf '%s\n' "$REQUIRED_VERSION" "$NODE_VERSION" | sort -V | head -n1)" != "$REQUIRED_VERSION" ]]; then
+    print_error "Node.js $NODE_VERSION is too old. Vite requires Node.js 20.19+ or 22.12+"
+    echo "Please upgrade: nvm install 22 && nvm use 22"
+    exit 1
+fi
+
 # Step 1: Pull latest code
 print_step "Pulling latest code from git..."
 git pull origin main
