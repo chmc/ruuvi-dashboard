@@ -1,5 +1,6 @@
 {
   "env": {
+    "browser": true,
     "node": true,
     "es2021": true,
     "jest/globals": true
@@ -69,18 +70,18 @@
       "rules": {
         // Remove TypeScript-specific rules
       }
+    },
+    {
+      "files": ["vite.config.js"],
+      "rules": {
+        "import/no-unresolved": "off",
+        "import/no-extraneous-dependencies": "off"
+      }
     }
   ],
   "settings": {
     "import/resolver": {
       "node": {
-        "extensions": [".js", ".jsx"]
-      },
-      "alias": {
-        "map": [
-          ["@", "./src"],
-          ["@test", "./test"]
-        ],
         "extensions": [".js", ".jsx"]
       }
     }

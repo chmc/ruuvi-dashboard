@@ -1,10 +1,10 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`energyPricesService getEnergyPrices() should return current energy prices and not get new 1`] = `
-Object {
-  "todayEnergyPrices": Object {
-    "data": Array [
-      Object {
+{
+  "todayEnergyPrices": {
+    "data": [
+      {
         "date": 2023-10-24T09:00:00.000Z,
         "hour": 12,
         "price": 0.05,
@@ -19,25 +19,25 @@ Object {
 `;
 
 exports[`energyPricesService getEnergyPrices() should return object with energy prices for today 1`] = `
-Object {
-  "todayEnergyPrices": Object {
-    "data": Array [
-      Object {
+{
+  "todayEnergyPrices": {
+    "data": [
+      {
         "date": 2023-10-26T21:00:00.000Z,
         "hour": 0,
         "price": 4.24,
       },
-      Object {
+      {
         "date": 2023-10-26T22:00:00.000Z,
         "hour": 1,
         "price": 6.31,
       },
-      Object {
+      {
         "date": 2023-10-26T23:00:00.000Z,
         "hour": 2,
         "price": 6.17,
       },
-      Object {
+      {
         "date": 2023-10-27T00:00:00.000Z,
         "hour": 3,
         "price": 6.03,

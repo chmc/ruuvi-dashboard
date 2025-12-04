@@ -53,7 +53,7 @@ describe('energyPricesService', () => {
       const result = await energyPricesService.getEnergyPrices(undefined)
 
       // Assert
-      expect(getEnergyPricesFromApiSpy).toBeCalledTimes(1)
+      expect(getEnergyPricesFromApiSpy).toHaveBeenCalledTimes(1)
       expect(result).toMatchSnapshot()
     })
 
