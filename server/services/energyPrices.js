@@ -8,7 +8,6 @@ const dateUtils = require('../utils/date')
  * @param   {EnergyPrices} energyPrices
  * @returns {EnergyPrices}
  */
-// eslint-disable-next-line consistent-return
 const getEnergyPrices = async (energyPrices) => {
   try {
     const { currentDate, currentDateObject, tomorrowDate, tomorrowDateObject } =

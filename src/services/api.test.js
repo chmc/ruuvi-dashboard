@@ -105,16 +105,15 @@ describe('apiService', () => {
       const result = await apiService.fetchWeatherData()
 
       // Check that hourly forecast contains expected properties
-      if (result.hourlyForecast.length > 0) {
-        const firstItem = result.hourlyForecast[0]
-        expect(firstItem).toHaveProperty('dateTimeUtcTxt')
-        expect(firstItem).toHaveProperty('dateTxt')
-        expect(firstItem).toHaveProperty('time')
-        expect(firstItem).toHaveProperty('weekDay')
-        expect(firstItem).toHaveProperty('temp')
-        expect(firstItem).toHaveProperty('wind')
-        expect(firstItem).toHaveProperty('iconUrl')
-      }
+      expect(result.hourlyForecast.length).toBeGreaterThan(0)
+      const firstItem = result.hourlyForecast[0]
+      expect(firstItem).toHaveProperty('dateTimeUtcTxt')
+      expect(firstItem).toHaveProperty('dateTxt')
+      expect(firstItem).toHaveProperty('time')
+      expect(firstItem).toHaveProperty('weekDay')
+      expect(firstItem).toHaveProperty('temp')
+      expect(firstItem).toHaveProperty('wind')
+      expect(firstItem).toHaveProperty('iconUrl')
     })
 
     it('should filter daily forecast to midday times (10-13)', async () => {
