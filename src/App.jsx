@@ -99,7 +99,7 @@ const App = () => {
   }, [])
 
   return (
-    <Box p={2}>
+    <Box px={2} pt={2} pb={0}>
       <Grid container spacing={2}>
         <InOutCard
           ruuviDatas={ruuviDatas}

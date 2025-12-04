@@ -35,8 +35,8 @@ export default [
   // Prettier config (must come after airbnb to override conflicting rules)
   ...fixupConfigRules(compat.extends('prettier')),
 
-  // React Hooks v5 flat config (replaces airbnb/hooks)
-  reactHooksPlugin.configs['recommended-latest'],
+  // React Hooks v7 flat config (replaces airbnb/hooks)
+  reactHooksPlugin.configs.flat['recommended-latest'],
 
   // Main configuration for all JS/JSX files
   {
