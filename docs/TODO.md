@@ -233,7 +233,7 @@ Add endpoint to fetch historical readings.
 
 ---
 
-### Task 2.2: Create Trends API Endpoint
+### Task 2.2: Create Trends API Endpoint ✅ Completed
 
 Add endpoint to fetch trend data for dashboard arrows.
 

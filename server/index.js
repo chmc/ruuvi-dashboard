@@ -14,6 +14,7 @@ const flushScheduler = require('./services/history/flushScheduler')
 const shutdownHandler = require('./services/history/shutdownHandler')
 const historySeeder = require('./services/history/historySeeder')
 const historyRouter = require('./routes/history')
+const trendsRouter = require('./routes/trends')
 require('dotenv').config()
 
 // Only import ruuviScanner when not in test mode (requires native BLE module)
@@ -97,6 +98,9 @@ app.get('/api/todayminmaxtemperature', async (req, res) => {
 
 // History API routes
 app.use('/api/ruuvi', historyRouter)
+
+// Trends API routes
+app.use('/api/ruuvi', trendsRouter)
 
 // Catch-all route to serve React app for any non-API routes (must be after API routes)
 if (process.env.NODE_ENV === 'production') {
