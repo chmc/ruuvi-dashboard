@@ -2,7 +2,7 @@
 
 ## Overview
 
-Implement persistent storage for RuuviTag sensor data with history visualization, trend indicators, and a diagnostics screen. Optimize for Raspberry Pi SD card longevity and tablet display (1280×800 fullscreen).
+Implement persistent storage for RuuviTag sensor data with history visualization, trend indicators, and a diagnostics screen. Optimize for Raspberry Pi SD card longevity and tablet display (1280ï¿½800 fullscreen).
 
 ## Rules
 
@@ -15,7 +15,7 @@ Implement persistent storage for RuuviTag sensor data with history visualization
 | Topic | Decision |
 |-------|----------|
 | Database | SQLite with WAL mode (`better-sqlite3`) |
-| Data Retention | 24h’1min, 7d’5min, 30d+’hourly averages |
+| Data Retention | 24hï¿½1min, 7dï¿½5min, 30d+ï¿½hourly averages |
 | Buffer Flush | 15 minutes interval |
 | SD Card Protection | In-memory buffer + optional tmpfs |
 | Graceful Shutdown | Signal handlers + systemd hook |
@@ -23,7 +23,7 @@ Implement persistent storage for RuuviTag sensor data with history visualization
 | Charts | Recharts library |
 | Navigation | Floating Speed Dial (MUI SpeedDial) |
 | Trends | Arrows on dashboard cards, sparklines on history screen |
-| Target Device | Lenovo Tab 2 X30L, 1280×800 fullscreen |
+| Target Device | Lenovo Tab 2 X30L, 1280ï¿½800 fullscreen |
 
 ## Environment Variables (New)
 
@@ -42,7 +42,7 @@ RUUVI_TMPFS_PATH=/var/ruuvi-buffer
 
 ## Phase 1: Database Foundation
 
-### Task 1.1: Create SQLite History Service - Schema and Connection
+### Task 1.1: Create SQLite History Service - Schema and Connection âœ… Completed
 
 Create the history database service with schema initialization.
 
@@ -327,7 +327,7 @@ Display trend indicators on sensor cards.
 **Test first:**
 - Test trend arrow renders for temperature
 - Test trend arrow renders for humidity
-- Test correct arrow icon for each direction (‘—’˜“)
+- Test correct arrow icon for each direction (ï¿½ï¿½ï¿½ï¿½ï¿½)
 - Test delta value displays next to arrow
 - Test no arrow when trend data unavailable
 
@@ -353,8 +353,8 @@ Tighten spacing to eliminate cropping.
 
 **Implementation:**
 - Audit current component heights
-- Reduce Card padding: 16px ’ 12px
-- Reduce Grid spacing: 2 ’ 1.5
+- Reduce Card padding: 16px ï¿½ 12px
+- Reduce Grid spacing: 2 ï¿½ 1.5
 - Reduce header height if needed
 - Test on 800px viewport
 
