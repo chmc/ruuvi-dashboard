@@ -31,6 +31,18 @@ const darkTheme = createTheme({
       },
     },
   },
+  components: {
+    MuiCardContent: {
+      styleOverrides: {
+        root: {
+          padding: '12px',
+          '&:last-child': {
+            paddingBottom: '12px',
+          },
+        },
+      },
+    },
+  },
 })
 
 export default darkTheme

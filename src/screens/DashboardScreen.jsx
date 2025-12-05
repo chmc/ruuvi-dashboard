@@ -125,8 +125,8 @@ const DashboardScreen = () => {
   }, [])
 
   return (
-    <Box px={2} pt={2} pb={0}>
-      <Grid container spacing={2}>
+    <Box px={1.5} pt={1.5} pb={0}>
+      <Grid container spacing={1.5}>
         <InOutCard
           ruuviDatas={ruuviDatas}
           todayMinMaxTemperature={todayMinMaxTemperature}

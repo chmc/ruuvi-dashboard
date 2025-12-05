@@ -30,7 +30,7 @@ const InOutCard = ({ ruuviDatas, todayMinMaxTemperature, sunrise, sunset }) => {
 
   return (
     <Grid size={4}>
-      <Grid container spacing={2}>
+      <Grid container spacing={1.5}>
         <Grid size={6}>
           <Card>
             <CardContent>
