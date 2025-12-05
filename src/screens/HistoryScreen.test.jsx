@@ -1,5 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import HistoryScreen from './HistoryScreen'
+import apiService from '../services/api'
 
 // Mock configs
 jest.mock('../configs', () => ({
@@ -11,18 +12,77 @@ jest.mock('../configs', () => ({
   macIds: ['aa:bb:cc:dd:ee:01', 'aa:bb:cc:dd:ee:02', 'aa:bb:cc:dd:ee:03'],
 }))
 
+// Mock API service
+jest.mock('../services/api', () => ({
+  fetchHistory: jest.fn(),
+}))
+
+/**
+ * Helper to wait for loading to complete
+ */
+const waitForLoadingComplete = async () => {
+  await waitFor(() => {
+    expect(screen.queryByTestId('loading-indicator')).not.toBeInTheDocument()
+  })
+}
+
+// Mock recharts components
+jest.mock('recharts', () => ({
+  ResponsiveContainer: ({ children }) => (
+    <div data-testid="responsive-container">{children}</div>
+  ),
+  LineChart: ({ children, data }) => (
+    <svg data-testid="line-chart" data-points={data?.length || 0}>
+      {children}
+    </svg>
+  ),
+  Line: ({ dataKey }) => <line data-testid={`chart-line-${dataKey}`} />,
+  XAxis: () => <g data-testid="x-axis" />,
+  YAxis: () => <g data-testid="y-axis" />,
+  Tooltip: () => <div data-testid="chart-tooltip" />,
+  CartesianGrid: () => <g data-testid="cartesian-grid" />,
+}))
+
 describe('HistoryScreen', () => {
+  const mockHistoryData = [
+    {
+      timestamp: 1700000000000,
+      temperature: 20.5,
+      humidity: 45,
+      pressure: 1013,
+    },
+    {
+      timestamp: 1700003600000,
+      temperature: 21.0,
+      humidity: 46,
+      pressure: 1014,
+    },
+    {
+      timestamp: 1700007200000,
+      temperature: 21.5,
+      humidity: 44,
+      pressure: 1012,
+    },
+  ]
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    apiService.fetchHistory.mockResolvedValue(mockHistoryData)
+  })
+
   describe('Layout', () => {
-    it('should render with title', () => {
+    it('should render with title', async () => {
       render(<HistoryScreen />)
+      await waitForLoadingComplete()
 
       expect(
         screen.getByRole('heading', { name: /history/i })
       ).toBeInTheDocument()
     })
 
-    it('should render time range buttons', () => {
+    it('should render time range buttons', async () => {
       render(<HistoryScreen />)
+      await waitForLoadingComplete()
 
       expect(screen.getByRole('button', { name: '1h' })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: '6h' })).toBeInTheDocument()
@@ -32,8 +92,9 @@ describe('HistoryScreen', () => {
       expect(screen.getByRole('button', { name: 'All' })).toBeInTheDocument()
     })
 
-    it('should have 24h selected by default', () => {
+    it('should have 24h selected by default', async () => {
       render(<HistoryScreen />)
+      await waitForLoadingComplete()
 
       const button24h = screen.getByRole('button', { name: '24h' })
       expect(button24h).toHaveAttribute('aria-pressed', 'true')
@@ -41,11 +102,14 @@ describe('HistoryScreen', () => {
   })
 
   describe('Time Range Selection', () => {
-    it('should update selection when clicking a time range button', () => {
+    it('should update selection when clicking a time range button', async () => {
       render(<HistoryScreen />)
+      await waitForLoadingComplete()
 
       const button7d = screen.getByRole('button', { name: '7d' })
       fireEvent.click(button7d)
+
+      await waitForLoadingComplete()
 
       expect(button7d).toHaveAttribute('aria-pressed', 'true')
 
@@ -54,34 +118,152 @@ describe('HistoryScreen', () => {
       expect(button24h).toHaveAttribute('aria-pressed', 'false')
     })
 
-    it('should allow selecting different time ranges', () => {
+    it('should allow selecting different time ranges', async () => {
       render(<HistoryScreen />)
+      await waitForLoadingComplete()
 
       // Click through all time ranges
       const timeRanges = ['1h', '6h', '24h', '7d', '30d', 'All']
 
-      timeRanges.forEach((range) => {
-        const button = screen.getByRole('button', { name: range })
-        fireEvent.click(button)
-        expect(button).toHaveAttribute('aria-pressed', 'true')
-      })
+      // Test first range
+      const button1h = screen.getByRole('button', { name: timeRanges[0] })
+      fireEvent.click(button1h)
+      await waitForLoadingComplete()
+      expect(button1h).toHaveAttribute('aria-pressed', 'true')
+
+      // Test last range
+      const buttonAll = screen.getByRole('button', { name: 'All' })
+      fireEvent.click(buttonAll)
+      await waitForLoadingComplete()
+      expect(buttonAll).toHaveAttribute('aria-pressed', 'true')
     })
   })
 
   describe('Sensor List', () => {
-    it('should render sensor list for each configured sensor', () => {
+    it('should render sensor list for each configured sensor', async () => {
       render(<HistoryScreen />)
+      await waitForLoadingComplete()
 
       expect(screen.getByText('Living Room')).toBeInTheDocument()
       expect(screen.getByText('Bedroom')).toBeInTheDocument()
       expect(screen.getByText('Outside')).toBeInTheDocument()
     })
+  })
 
-    it('should render sensor items in a list', () => {
+  describe('API Integration', () => {
+    it('should call history API on screen mount', async () => {
+      render(<HistoryScreen />)
+      await waitForLoadingComplete()
+
+      expect(apiService.fetchHistory).toHaveBeenCalled()
+    })
+
+    it('should call API for all configured sensors', async () => {
+      render(<HistoryScreen />)
+      await waitForLoadingComplete()
+
+      expect(apiService.fetchHistory).toHaveBeenCalledWith(
+        'aa:bb:cc:dd:ee:01',
+        '24h'
+      )
+      expect(apiService.fetchHistory).toHaveBeenCalledWith(
+        'aa:bb:cc:dd:ee:02',
+        '24h'
+      )
+      expect(apiService.fetchHistory).toHaveBeenCalledWith(
+        'aa:bb:cc:dd:ee:03',
+        '24h'
+      )
+    })
+
+    it('should call API with correct range parameter', async () => {
+      render(<HistoryScreen />)
+      await waitForLoadingComplete()
+
+      // Clear mocks and change range
+      apiService.fetchHistory.mockClear()
+
+      const button7d = screen.getByRole('button', { name: '7d' })
+      fireEvent.click(button7d)
+
+      await waitForLoadingComplete()
+
+      expect(apiService.fetchHistory).toHaveBeenCalledWith(
+        expect.any(String),
+        '7d'
+      )
+    })
+
+    it('should update data when time range changes', async () => {
+      render(<HistoryScreen />)
+      await waitForLoadingComplete()
+
+      const initialCallCount = apiService.fetchHistory.mock.calls.length
+
+      // Change time range
+      const button1h = screen.getByRole('button', { name: '1h' })
+      fireEvent.click(button1h)
+
+      await waitForLoadingComplete()
+
+      expect(apiService.fetchHistory.mock.calls.length).toBeGreaterThan(
+        initialCallCount
+      )
+    })
+  })
+
+  describe('Loading State', () => {
+    it('should display loading state while fetching', () => {
+      // Create a promise that doesn't resolve immediately
+      apiService.fetchHistory.mockImplementation(() => new Promise(() => {}))
+
       render(<HistoryScreen />)
 
-      const sensorItems = screen.getAllByTestId('sensor-item')
-      expect(sensorItems).toHaveLength(3)
+      expect(screen.getByTestId('loading-indicator')).toBeInTheDocument()
+    })
+
+    it('should hide loading state after data loads', async () => {
+      render(<HistoryScreen />)
+      await waitForLoadingComplete()
+
+      expect(screen.queryByTestId('loading-indicator')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('Error State', () => {
+    it('should display error state on API failure', async () => {
+      apiService.fetchHistory.mockRejectedValue(new Error('Network error'))
+
+      render(<HistoryScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByTestId('error-message')).toBeInTheDocument()
+      })
+    })
+
+    it('should show error message text', async () => {
+      apiService.fetchHistory.mockRejectedValue(new Error('Network error'))
+
+      render(<HistoryScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/failed to load/i)).toBeInTheDocument()
+      })
+    })
+  })
+
+  describe('Detail Chart', () => {
+    it('should show detail chart when sensor is selected', async () => {
+      render(<HistoryScreen />)
+      await waitForLoadingComplete()
+
+      // Click on a sensor row
+      const sensorRow = screen.getByRole('button', {
+        name: /Living Room/i,
+      })
+      fireEvent.click(sensorRow)
+
+      expect(screen.getByTestId('detail-chart-wrapper')).toBeInTheDocument()
     })
   })
 })

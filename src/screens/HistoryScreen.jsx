@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import ToggleButton from '@mui/material/ToggleButton'
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
-import List from '@mui/material/List'
-import ListItem from '@mui/material/ListItem'
-import ListItemText from '@mui/material/ListItemText'
+import CircularProgress from '@mui/material/CircularProgress'
+import Alert from '@mui/material/Alert'
 import configs from '../configs'
+import apiService from '../services/api'
+import SensorHistoryRow from '../components/SensorHistoryRow'
+import DetailChart from '../components/DetailChart'
 
 /**
  * Available time range options for history data
@@ -27,6 +29,44 @@ const TIME_RANGES = [
  */
 const HistoryScreen = () => {
   const [selectedRange, setSelectedRange] = useState('24h')
+  const [selectedSensor, setSelectedSensor] = useState(null)
+  const [historyData, setHistoryData] = useState({})
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  /**
+   * Fetch history data for all sensors
+   * @param {string} range - Time range to fetch
+   */
+  const fetchAllHistory = useCallback(async (range) => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      const results = await Promise.all(
+        configs.ruuviTags.map(async (sensor) => {
+          const data = await apiService.fetchHistory(sensor.mac, range)
+          return { mac: sensor.mac, data }
+        })
+      )
+
+      const dataMap = {}
+      results.forEach(({ mac, data }) => {
+        dataMap[mac] = data
+      })
+
+      setHistoryData(dataMap)
+    } catch (err) {
+      setError('Failed to load history data')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  // Fetch data on mount and when range changes
+  useEffect(() => {
+    fetchAllHistory(selectedRange)
+  }, [selectedRange, fetchAllHistory])
 
   /**
    * Handle time range selection change
@@ -38,6 +78,48 @@ const HistoryScreen = () => {
       setSelectedRange(newRange)
     }
   }
+
+  /**
+   * Handle sensor selection
+   * @param {string} mac - MAC address of selected sensor
+   */
+  const handleSensorSelect = (mac) => {
+    setSelectedSensor(mac === selectedSensor ? null : mac)
+  }
+
+  /**
+   * Get current value from history data
+   * @param {Array} data - History data array
+   * @returns {number|null} Latest temperature value
+   */
+  const getCurrentValue = (data) => {
+    if (!data || data.length === 0) return null
+    return data[data.length - 1].temperature
+  }
+
+  /**
+   * Transform history data to sparkline format
+   * @param {Array} data - History data array
+   * @returns {Array} Data formatted for sparkline
+   */
+  const toSparklineData = (data) => {
+    if (!data) return []
+    return data.map((point) => ({
+      timestamp: point.timestamp,
+      value: point.temperature,
+    }))
+  }
+
+  /**
+   * Get the selected sensor object
+   * @returns {Object|null} Selected sensor config
+   */
+  const getSelectedSensorConfig = () => {
+    if (!selectedSensor) return null
+    return configs.ruuviTags.find((s) => s.mac === selectedSensor)
+  }
+
+  const selectedSensorConfig = getSelectedSensorConfig()
 
   return (
     <Box px={2} pt={2} pb={0}>
@@ -62,16 +144,53 @@ const HistoryScreen = () => {
         </ToggleButtonGroup>
       </Box>
 
+      {/* Loading State */}
+      {loading && (
+        <Box
+          data-testid="loading-indicator"
+          display="flex"
+          justifyContent="center"
+          py={4}
+        >
+          <CircularProgress />
+        </Box>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <Alert data-testid="error-message" severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
       {/* Sensor List */}
-      <Box>
-        <List>
+      {!loading && !error && (
+        <Box>
           {configs.ruuviTags.map((sensor) => (
-            <ListItem key={sensor.mac} data-testid="sensor-item">
-              <ListItemText primary={sensor.name} />
-            </ListItem>
+            <SensorHistoryRow
+              key={sensor.mac}
+              name={sensor.name}
+              mac={sensor.mac}
+              data={toSparklineData(historyData[sensor.mac])}
+              currentValue={getCurrentValue(historyData[sensor.mac])}
+              unit="°C"
+              onSelect={handleSensorSelect}
+              selected={selectedSensor === sensor.mac}
+            />
           ))}
-        </List>
-      </Box>
+        </Box>
+      )}
+
+      {/* Detail Chart */}
+      {selectedSensorConfig && historyData[selectedSensor] && (
+        <Box mt={2}>
+          <DetailChart
+            data={historyData[selectedSensor]}
+            sensorName={selectedSensorConfig.name}
+            timeRange={selectedRange}
+          />
+        </Box>
+      )}
     </Box>
   )
 }

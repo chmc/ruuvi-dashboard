@@ -448,7 +448,7 @@ Build full-size chart for selected sensor.
 
 ---
 
-### Task 5.5: Integrate History Screen with API
+### Task 5.5: Integrate History Screen with API ✅ Completed
 
 Connect history screen to backend data.
 

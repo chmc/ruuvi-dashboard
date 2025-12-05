@@ -215,4 +215,84 @@ describe('apiService', () => {
       expect(result).toBeNull()
     })
   })
+
+  describe('fetchHistory', () => {
+    const mockHistoryData = [
+      {
+        timestamp: 1700000000000,
+        temperature: 20.5,
+        humidity: 45,
+        pressure: 1013,
+      },
+      {
+        timestamp: 1700003600000,
+        temperature: 21.0,
+        humidity: 46,
+        pressure: 1014,
+      },
+      {
+        timestamp: 1700007200000,
+        temperature: 21.5,
+        humidity: 44,
+        pressure: 1012,
+      },
+    ]
+
+    it('should fetch history data for a sensor with default range', async () => {
+      global.fetch.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce(mockHistoryData),
+      })
+
+      const result = await apiService.fetchHistory('aa:bb:cc:dd:ee:ff')
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/ruuvi/history?mac=aa:bb:cc:dd:ee:ff&range=24h'
+      )
+      expect(result).toEqual(mockHistoryData)
+    })
+
+    it('should fetch history data with specified range', async () => {
+      global.fetch.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce(mockHistoryData),
+      })
+
+      await apiService.fetchHistory('aa:bb:cc:dd:ee:ff', '7d')
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/ruuvi/history?mac=aa:bb:cc:dd:ee:ff&range=7d'
+      )
+    })
+
+    it('should throw error when fetch fails', async () => {
+      global.fetch.mockRejectedValueOnce(new Error('Network error'))
+
+      await expect(
+        apiService.fetchHistory('aa:bb:cc:dd:ee:ff')
+      ).rejects.toThrow('Network error')
+    })
+
+    it('should throw error when response is not ok', async () => {
+      global.fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+      })
+
+      await expect(
+        apiService.fetchHistory('aa:bb:cc:dd:ee:ff')
+      ).rejects.toThrow('Failed to fetch history: 500')
+    })
+
+    it('should return empty array when no data', async () => {
+      global.fetch.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce([]),
+      })
+
+      const result = await apiService.fetchHistory('aa:bb:cc:dd:ee:ff')
+
+      expect(result).toEqual([])
+    })
+  })
 })

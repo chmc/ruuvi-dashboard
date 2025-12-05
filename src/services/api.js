@@ -68,12 +68,35 @@ const fetchTrends = async (macs) => {
   return response.json()
 }
 
+/**
+ * @typedef {Object} HistoryDataPoint
+ * @property {number} timestamp - Unix timestamp in milliseconds
+ * @property {number} temperature - Temperature in Celsius
+ * @property {number} humidity - Humidity percentage
+ * @property {number} pressure - Pressure in hPa
+ */
+
+/**
+ * Fetch historical sensor data
+ * @param {string} mac - MAC address of the sensor
+ * @param {string} [range='24h'] - Time range (1h, 6h, 24h, 7d, 30d, all)
+ * @returns {Promise<HistoryDataPoint[]>} Array of history data points
+ */
+const fetchHistory = async (mac, range = '24h') => {
+  const response = await fetch(`/api/ruuvi/history?mac=${mac}&range=${range}`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch history: ${response.status}`)
+  }
+  return response.json()
+}
+
 const apiService = {
   fetchRuuviData,
   fetchWeatherData,
   fetchEnergyPrices,
   fetchMinMaxTemperatures,
   fetchTrends,
+  fetchHistory,
 }
 
 export default apiService
