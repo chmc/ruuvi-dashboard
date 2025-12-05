@@ -405,7 +405,7 @@ Build mini charts for sensor overview.
 
 ---
 
-### Task 5.3: Create Sensor History Row Component
+### Task 5.3: Create Sensor History Row Component ✅ Completed
 
 Build clickable sensor row with sparkline.
 
