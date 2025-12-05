@@ -1,5 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import { ThemeProvider } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
@@ -11,7 +12,9 @@ root.render(
   <ThemeProvider theme={darkTheme}>
     <CssBaseline />
     <React.StrictMode>
-      <App />
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
     </React.StrictMode>
   </ThemeProvider>
 )
