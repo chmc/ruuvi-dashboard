@@ -1,0 +1,153 @@
+/**
+ * Diagnostics API Routes
+ *
+ * Provides endpoints for system diagnostics and manual buffer flush.
+ */
+const express = require('express')
+const historyDb = require('../services/history/historyDb')
+const historyBuffer = require('../services/history/historyBuffer')
+const flushScheduler = require('../services/history/flushScheduler')
+
+const router = express.Router()
+
+/** Server start time for uptime calculation */
+const serverStartTime = Date.now()
+
+/**
+ * Get database size in bytes
+ * @returns {number}
+ */
+const getDbSize = () => {
+  const db = historyDb.getDb()
+  if (!db) {
+    return 0
+  }
+
+  try {
+    const pageCount = db.pragma('page_count')[0].page_count
+    const pageSize = db.pragma('page_size')[0].page_size
+    return pageCount * pageSize
+  } catch {
+    return 0
+  }
+}
+
+/**
+ * Get timestamp of oldest record in database
+ * @returns {number | null}
+ */
+const getOldestRecord = () => {
+  const db = historyDb.getDb()
+  if (!db) {
+    return null
+  }
+
+  try {
+    const stmt = db.prepare(
+      'SELECT MIN(timestamp) as oldest_timestamp FROM readings'
+    )
+    const result = stmt.get()
+    return result?.oldest_timestamp || null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Get battery levels for all configured sensors
+ * @param {string[]} macs - MAC addresses to check
+ * @returns {Array<{mac: string, voltage: number, lastSeen: number}>}
+ */
+const getBatteryLevels = (macs) => {
+  if (!macs || macs.length === 0) {
+    return []
+  }
+
+  return macs.map((mac) => {
+    const normalizedMac = mac.trim().toLowerCase()
+    const reading = historyDb.getLatestReading(normalizedMac)
+
+    if (!reading) {
+      return {
+        mac: normalizedMac,
+        voltage: null,
+        lastSeen: null,
+      }
+    }
+
+    return {
+      mac: normalizedMac,
+      voltage: reading.battery,
+      lastSeen: reading.timestamp,
+    }
+  })
+}
+
+/**
+ * GET /api/diagnostics
+ *
+ * Fetch system diagnostics data.
+ *
+ * Query parameters:
+ * - macs (optional): Comma-separated MAC addresses for battery levels
+ *
+ * Response: {
+ *   bufferSize: number,
+ *   lastFlushTime: number | null,
+ *   batteries: Array<{mac, voltage, lastSeen}>,
+ *   dbSize: number,
+ *   oldestRecord: number | null,
+ *   uptime: number
+ * }
+ */
+router.get('/diagnostics', (req, res) => {
+  try {
+    const { macs } = req.query
+    const macList = macs ? macs.split(',') : []
+
+    const diagnostics = {
+      bufferSize: historyBuffer.getBufferSize(),
+      lastFlushTime: flushScheduler.getLastFlushTime(),
+      batteries: getBatteryLevels(macList),
+      dbSize: getDbSize(),
+      oldestRecord: getOldestRecord(),
+      uptime: Date.now() - serverStartTime,
+    }
+
+    return res.json(diagnostics)
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error fetching diagnostics:', error)
+    return res.status(500).json({
+      error: 'Failed to fetch diagnostics data',
+    })
+  }
+})
+
+/**
+ * POST /api/diagnostics/flush
+ *
+ * Trigger an immediate buffer flush.
+ *
+ * Response: { success: boolean, flushedCount: number, message: string }
+ */
+router.post('/diagnostics/flush', (req, res) => {
+  try {
+    const result = flushScheduler.forceFlush()
+    const flushedCount = result?.flushedCount || 0
+
+    return res.json({
+      success: true,
+      flushedCount,
+      message: 'Buffer flushed successfully',
+    })
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error flushing buffer:', error)
+    return res.status(500).json({
+      error: 'Failed to flush buffer',
+    })
+  }
+})
+
+module.exports = router

@@ -15,6 +15,7 @@ const shutdownHandler = require('./services/history/shutdownHandler')
 const historySeeder = require('./services/history/historySeeder')
 const historyRouter = require('./routes/history')
 const trendsRouter = require('./routes/trends')
+const diagnosticsRouter = require('./routes/diagnostics')
 require('dotenv').config()
 
 // Only import ruuviScanner when not in test mode (requires native BLE module)
@@ -101,6 +102,9 @@ app.use('/api/ruuvi', historyRouter)
 
 // Trends API routes
 app.use('/api/ruuvi', trendsRouter)
+
+// Diagnostics API routes
+app.use('/api', diagnosticsRouter)
 
 // Catch-all route to serve React app for any non-API routes (must be after API routes)
 if (process.env.NODE_ENV === 'production') {
