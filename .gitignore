@@ -446,9 +446,11 @@ coordination/
 *.db
 *.db-journal
 *.db-wal
+*.db-shm
 *.sqlite
 *.sqlite-journal
 *.sqlite-wal
+*.sqlite-shm
 
 # Temporary prompt / log files
 hive-mind-prompt-*.txt
