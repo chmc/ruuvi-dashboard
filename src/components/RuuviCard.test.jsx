@@ -11,6 +11,7 @@ describe('RuuviCard', () => {
   const defaultProps = {
     ruuvi: { mac: 'aa:bb:cc:dd:ee:ff', name: 'Living Room' },
     ruuviData: null,
+    trend: null,
   }
 
   it('should render sensor name', () => {
@@ -137,5 +138,117 @@ describe('RuuviCard', () => {
     render(<RuuviCard {...props} />)
 
     expect(screen.getByText(/Asteet: -15.5/)).toBeInTheDocument()
+  })
+
+  describe('trend indicators', () => {
+    it('should render trend arrow for temperature when trend data provided', () => {
+      const props = {
+        ...defaultProps,
+        ruuviData: {
+          temperature: 21.5,
+          humidity: 45.3,
+          pressure: 1013,
+          mac: 'aa:bb:cc:dd:ee:ff',
+        },
+        trend: {
+          mac: 'aa:bb:cc:dd:ee:ff',
+          temperature: { direction: 'rising', delta: 1.5 },
+          humidity: { direction: 'stable', delta: 0.2 },
+        },
+      }
+
+      render(<RuuviCard {...props} />)
+
+      expect(screen.getByTestId('trend-arrow-rising')).toBeInTheDocument()
+    })
+
+    it('should render trend arrow for humidity when trend data provided', () => {
+      const props = {
+        ...defaultProps,
+        ruuviData: {
+          temperature: 21.5,
+          humidity: 45.3,
+          pressure: 1013,
+          mac: 'aa:bb:cc:dd:ee:ff',
+        },
+        trend: {
+          mac: 'aa:bb:cc:dd:ee:ff',
+          temperature: { direction: 'stable', delta: 0.1 },
+          humidity: { direction: 'falling', delta: -3.5 },
+        },
+      }
+
+      render(<RuuviCard {...props} />)
+
+      expect(screen.getByTestId('trend-arrow-falling')).toBeInTheDocument()
+    })
+
+    it('should display delta value next to trend arrow', () => {
+      const props = {
+        ...defaultProps,
+        ruuviData: {
+          temperature: 21.5,
+          humidity: 45.3,
+          pressure: 1013,
+          mac: 'aa:bb:cc:dd:ee:ff',
+        },
+        trend: {
+          mac: 'aa:bb:cc:dd:ee:ff',
+          temperature: { direction: 'rising', delta: 1.5 },
+          humidity: { direction: 'falling', delta: -2.0 },
+        },
+      }
+
+      render(<RuuviCard {...props} />)
+
+      expect(screen.getByText('+1.5')).toBeInTheDocument()
+      expect(screen.getByText('-2.0%')).toBeInTheDocument()
+    })
+
+    it('should not render trend arrows when trend data is null', () => {
+      const props = {
+        ...defaultProps,
+        ruuviData: {
+          temperature: 21.5,
+          humidity: 45.3,
+          pressure: 1013,
+          mac: 'aa:bb:cc:dd:ee:ff',
+        },
+        trend: null,
+      }
+
+      render(<RuuviCard {...props} />)
+
+      expect(screen.queryByTestId('trend-arrow-rising')).not.toBeInTheDocument()
+      expect(
+        screen.queryByTestId('trend-arrow-falling')
+      ).not.toBeInTheDocument()
+      expect(screen.queryByTestId('trend-arrow-stable')).not.toBeInTheDocument()
+    })
+
+    it('should not render trend arrows when trend temperature/humidity is null', () => {
+      const props = {
+        ...defaultProps,
+        ruuviData: {
+          temperature: 21.5,
+          humidity: 45.3,
+          pressure: 1013,
+          mac: 'aa:bb:cc:dd:ee:ff',
+        },
+        trend: {
+          mac: 'aa:bb:cc:dd:ee:ff',
+          temperature: null,
+          humidity: null,
+        },
+      }
+
+      render(<RuuviCard {...props} />)
+
+      expect(screen.queryByTestId('trend-arrow-rising')).not.toBeInTheDocument()
+      expect(
+        screen.queryByTestId('trend-arrow-falling')
+      ).not.toBeInTheDocument()
+      expect(screen.queryByTestId('trend-arrow-stable')).not.toBeInTheDocument()
+    })
   })
 })

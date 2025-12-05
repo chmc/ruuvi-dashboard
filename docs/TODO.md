@@ -320,7 +320,7 @@ Implement FAB navigation menu.
 
 ## Phase 4: Frontend - Dashboard Enhancements
 
-### Task 4.1: Add Trend Arrows to RuuviCard
+### Task 4.1: Add Trend Arrows to RuuviCard ✅ Completed
 
 Display trend indicators on sensor cards.
 

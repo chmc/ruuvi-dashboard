@@ -19,6 +19,7 @@ import apiService from '../services/api'
 
 const DashboardScreen = () => {
   const [ruuviDatas, setRuuviDatas] = useState(null)
+  const [trends, setTrends] = useState(null)
 
   /** @type {[weatherForecast, setWeatherForecast]} */
   const [weatherForecast, setWeatherForecast] = useState(null)
@@ -69,6 +70,21 @@ const DashboardScreen = () => {
       }
     }
 
+    const fetchTrends = async () => {
+      try {
+        const trendsData = await apiService.fetchTrends(configs.macIds)
+        // Convert array to object keyed by MAC for easier lookup
+        const trendsMap = trendsData.reduce(
+          (acc, trend) => ({ ...acc, [trend.mac]: trend }),
+          {}
+        )
+        setTrends(trendsMap)
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('fetchTrends ERROR: ', error)
+      }
+    }
+
     // eslint-disable-next-line no-console
     fetchWeatherData().catch(console.error)
     // eslint-disable-next-line no-console
@@ -77,12 +93,21 @@ const DashboardScreen = () => {
     fetchEnergyPrices().catch(console.error)
     // eslint-disable-next-line no-console
     fetchMinMaxTemperatures().catch(console.error)
+    // eslint-disable-next-line no-console
+    fetchTrends().catch(console.error)
 
     const ruuviIntervalId = setInterval(() => {
       // Every 10sec
       fetchRuuviData()
       fetchMinMaxTemperatures()
     }, 10000)
+    const trendsIntervalId = setInterval(
+      () => {
+        // Every 5 minutes (trends don't change as frequently)
+        fetchTrends()
+      },
+      5 * 60 * 1000
+    )
     const energyPricesIntervalId = setInterval(
       () => {
         // Every 30mins
@@ -95,6 +120,7 @@ const DashboardScreen = () => {
     return () => {
       clearInterval(ruuviIntervalId)
       clearInterval(energyPricesIntervalId)
+      clearInterval(trendsIntervalId)
     }
   }, [])
 
@@ -113,6 +139,7 @@ const DashboardScreen = () => {
               key={macItem.mac}
               ruuvi={macItem}
               ruuviData={ruuviDatas[macItem.mac]}
+              trend={trends?.[macItem.mac]}
             />
           ))}
         <CurrentEnergyPriceCard energyPrices={todayEnergyPrices} />

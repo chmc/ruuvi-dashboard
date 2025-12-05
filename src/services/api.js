@@ -57,11 +57,23 @@ const fetchMinMaxTemperatures = async () => {
   return response.json()
 }
 
+/**
+ * Fetch trend data for specified sensors
+ * @param {string[]} macs - Array of MAC addresses
+ * @returns {Promise<Array<{mac: string, temperature: {direction: string, delta: number} | null, humidity: {direction: string, delta: number} | null}>>}
+ */
+const fetchTrends = async (macs) => {
+  const macsParam = macs.join(',')
+  const response = await fetch(`/api/ruuvi/trends?macs=${macsParam}`)
+  return response.json()
+}
+
 const apiService = {
   fetchRuuviData,
   fetchWeatherData,
   fetchEnergyPrices,
   fetchMinMaxTemperatures,
+  fetchTrends,
 }
 
 export default apiService

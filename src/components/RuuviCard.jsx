@@ -9,6 +9,7 @@ import Cloud from '@mui/icons-material/Cloud'
 import FilterDrama from '@mui/icons-material/FilterDrama'
 import WbSunny from '@mui/icons-material/WbSunny'
 import uiFormatter from '../utils/formatters'
+import TrendIndicator from './TrendIndicator'
 
 /**
  * Get pressure weather icon and word
@@ -47,7 +48,28 @@ const getPressureWeather = (pressure) => {
   }
 }
 
-const RuuviCard = ({ ruuvi, ruuviData }) => {
+/**
+ * @typedef {Object} TrendData
+ * @property {string} direction - 'rising' | 'rising-slightly' | 'stable' | 'falling-slightly' | 'falling'
+ * @property {number} delta - Change value
+ */
+
+/**
+ * @typedef {Object} SensorTrend
+ * @property {string} mac
+ * @property {TrendData | null} temperature
+ * @property {TrendData | null} humidity
+ */
+
+/**
+ * @param {Object} props
+ * @param {Object} props.ruuvi - Ruuvi sensor config
+ * @param {string} props.ruuvi.mac - MAC address
+ * @param {string} props.ruuvi.name - Display name
+ * @param {Object} [props.ruuviData] - Current sensor data
+ * @param {SensorTrend} [props.trend] - Trend data for this sensor
+ */
+const RuuviCard = ({ ruuvi, ruuviData, trend }) => {
   const weather = getPressureWeather(ruuviData?.pressure)
 
   return (
@@ -57,10 +79,26 @@ const RuuviCard = ({ ruuvi, ruuviData }) => {
           <Typography variant="subtitle1" component="div" fontWeight="medium">
             {ruuvi.name}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Asteet: {uiFormatter.toTemperatureUI(ruuviData?.temperature)} c
-            <br />
-            Kosteus: {uiFormatter.toHumidityUI(ruuviData?.humidity)} %
+          <Typography variant="body2" color="text.secondary" component="div">
+            <Box display="flex" alignItems="center" gap={0.5}>
+              Asteet: {uiFormatter.toTemperatureUI(ruuviData?.temperature)} c
+              {trend?.temperature && (
+                <TrendIndicator
+                  direction={trend.temperature.direction}
+                  delta={trend.temperature.delta}
+                />
+              )}
+            </Box>
+            <Box display="flex" alignItems="center" gap={0.5}>
+              Kosteus: {uiFormatter.toHumidityUI(ruuviData?.humidity)} %
+              {trend?.humidity && (
+                <TrendIndicator
+                  direction={trend.humidity.direction}
+                  delta={trend.humidity.delta}
+                  unit="%"
+                />
+              )}
+            </Box>
           </Typography>
           <Box display="flex" alignItems="center" mt={0.5}>
             {weather.icon}

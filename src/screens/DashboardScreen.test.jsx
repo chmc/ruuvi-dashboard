@@ -60,6 +60,7 @@ jest.mock('../configs', () => ({
     { mac: 'mac1', name: 'Living Room' },
     { mac: 'mac2', name: 'Bedroom' },
   ],
+  macIds: ['mac1', 'mac2'],
   mainIndoorMac: 'mac1',
   mainOutdoorMac: 'mac2',
 }))
@@ -70,6 +71,7 @@ jest.mock('../services/api', () => ({
   fetchWeatherData: jest.fn(),
   fetchEnergyPrices: jest.fn(),
   fetchMinMaxTemperatures: jest.fn(),
+  fetchTrends: jest.fn(),
 }))
 
 describe('DashboardScreen', () => {
@@ -98,6 +100,19 @@ describe('DashboardScreen', () => {
       minTemperature: 10.0,
       maxTemperature: 20.0,
     })
+
+    apiService.fetchTrends.mockResolvedValue([
+      {
+        mac: 'mac1',
+        temperature: { direction: 'stable', delta: 0.2 },
+        humidity: { direction: 'stable', delta: 0.5 },
+      },
+      {
+        mac: 'mac2',
+        temperature: { direction: 'rising', delta: 1.0 },
+        humidity: { direction: 'falling', delta: -2.0 },
+      },
+    ])
   })
 
   afterEach(() => {
@@ -343,5 +358,54 @@ describe('DashboardScreen', () => {
 
     // No new calls should be made after unmount
     expect(apiService.fetchRuuviData).not.toHaveBeenCalled()
+  })
+
+  it('should fetch trends data on mount', async () => {
+    await act(async () => {
+      render(<DashboardScreen />)
+    })
+
+    await waitFor(() => {
+      expect(apiService.fetchTrends).toHaveBeenCalledTimes(1)
+      expect(apiService.fetchTrends).toHaveBeenCalledWith(['mac1', 'mac2'])
+    })
+  })
+
+  it('should poll trends data every 5 minutes', async () => {
+    await act(async () => {
+      render(<DashboardScreen />)
+    })
+
+    // Wait for initial fetch
+    await waitFor(() => {
+      expect(apiService.fetchTrends).toHaveBeenCalledTimes(1)
+    })
+
+    // Advance timer by 5 minutes
+    await act(async () => {
+      jest.advanceTimersByTime(5 * 60 * 1000)
+    })
+
+    await waitFor(() => {
+      expect(apiService.fetchTrends).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  it('should handle trends fetch error gracefully', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    apiService.fetchTrends.mockRejectedValue(new Error('Trends API error'))
+
+    await act(async () => {
+      render(<DashboardScreen />)
+    })
+
+    await waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'fetchTrends ERROR: ',
+        expect.any(Error)
+      )
+    })
+
+    consoleSpy.mockRestore()
   })
 })
