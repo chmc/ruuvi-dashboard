@@ -83,7 +83,7 @@ Add methods to insert readings and query by time range.
 
 ---
 
-### Task 1.3: Create In-Memory Buffer Service
+### Task 1.3: Create In-Memory Buffer Service ✅ Completed
 
 Create buffer that accumulates readings before flushing to database.
 
