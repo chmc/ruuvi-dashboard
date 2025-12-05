@@ -62,7 +62,7 @@ Create the history database service with schema initialization.
 
 ---
 
-### Task 1.2: Create History Service - Insert and Query Methods
+### Task 1.2: Create History Service - Insert and Query Methods ✅ Completed
 
 Add methods to insert readings and query by time range.
 

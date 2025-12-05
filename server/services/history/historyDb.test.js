@@ -187,4 +187,293 @@ describe('HistoryDb', () => {
       expect(() => historyDb.getTableInfo('readings')).toThrow()
     })
   })
+
+  describe('insertReading', () => {
+    it('should insert a single reading', () => {
+      historyDb.open(testDbPath)
+      const mac = 'aa:bb:cc:dd:ee:ff'
+      const timestamp = Date.now()
+      const temperature = 22.5
+      const humidity = 45.3
+      const pressure = 101325
+      const battery = 2.95
+
+      const result = historyDb.insertReading(
+        mac,
+        timestamp,
+        temperature,
+        humidity,
+        pressure,
+        battery
+      )
+
+      expect(result.changes).toBe(1)
+      expect(result.lastInsertRowid).toBeGreaterThan(0)
+    })
+
+    it('should store reading with correct values', () => {
+      historyDb.open(testDbPath)
+      const mac = 'aa:bb:cc:dd:ee:ff'
+      const timestamp = 1700000000000
+      const temperature = 22.5
+      const humidity = 45.3
+      const pressure = 101325
+      const battery = 2.95
+
+      historyDb.insertReading(
+        mac,
+        timestamp,
+        temperature,
+        humidity,
+        pressure,
+        battery
+      )
+
+      const readings = historyDb.getReadings(
+        mac,
+        timestamp - 1000,
+        timestamp + 1000
+      )
+      expect(readings).toHaveLength(1)
+      expect(readings[0]).toMatchObject({
+        mac,
+        timestamp,
+        temperature,
+        humidity,
+        pressure,
+        battery,
+      })
+    })
+  })
+
+  describe('insertBatch', () => {
+    it('should insert multiple readings at once', () => {
+      historyDb.open(testDbPath)
+      const readings = [
+        {
+          mac: 'aa:bb:cc:dd:ee:ff',
+          timestamp: 1700000000000,
+          temperature: 22.5,
+          humidity: 45.3,
+          pressure: 101325,
+          battery: 2.95,
+        },
+        {
+          mac: 'aa:bb:cc:dd:ee:ff',
+          timestamp: 1700000001000,
+          temperature: 22.6,
+          humidity: 45.4,
+          pressure: 101326,
+          battery: 2.94,
+        },
+        {
+          mac: '11:22:33:44:55:66',
+          timestamp: 1700000000000,
+          temperature: 18.0,
+          humidity: 60.0,
+          pressure: 101000,
+          battery: 3.0,
+        },
+      ]
+
+      const result = historyDb.insertBatch(readings)
+
+      expect(result.totalChanges).toBe(3)
+    })
+
+    it('should insert all readings correctly', () => {
+      historyDb.open(testDbPath)
+      const mac = 'aa:bb:cc:dd:ee:ff'
+      const baseTimestamp = 1700000000000
+      const readings = [
+        {
+          mac,
+          timestamp: baseTimestamp,
+          temperature: 22.5,
+          humidity: 45.3,
+          pressure: 101325,
+          battery: 2.95,
+        },
+        {
+          mac,
+          timestamp: baseTimestamp + 1000,
+          temperature: 22.6,
+          humidity: 45.4,
+          pressure: 101326,
+          battery: 2.94,
+        },
+      ]
+
+      historyDb.insertBatch(readings)
+
+      const storedReadings = historyDb.getReadings(
+        mac,
+        baseTimestamp - 1000,
+        baseTimestamp + 2000
+      )
+      expect(storedReadings).toHaveLength(2)
+    })
+
+    it('should handle empty array', () => {
+      historyDb.open(testDbPath)
+
+      const result = historyDb.insertBatch([])
+
+      expect(result.totalChanges).toBe(0)
+    })
+  })
+
+  describe('getReadings', () => {
+    beforeEach(() => {
+      historyDb.open(testDbPath)
+      // Insert test data
+      const readings = [
+        {
+          mac: 'aa:bb:cc:dd:ee:ff',
+          timestamp: 1700000000000,
+          temperature: 22.0,
+          humidity: 45.0,
+          pressure: 101000,
+          battery: 2.9,
+        },
+        {
+          mac: 'aa:bb:cc:dd:ee:ff',
+          timestamp: 1700000060000,
+          temperature: 22.5,
+          humidity: 45.5,
+          pressure: 101100,
+          battery: 2.9,
+        },
+        {
+          mac: 'aa:bb:cc:dd:ee:ff',
+          timestamp: 1700000120000,
+          temperature: 23.0,
+          humidity: 46.0,
+          pressure: 101200,
+          battery: 2.9,
+        },
+        {
+          mac: '11:22:33:44:55:66',
+          timestamp: 1700000000000,
+          temperature: 18.0,
+          humidity: 60.0,
+          pressure: 100000,
+          battery: 3.0,
+        },
+      ]
+      historyDb.insertBatch(readings)
+    })
+
+    it('should query readings by MAC and time range', () => {
+      const readings = historyDb.getReadings(
+        'aa:bb:cc:dd:ee:ff',
+        1700000000000,
+        1700000120000
+      )
+
+      expect(readings).toHaveLength(3)
+    })
+
+    it('should filter by time range correctly', () => {
+      const readings = historyDb.getReadings(
+        'aa:bb:cc:dd:ee:ff',
+        1700000050000,
+        1700000070000
+      )
+
+      expect(readings).toHaveLength(1)
+      expect(readings[0].timestamp).toBe(1700000060000)
+    })
+
+    it('should return data in ascending timestamp order', () => {
+      const readings = historyDb.getReadings(
+        'aa:bb:cc:dd:ee:ff',
+        1700000000000,
+        1700000120000
+      )
+
+      expect(readings[0].timestamp).toBe(1700000000000)
+      expect(readings[1].timestamp).toBe(1700000060000)
+      expect(readings[2].timestamp).toBe(1700000120000)
+    })
+
+    it('should return empty array for non-existent MAC', () => {
+      const readings = historyDb.getReadings(
+        'ff:ff:ff:ff:ff:ff',
+        1700000000000,
+        1700000120000
+      )
+
+      expect(readings).toEqual([])
+    })
+
+    it('should return empty array for time range with no data', () => {
+      const readings = historyDb.getReadings(
+        'aa:bb:cc:dd:ee:ff',
+        1600000000000,
+        1600000120000
+      )
+
+      expect(readings).toEqual([])
+    })
+
+    it('should only return readings for specified MAC', () => {
+      const readings = historyDb.getReadings(
+        '11:22:33:44:55:66',
+        1700000000000,
+        1700000120000
+      )
+
+      expect(readings).toHaveLength(1)
+      expect(readings[0].mac).toBe('11:22:33:44:55:66')
+    })
+  })
+
+  describe('getLatestReading', () => {
+    beforeEach(() => {
+      historyDb.open(testDbPath)
+      // Insert test data
+      const readings = [
+        {
+          mac: 'aa:bb:cc:dd:ee:ff',
+          timestamp: 1700000000000,
+          temperature: 22.0,
+          humidity: 45.0,
+          pressure: 101000,
+          battery: 2.9,
+        },
+        {
+          mac: 'aa:bb:cc:dd:ee:ff',
+          timestamp: 1700000120000,
+          temperature: 23.0,
+          humidity: 46.0,
+          pressure: 101200,
+          battery: 2.85,
+        },
+        {
+          mac: 'aa:bb:cc:dd:ee:ff',
+          timestamp: 1700000060000,
+          temperature: 22.5,
+          humidity: 45.5,
+          pressure: 101100,
+          battery: 2.88,
+        },
+      ]
+      historyDb.insertBatch(readings)
+    })
+
+    it('should return the most recent reading for a MAC', () => {
+      const latest = historyDb.getLatestReading('aa:bb:cc:dd:ee:ff')
+
+      expect(latest).toBeDefined()
+      expect(latest.timestamp).toBe(1700000120000)
+      expect(latest.temperature).toBe(23.0)
+    })
+
+    it('should return undefined for non-existent MAC', () => {
+      const latest = historyDb.getLatestReading('ff:ff:ff:ff:ff:ff')
+
+      expect(latest).toBeUndefined()
+    })
+  })
 })
