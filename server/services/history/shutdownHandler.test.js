@@ -93,9 +93,7 @@ describe('shutdownHandler', () => {
 
     beforeEach(() => {
       // Mock process.exit to prevent actual exit
-      mockExit = jest
-        .spyOn(process, 'exit')
-        .mockImplementation(() => undefined)
+      mockExit = jest.spyOn(process, 'exit').mockImplementation(() => undefined)
     })
 
     afterEach(() => {
@@ -151,9 +149,7 @@ describe('shutdownHandler', () => {
 
     it('should handle flush errors gracefully', async () => {
       const errorFlush = jest.fn().mockRejectedValue(new Error('Flush failed'))
-      const consoleErrorSpy = jest
-        .spyOn(console, 'error')
-        .mockImplementation()
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
 
       shutdownHandler.register(errorFlush)
 

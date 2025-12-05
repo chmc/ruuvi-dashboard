@@ -22,32 +22,6 @@ let handlersRegistered = false
 let signalHandler = null
 
 /**
- * Create the signal handler function
- * @returns {(signal: string) => Promise<void>}
- */
-const createSignalHandler = () => async (signal) => {
-  await triggerShutdown(signal)
-}
-
-/**
- * Register signal handlers for graceful shutdown
- * @param {() => any} callback - Function to call before exit (typically flushScheduler.forceFlush)
- */
-const register = (callback) => {
-  if (handlersRegistered) {
-    return
-  }
-
-  flushCallback = callback
-  signalHandler = createSignalHandler()
-
-  process.on('SIGTERM', signalHandler)
-  process.on('SIGINT', signalHandler)
-
-  handlersRegistered = true
-}
-
-/**
  * Trigger the shutdown sequence
  * @param {string} [signal] - The signal that triggered shutdown
  * @returns {Promise<void>}
@@ -81,6 +55,32 @@ const triggerShutdown = async (signal = 'manual') => {
     console.error('Shutdown error during flush:', error)
     process.exit(1)
   }
+}
+
+/**
+ * Create the signal handler function
+ * @returns {(signal: string) => Promise<void>}
+ */
+const createSignalHandler = () => async (signal) => {
+  await triggerShutdown(signal)
+}
+
+/**
+ * Register signal handlers for graceful shutdown
+ * @param {() => any} callback - Function to call before exit (typically flushScheduler.forceFlush)
+ */
+const register = (callback) => {
+  if (handlersRegistered) {
+    return
+  }
+
+  flushCallback = callback
+  signalHandler = createSignalHandler()
+
+  process.on('SIGTERM', signalHandler)
+  process.on('SIGINT', signalHandler)
+
+  handlersRegistered = true
 }
 
 /**

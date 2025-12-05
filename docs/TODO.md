@@ -190,7 +190,7 @@ Generate 90 days of realistic fake history data.
 
 ---
 
-### Task 1.8: Integrate History Service with Ruuvi Scanner
+### Task 1.8: Integrate History Service with Ruuvi Scanner ✅ Completed
 
 Connect the BLE scanner to buffer readings for storage.
 

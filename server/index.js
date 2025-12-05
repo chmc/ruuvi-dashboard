@@ -8,6 +8,11 @@ const energyPricesService = require('./services/energyPrices')
 const sensorService = require('./services/sensor')
 const simulatorUtils = require('./utils/simulator')
 const storage = require('./storage')
+const historyDb = require('./services/history/historyDb')
+const historyBuffer = require('./services/history/historyBuffer')
+const flushScheduler = require('./services/history/flushScheduler')
+const shutdownHandler = require('./services/history/shutdownHandler')
+const historySeeder = require('./services/history/historySeeder')
 require('dotenv').config()
 
 // Only import ruuviScanner when not in test mode (requires native BLE module)
@@ -113,6 +118,77 @@ const updateSensorCache = (sensorDataCollection) => {
 }
 
 /**
+ * Add sensor reading to history buffer
+ * @param {string} mac - MAC address of the sensor
+ * @param {object} sensorData - Sensor data with temperature, humidity, pressure, battery
+ */
+const addToHistoryBuffer = (mac, sensorData) => {
+  historyBuffer.addReading(mac, {
+    timestamp: Date.now(),
+    temperature: sensorData.temperature,
+    humidity: sensorData.humidity,
+    pressure: sensorData.pressure,
+    battery: sensorData.battery,
+  })
+}
+
+/**
+ * Create flush callback for scheduler and shutdown handler
+ * @returns {() => {flushedCount: number}}
+ */
+const createFlushCallback = () => () => {
+  const result = historyBuffer.flush(historyDb)
+  console.log(
+    new Date().toLocaleString(),
+    `Buffer flushed: ${result.flushedCount} readings saved`
+  )
+  return result
+}
+
+/**
+ * Initialize history services (database, scheduler, shutdown handler)
+ */
+const initializeHistoryServices = () => {
+  console.log(new Date().toLocaleString(), 'Initializing history services...')
+
+  // Open database
+  historyDb.open()
+  console.log(
+    new Date().toLocaleString(),
+    'History database opened:',
+    historyDb.getDbPath()
+  )
+
+  // Check if seeding is needed
+  const macs = getConfigMacIds() || []
+  const outdoorMac = process.env.VITE_MAIN_OUTDOOR_RUUVITAG_MAC?.toLowerCase()
+  if (historySeeder.seedIfNeeded(historyDb, macs, outdoorMac)) {
+    console.log(
+      new Date().toLocaleString(),
+      'History database seeded with 90 days of data'
+    )
+  }
+
+  // Create flush callback
+  const flushCallback = createFlushCallback()
+
+  // Start flush scheduler
+  const flushIntervalMs = flushScheduler.getDefaultIntervalMs()
+  flushScheduler.start(flushIntervalMs, flushCallback)
+  console.log(
+    new Date().toLocaleString(),
+    `Flush scheduler started (interval: ${flushIntervalMs / 1000}s)`
+  )
+
+  // Register shutdown handler
+  shutdownHandler.register(flushCallback)
+  console.log(
+    new Date().toLocaleString(),
+    'Graceful shutdown handler registered'
+  )
+}
+
+/**
  * @returns {string[]}
  */
 const getConfigMacIds = () => process.env.VITE_RUUVITAG_MACS?.split(',')
@@ -126,12 +202,24 @@ if (process.env.TEST || process.env.SIMULATE) {
   console.log('Run in SIMULATION MODE')
   console.log('Using simulated sensor data')
 
+  // Initialize history services (skip in TEST mode to avoid DB operations)
+  if (!process.env.TEST) {
+    initializeHistoryServices()
+  }
+
   /** @type {SensorDataCollection} */
   const sensorDataCollection = simulatorUtils.initSimulator()
 
   setInterval(() => {
     simulatorUtils.modifyDataWithWave(sensorDataCollection)
     updateSensorCache(sensorDataCollection)
+
+    // Add readings to history buffer (skip in TEST mode)
+    if (!process.env.TEST) {
+      Object.entries(sensorDataCollection).forEach(([mac, sensorData]) => {
+        addToHistoryBuffer(mac, sensorData)
+      })
+    }
   }, 1000)
 } else {
   // Run with real RuuviTag sensors using Node.js BLE
@@ -143,6 +231,9 @@ if (process.env.TEST || process.env.SIMULATE) {
       'WARNING: No MAC addresses configured. Set VITE_RUUVITAG_MACS environment variable.'
     )
   }
+
+  // Initialize history services
+  initializeHistoryServices()
 
   const scanner = ruuviScanner.createScanner({ macs })
 
@@ -156,7 +247,7 @@ if (process.env.TEST || process.env.SIMULATE) {
     updateSensorCache(mergedData)
   })
 
-  // Handle individual sensor data (for logging)
+  // Handle individual sensor data (for logging and history)
   scanner.on('data', ({ mac, sensorData }) => {
     console.log(
       new Date().toLocaleString(),
@@ -164,6 +255,9 @@ if (process.env.TEST || process.env.SIMULATE) {
         1
       )}°C, ${sensorData.humidity.toFixed(1)}%`
     )
+
+    // Add reading to history buffer
+    addToHistoryBuffer(mac, sensorData)
   })
 
   // Handle errors
@@ -181,16 +275,7 @@ if (process.env.TEST || process.env.SIMULATE) {
     scanner.start()
   }, 3000)
 
-  // Graceful shutdown
-  process.on('SIGINT', () => {
-    console.log('\nShutting down RuuviTag scanner...')
-    scanner.stop()
-    process.exit(0)
-  })
-
-  process.on('SIGTERM', () => {
-    console.log('\nShutting down RuuviTag scanner...')
-    scanner.stop()
-    process.exit(0)
-  })
+  // Note: Graceful shutdown for scanner is handled by shutdownHandler
+  // which is registered in initializeHistoryServices() and will also
+  // stop the scanner via process.exit() after flushing the buffer
 }
