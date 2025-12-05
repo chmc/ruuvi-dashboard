@@ -27,6 +27,14 @@ jest.mock(
     }
 )
 
+jest.mock(
+  './components/NavigationFab',
+  () =>
+    function MockNavigationFab() {
+      return <div data-testid="navigation-fab">Navigation FAB</div>
+    }
+)
+
 describe('App', () => {
   it('should render Dashboard at root route', () => {
     render(
