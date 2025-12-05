@@ -189,7 +189,7 @@ describe('apiService', () => {
       }
 
       global.fetch.mockResolvedValueOnce({
-        text: jest.fn().mockResolvedValueOnce(JSON.stringify(mockData)),
+        json: jest.fn().mockResolvedValueOnce(mockData),
       })
 
       const result = await apiService.fetchMinMaxTemperatures()
@@ -206,12 +206,13 @@ describe('apiService', () => {
       )
     })
 
-    it('should handle invalid JSON response', async () => {
+    it('should return null when cache is empty', async () => {
       global.fetch.mockResolvedValueOnce({
-        text: jest.fn().mockResolvedValueOnce('not json'),
+        json: jest.fn().mockResolvedValueOnce(null),
       })
 
-      await expect(apiService.fetchMinMaxTemperatures()).rejects.toThrow()
+      const result = await apiService.fetchMinMaxTemperatures()
+      expect(result).toBeNull()
     })
   })
 })

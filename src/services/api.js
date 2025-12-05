@@ -54,9 +54,7 @@ const fetchEnergyPrices = async () => {
 
 const fetchMinMaxTemperatures = async () => {
   const response = await fetch('/api/todayminmaxtemperature')
-  const text = await response.text()
-  const json = JSON.parse(text)
-  return json
+  return response.json()
 }
 
 const apiService = {

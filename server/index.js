@@ -86,7 +86,7 @@ app.get('/api/energyprices', async (req, res) => {
 })
 
 app.get('/api/todayminmaxtemperature', async (req, res) => {
-  res.send(cache.get(cacheKeys.todayMinMax))
+  res.json(cache.get(cacheKeys.todayMinMax) || null)
 })
 
 // Catch-all route to serve React app for any non-API routes (must be after API routes)
