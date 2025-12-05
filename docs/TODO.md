@@ -212,7 +212,7 @@ Connect the BLE scanner to buffer readings for storage.
 
 ## Phase 2: History API Endpoints
 
-### Task 2.1: Create History API Endpoint
+### Task 2.1: Create History API Endpoint ✅ Completed
 
 Add endpoint to fetch historical readings.
 
