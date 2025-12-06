@@ -41,7 +41,13 @@ if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../build')))
 }
 
-app.listen(port, () => console.log(`Listening on port ${port}`))
+/**
+ * Start the HTTP server
+ * Called after database and services are initialized
+ */
+const startServer = () => {
+  app.listen(port, () => console.log(`Listening on port ${port}`))
+}
 
 app.get('/api/ruuvi', (req, res) => {
   res.send(cache.get(cacheKeys.ruuvi))
@@ -209,15 +215,21 @@ const getConfigMacIds = () => process.env.VITE_RUUVITAG_MACS?.split(',')
 // Sensor Data Collection Mode Selection
 // ============================================================================
 
+// Detect if running under Jest (vs normal development with simulated data)
+const isJestTest = process.env.NODE_ENV === 'test'
+
 if (process.env.TEST || process.env.SIMULATE) {
   // Run in simulation/test mode
   console.log('Run in SIMULATION MODE')
   console.log('Using simulated sensor data')
 
-  // Initialize history services (skip in TEST mode to avoid DB operations)
-  if (!process.env.TEST) {
+  // Initialize history services (skip only during Jest tests)
+  if (!isJestTest) {
     initializeHistoryServices()
   }
+
+  // Start HTTP server after initialization
+  startServer()
 
   /** @type {SensorDataCollection} */
   const sensorDataCollection = simulatorUtils.initSimulator()
@@ -226,8 +238,8 @@ if (process.env.TEST || process.env.SIMULATE) {
     simulatorUtils.modifyDataWithWave(sensorDataCollection)
     updateSensorCache(sensorDataCollection)
 
-    // Add readings to history buffer (skip in TEST mode)
-    if (!process.env.TEST) {
+    // Add readings to history buffer (skip during Jest tests)
+    if (!isJestTest) {
       Object.entries(sensorDataCollection).forEach(([mac, sensorData]) => {
         addToHistoryBuffer(mac, sensorData)
       })
@@ -246,6 +258,9 @@ if (process.env.TEST || process.env.SIMULATE) {
 
   // Initialize history services
   initializeHistoryServices()
+
+  // Start HTTP server after initialization
+  startServer()
 
   const scanner = ruuviScanner.createScanner({ macs })
 

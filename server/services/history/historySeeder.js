@@ -208,9 +208,19 @@ const seed = (db, macs, outdoorMac) => {
   const endTime = Date.now()
   const startTime = endTime - NINETY_DAYS_MS
 
+  // Normalize outdoor MAC for comparison
+  const normalizedOutdoorMac = outdoorMac?.toLowerCase()
+
   macs.forEach((mac) => {
-    const isOutdoor = mac === outdoorMac
-    const readings = generateReadingsForMac(mac, isOutdoor, startTime, endTime)
+    // Normalize MAC address to lowercase for consistency
+    const normalizedMac = mac.toLowerCase()
+    const isOutdoor = normalizedMac === normalizedOutdoorMac
+    const readings = generateReadingsForMac(
+      normalizedMac,
+      isOutdoor,
+      startTime,
+      endTime
+    )
 
     // Insert in batches to avoid memory issues
     const BATCH_SIZE = 1000
