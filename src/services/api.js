@@ -91,6 +91,33 @@ const fetchHistory = async (mac, range = '24h') => {
 }
 
 /**
+ * @typedef {Object} DiagnosticsData
+ * @property {number} bufferSize - Number of readings in buffer
+ * @property {number | null} lastFlushTime - Timestamp of last flush
+ * @property {Array<{mac: string, voltage: number | null, lastSeen: number | null}>} batteries - Battery levels for sensors
+ * @property {number} dbSize - Database size in bytes
+ * @property {number | null} oldestRecord - Timestamp of oldest record
+ * @property {number} uptime - Server uptime in milliseconds
+ */
+
+/**
+ * Fetch diagnostics data from the server
+ * @param {string[]} [macs=[]] - Array of MAC addresses to get battery levels for
+ * @returns {Promise<DiagnosticsData>}
+ */
+const getDiagnostics = async (macs = []) => {
+  const macsParam = macs.length > 0 ? macs.join(',') : ''
+  const url = macsParam
+    ? `/api/diagnostics?macs=${macsParam}`
+    : '/api/diagnostics'
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch diagnostics: ${response.status}`)
+  }
+  return response.json()
+}
+
+/**
  * Flush the buffer to database
  * @returns {Promise<{success: boolean, flushedCount: number, message: string}>}
  */
@@ -115,6 +142,7 @@ const apiService = {
   fetchMinMaxTemperatures,
   fetchTrends,
   fetchHistory,
+  getDiagnostics,
   flushBuffer,
 }
 

@@ -158,4 +158,26 @@ describe('uiFormatter', () => {
       expect(result).toBeLessThanOrEqual(23)
     })
   })
+
+  describe('toLocalDateTime', () => {
+    it('should format timestamp in milliseconds to Finnish locale date/time', () => {
+      // Oct 24, 2023 14:30:00 UTC in milliseconds
+      const timestamp = 1698165000000
+      const result = uiFormatter.toLocalDateTime(timestamp)
+      // Should match Finnish locale format: DD.MM.YYYY klo HH.MM
+      expect(result).toMatch(/^\d{2}\.\d{2}\.\d{4} klo \d{2}\.\d{2}$/)
+    })
+
+    it('should format different timestamps correctly', () => {
+      const timestamp1 = 1698165000000 // Oct 24, 2023 14:30:00 UTC
+      const timestamp2 = 1609459200000 // Jan 1, 2021 00:00:00 UTC
+      
+      const result1 = uiFormatter.toLocalDateTime(timestamp1)
+      const result2 = uiFormatter.toLocalDateTime(timestamp2)
+      
+      expect(result1).toMatch(/^\d{2}\.\d{2}\.\d{4} klo \d{2}\.\d{2}$/)
+      expect(result2).toMatch(/^\d{2}\.\d{2}\.\d{4} klo \d{2}\.\d{2}$/)
+      expect(result1).not.toBe(result2)
+    })
+  })
 })

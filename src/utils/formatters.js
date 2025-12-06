@@ -108,6 +108,22 @@ const toLocalTime = (unixDateTime) => {
   return date.getHours()
 }
 
+/**
+ * Format timestamp in milliseconds to local date and time string
+ * @param {number} timestampMs - Unix timestamp in milliseconds
+ * @returns {string} Formatted date/time string (e.g., "24.10.2023, 14:30")
+ */
+const toLocalDateTime = (timestampMs) => {
+  const date = new Date(timestampMs)
+  return date.toLocaleString('fi-FI', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 const uiFormatter = {
   toTemperatureUI,
   toTemperatureRoundUpUI,
@@ -120,6 +136,7 @@ const uiFormatter = {
   toSharpTimeUI,
   toLocalDate,
   toLocalTime,
+  toLocalDateTime,
 }
 
 export default uiFormatter

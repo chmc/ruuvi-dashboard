@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Card from '@mui/material/Card'
@@ -14,25 +14,91 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Alert from '@mui/material/Alert'
 import BatteryIndicator from '../components/BatteryIndicator'
 import apiService from '../services/api'
+import configs from '../configs'
+import formatters from '../utils/formatters'
 
 /**
- * @typedef {Object} BatteryData
- * @property {string} mac - MAC address
- * @property {number | null} voltage - Battery voltage in volts
- * @property {number | null} lastSeen - Timestamp of last reading
+ * @typedef {Object} DiagnosticsData
+ * @property {number} bufferSize - Number of readings in buffer
+ * @property {number | null} lastFlushTime - Timestamp of last flush
+ * @property {Array<{mac: string, voltage: number | null, lastSeen: number | null}>} batteries - Battery levels for sensors
+ * @property {number} dbSize - Database size in bytes
+ * @property {number | null} oldestRecord - Timestamp of oldest record
+ * @property {number} uptime - Server uptime in milliseconds
  */
+
+/**
+ * Format bytes to human-readable string
+ * @param {number} bytes
+ * @returns {string}
+ */
+const formatBytes = (bytes) => {
+  if (bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
+}
+
+/**
+ * Format uptime in milliseconds to human-readable string
+ * @param {number} ms
+ * @returns {string}
+ */
+const formatUptime = (ms) => {
+  const seconds = Math.floor(ms / 1000)
+  const minutes = Math.floor(seconds / 60)
+  const hours = Math.floor(minutes / 60)
+  const days = Math.floor(hours / 24)
+
+  if (days > 0) {
+    return `${days}d ${hours % 24}h ${minutes % 60}m`
+  }
+  if (hours > 0) {
+    return `${hours}h ${minutes % 60}m ${seconds % 60}s`
+  }
+  if (minutes > 0) {
+    return `${minutes}m ${seconds % 60}s`
+  }
+  return `${seconds}s`
+}
 
 /**
  * Diagnostics screen - displays system status and buffer information
- * @param {Object} props
- * @param {BatteryData[]} [props.batteries] - Array of battery data
  * @returns {JSX.Element}
  */
-const DiagnosticsScreen = ({ batteries = [] }) => {
+const DiagnosticsScreen = () => {
+  const [diagnostics, setDiagnostics] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [flushDialogOpen, setFlushDialogOpen] = useState(false)
   const [isFlushing, setIsFlushing] = useState(false)
   const [flushSuccess, setFlushSuccess] = useState(null)
   const [flushError, setFlushError] = useState(null)
+
+  const fetchDiagnostics = async () => {
+    try {
+      setError(null)
+      const macs = configs.macIds || []
+      const data = await apiService.getDiagnostics(macs)
+      setDiagnostics(data)
+    } catch (err) {
+      setError(err.message || 'Failed to fetch diagnostics')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchDiagnostics()
+
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      fetchDiagnostics()
+    }, 30000)
+
+    return () => clearInterval(interval)
+  }, [])
 
   const handleFlushClick = () => {
     setFlushDialogOpen(true)
@@ -50,6 +116,8 @@ const DiagnosticsScreen = ({ batteries = [] }) => {
       const result = await apiService.flushBuffer()
       setFlushSuccess(result.message || 'Buffer flushed successfully')
       setFlushError(null)
+      // Refresh diagnostics after flush
+      await fetchDiagnostics()
     } catch (error) {
       setFlushError(error.message || 'Failed to flush buffer')
       setFlushSuccess(null)
@@ -62,11 +130,40 @@ const DiagnosticsScreen = ({ batteries = [] }) => {
     setFlushDialogOpen(false)
   }
 
+  if (loading) {
+    return (
+      <Box px={2} pt={2} pb={0} display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    )
+  }
+
+  if (error && !diagnostics) {
+    return (
+      <Box px={2} pt={2} pb={0}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Diagnostics
+        </Typography>
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {error}
+        </Alert>
+      </Box>
+    )
+  }
+
+  const batteries = diagnostics?.batteries || []
+
   return (
     <Box px={2} pt={2} pb={0}>
       <Typography variant="h4" component="h1" gutterBottom>
         Diagnostics
       </Typography>
+
+      {error && (
+        <Alert severity="warning" sx={{ mt: 1, mb: 1 }}>
+          {error}
+        </Alert>
+      )}
 
       <Grid container spacing={1.5} sx={{ mt: 1 }}>
         {/* Buffer Status Section */}
@@ -77,6 +174,24 @@ const DiagnosticsScreen = ({ batteries = [] }) => {
                 Buffer Status
               </Typography>
               <Box display="flex" flexDirection="column" gap={1.5} mt={1}>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Buffer Size:
+                  </Typography>
+                  <Typography variant="body1">
+                    {diagnostics?.bufferSize ?? 0} readings
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Last Flush:
+                  </Typography>
+                  <Typography variant="body1">
+                    {diagnostics?.lastFlushTime
+                      ? formatters.toLocalDateTime(diagnostics.lastFlushTime)
+                      : 'Never'}
+                  </Typography>
+                </Box>
                 <Button
                   variant="contained"
                   color="primary"
@@ -91,7 +206,6 @@ const DiagnosticsScreen = ({ batteries = [] }) => {
                 )}
                 {flushError && <Alert severity="error">{flushError}</Alert>}
               </Box>
-              {/* Additional buffer status content will be added in Task 6.4 */}
             </CardContent>
           </Card>
         </Grid>
@@ -105,13 +219,18 @@ const DiagnosticsScreen = ({ batteries = [] }) => {
             </Typography>
             <Box display="flex" flexDirection="column" gap={1.5} mt={1}>
               {batteries.length > 0 ? (
-                batteries.map((battery) => (
-                  <BatteryIndicator
-                    key={battery.mac}
-                    mac={battery.mac}
-                    voltage={battery.voltage}
-                  />
-                ))
+                batteries.map((battery) => {
+                  const sensorName = configs.ruuviTags.find(
+                    (tag) => tag.mac === battery.mac
+                  )?.name || battery.mac
+                  return (
+                    <BatteryIndicator
+                      key={battery.mac}
+                      mac={sensorName}
+                      voltage={battery.voltage}
+                    />
+                  )
+                })
               ) : (
                 <Typography variant="body2" color="text.secondary">
                   No battery data available
@@ -129,7 +248,34 @@ const DiagnosticsScreen = ({ batteries = [] }) => {
             <Typography variant="h6" component="h2" gutterBottom>
               System Info
             </Typography>
-            {/* System info content will be added in Task 6.4 */}
+            <Box display="flex" flexDirection="column" gap={1.5} mt={1}>
+              <Box>
+                <Typography variant="body2" color="text.secondary">
+                  Database Size:
+                </Typography>
+                <Typography variant="body1">
+                  {diagnostics?.dbSize ? formatBytes(diagnostics.dbSize) : 'N/A'}
+                </Typography>
+              </Box>
+              <Box>
+                <Typography variant="body2" color="text.secondary">
+                  Oldest Record:
+                </Typography>
+                <Typography variant="body1">
+                  {diagnostics?.oldestRecord
+                    ? formatters.toLocalDateTime(diagnostics.oldestRecord)
+                    : 'N/A'}
+                </Typography>
+              </Box>
+              <Box>
+                <Typography variant="body2" color="text.secondary">
+                  Server Uptime:
+                </Typography>
+                <Typography variant="body1">
+                  {diagnostics?.uptime ? formatUptime(diagnostics.uptime) : 'N/A'}
+                </Typography>
+              </Box>
+            </Box>
           </CardContent>
         </Card>
         </Grid>
