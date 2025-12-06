@@ -1,6 +1,14 @@
 import { render, screen } from '@testing-library/react'
 import DiagnosticsScreen from './DiagnosticsScreen'
 
+// Mock configs
+jest.mock('../configs', () => ({
+  ruuviTags: [
+    { mac: 'aa:bb:cc:dd:ee:ff', name: 'Indoor Sensor' },
+    { mac: '11:22:33:44:55:66', name: 'Outdoor Sensor' },
+  ],
+}))
+
 describe('DiagnosticsScreen', () => {
   describe('Layout', () => {
     it('should render with title', () => {
