@@ -21,6 +21,7 @@ import Sparkline from './Sparkline'
  * @param {(mac: string) => void} [props.onSelect] - Callback when row is clicked
  * @param {boolean} [props.selected] - Whether this row is selected
  * @param {string} [props.color] - Sparkline color
+ * @param {string} [props.timeRange] - Time range for X-axis formatting
  * @returns {JSX.Element}
  */
 const SensorHistoryRow = ({
@@ -32,6 +33,7 @@ const SensorHistoryRow = ({
   onSelect,
   selected = false,
   color,
+  timeRange = '24h',
 }) => {
   /**
    * Handle row click
@@ -88,8 +90,15 @@ const SensorHistoryRow = ({
       </Typography>
 
       {/* Sparkline */}
-      <Box sx={{ flex: 1, mx: 2 }}>
-        <Sparkline data={data} color={color} width={120} height={32} />
+      <Box sx={{ flex: 1, mx: 2, minWidth: 0 }}>
+        <Sparkline
+          data={data}
+          color={color}
+          width="100%"
+          height={100}
+          timeRange={timeRange}
+          showAxes
+        />
       </Box>
 
       {/* Current Value */}

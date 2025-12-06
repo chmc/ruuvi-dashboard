@@ -88,13 +88,14 @@ const HistoryScreen = () => {
   }
 
   /**
-   * Get current value from history data
+   * Get current value from history data, formatted to 1 decimal
    * @param {Array} data - History data array
    * @returns {number|null} Latest temperature value
    */
   const getCurrentValue = (data) => {
     if (!data || data.length === 0) return null
-    return data[data.length - 1].temperature
+    const temp = data[data.length - 1].temperature
+    return Math.round(temp * 10) / 10
   }
 
   /**
@@ -176,6 +177,7 @@ const HistoryScreen = () => {
               unit="°C"
               onSelect={handleSensorSelect}
               selected={selectedSensor === sensor.mac}
+              timeRange={selectedRange}
             />
           ))}
         </Box>

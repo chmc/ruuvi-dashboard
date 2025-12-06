@@ -41,6 +41,7 @@ jest.mock('recharts', () => ({
   YAxis: () => <g data-testid="y-axis" />,
   Tooltip: () => <div data-testid="chart-tooltip" />,
   CartesianGrid: () => <g data-testid="cartesian-grid" />,
+  ReferenceLine: () => <line data-testid="reference-line" />,
 }))
 
 describe('HistoryScreen', () => {

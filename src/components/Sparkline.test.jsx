@@ -18,6 +18,9 @@ jest.mock('recharts', () => ({
       data-stroke={stroke}
     />
   ),
+  YAxis: () => <g data-testid="y-axis" />,
+  XAxis: () => <g data-testid="x-axis" />,
+  ReferenceLine: () => <line data-testid="reference-line" />,
 }))
 
 describe('Sparkline', () => {
