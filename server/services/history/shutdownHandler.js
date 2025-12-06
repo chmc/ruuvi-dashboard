@@ -12,6 +12,9 @@
 /** @type {(() => any) | null} */
 let flushCallback = null
 
+/** @type {(() => void) | null} */
+let scannerStopCallback = null
+
 /** @type {boolean} */
 let isShuttingDown = false
 
@@ -36,6 +39,13 @@ const triggerShutdown = async (signal = 'manual') => {
   console.log(`\nGraceful shutdown initiated (${signal})...`)
 
   try {
+    // Stop scanner first to prevent new readings
+    if (scannerStopCallback) {
+      console.log('Stopping BLE scanner...')
+      scannerStopCallback()
+    }
+
+    // Flush buffer to database
     if (flushCallback) {
       console.log('Flushing buffer to database...')
 
@@ -52,7 +62,7 @@ const triggerShutdown = async (signal = 'manual') => {
     console.log('Shutdown complete')
     process.exit(0)
   } catch (error) {
-    console.error('Shutdown error during flush:', error)
+    console.error('Shutdown error:', error)
     process.exit(1)
   }
 }
@@ -84,6 +94,14 @@ const register = (callback) => {
 }
 
 /**
+ * Register scanner stop callback for graceful shutdown
+ * @param {() => void} callback - Function to stop the BLE scanner
+ */
+const registerScannerStop = (callback) => {
+  scannerStopCallback = callback
+}
+
+/**
  * Check if handlers are registered
  * @returns {boolean}
  */
@@ -99,6 +117,7 @@ const reset = () => {
   }
 
   flushCallback = null
+  scannerStopCallback = null
   isShuttingDown = false
   handlersRegistered = false
   signalHandler = null
@@ -106,6 +125,7 @@ const reset = () => {
 
 module.exports = {
   register,
+  registerScannerStop,
   triggerShutdown,
   isRegistered,
   reset,

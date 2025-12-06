@@ -1,6 +1,6 @@
 // Normalize MAC addresses to lowercase for consistent lookups
 // (RuuviTag scanner returns lowercase MACs from the payload)
-const normalizeMac = (mac) => mac?.toLowerCase() || ''
+const normalizeMac = (mac) => mac?.trim().toLowerCase() || ''
 
 const macIds = import.meta.env.VITE_RUUVITAG_MACS?.split(',').map(normalizeMac)
 const macNames = import.meta.env.VITE_RUUVITAG_NAMES?.split(',')

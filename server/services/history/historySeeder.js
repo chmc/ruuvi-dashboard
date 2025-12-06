@@ -212,8 +212,8 @@ const seed = (db, macs, outdoorMac) => {
   const normalizedOutdoorMac = outdoorMac?.toLowerCase()
 
   macs.forEach((mac) => {
-    // Normalize MAC address to lowercase for consistency
-    const normalizedMac = mac.toLowerCase()
+    // Normalize MAC address: trim whitespace and convert to lowercase for consistency
+    const normalizedMac = mac.trim().toLowerCase()
     const isOutdoor = normalizedMac === normalizedOutdoorMac
     const readings = generateReadingsForMac(
       normalizedMac,

@@ -177,6 +177,38 @@ describe('shutdownHandler', () => {
       // Flush should only be called once
       expect(mockFlush).toHaveBeenCalledTimes(1)
     })
+
+    it('should call scanner stop callback before flush', async () => {
+      const mockScannerStop = jest.fn()
+      shutdownHandler.register(mockFlush)
+      shutdownHandler.registerScannerStop(mockScannerStop)
+
+      await shutdownHandler.triggerShutdown()
+
+      expect(mockScannerStop).toHaveBeenCalledTimes(1)
+      expect(mockFlush).toHaveBeenCalledTimes(1)
+      // Verify order: scanner stop should be called first (check console.log order)
+      const logCalls = consoleLogSpy.mock.calls.map((call) => call[0])
+      const scannerStopIndex = logCalls.findIndex((msg) =>
+        String(msg).includes('Stopping BLE scanner')
+      )
+      const flushIndex = logCalls.findIndex((msg) =>
+        String(msg).includes('Flushing buffer')
+      )
+      expect(scannerStopIndex).toBeGreaterThan(-1)
+      expect(flushIndex).toBeGreaterThan(-1)
+      expect(scannerStopIndex).toBeLessThan(flushIndex)
+    })
+
+    it('should work without scanner stop callback', async () => {
+      shutdownHandler.register(mockFlush)
+      // Don't register scanner stop
+
+      await shutdownHandler.triggerShutdown()
+
+      expect(mockFlush).toHaveBeenCalledTimes(1)
+      expect(mockExit).toHaveBeenCalledWith(0)
+    })
   })
 
   describe('reset', () => {

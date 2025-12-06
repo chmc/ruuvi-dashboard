@@ -25,6 +25,9 @@ if (!process.env.TEST && !process.env.SIMULATE) {
   ruuviScanner = require('./services/ruuvi/ruuviScanner')
 }
 
+// Store scanner instance for graceful shutdown
+let scannerInstance = null
+
 const app = express()
 const port = process.env.PORT || 3001
 const cache = new NodeCache()
@@ -198,7 +201,8 @@ const initializeHistoryServices = () => {
     `Flush scheduler started (interval: ${flushIntervalMs / 1000}s)`
   )
 
-  // Register shutdown handler
+  // Register shutdown handler with flush callback
+  // Scanner stop will be registered separately when scanner is created
   shutdownHandler.register(flushCallback)
   console.log(
     new Date().toLocaleString(),
@@ -209,7 +213,8 @@ const initializeHistoryServices = () => {
 /**
  * @returns {string[]}
  */
-const getConfigMacIds = () => process.env.VITE_RUUVITAG_MACS?.split(',')
+const getConfigMacIds = () =>
+  process.env.VITE_RUUVITAG_MACS?.split(',').map((mac) => mac.trim()) || []
 
 // ============================================================================
 // Sensor Data Collection Mode Selection
@@ -262,10 +267,21 @@ if (process.env.TEST || process.env.SIMULATE) {
   // Start HTTP server after initialization
   startServer()
 
-  const scanner = ruuviScanner.createScanner({ macs })
+  scannerInstance = ruuviScanner.createScanner({ macs })
+
+  // Register scanner stop for graceful shutdown
+  shutdownHandler.registerScannerStop(() => {
+    if (scannerInstance) {
+      console.log(
+        new Date().toLocaleString(),
+        'Stopping RuuviTag BLE scanner...'
+      )
+      scannerInstance.stop()
+    }
+  })
 
   // Handle sensor data updates
-  scanner.on('collection', (sensorDataCollection) => {
+  scannerInstance.on('collection', (sensorDataCollection) => {
     const mergedData = sensorService.getSensorData(
       sensorDataCollection,
       cache.get(cacheKeys.ruuvi),
@@ -275,7 +291,7 @@ if (process.env.TEST || process.env.SIMULATE) {
   })
 
   // Handle individual sensor data (for logging and history)
-  scanner.on('data', ({ mac, sensorData }) => {
+  scannerInstance.on('data', ({ mac, sensorData }) => {
     console.log(
       new Date().toLocaleString(),
       `Sensor ${mac}: ${sensorData.temperature.toFixed(
@@ -288,7 +304,7 @@ if (process.env.TEST || process.env.SIMULATE) {
   })
 
   // Handle errors
-  scanner.on('error', (error) => {
+  scannerInstance.on('error', (error) => {
     console.error(new Date().toLocaleString(), 'RuuviTag scanner error:', error)
   })
 
@@ -299,10 +315,6 @@ if (process.env.TEST || process.env.SIMULATE) {
   )
   setTimeout(() => {
     console.log(new Date().toLocaleString(), 'Starting RuuviTag BLE scanner')
-    scanner.start()
+    scannerInstance.start()
   }, 3000)
-
-  // Note: Graceful shutdown for scanner is handled by shutdownHandler
-  // which is registered in initializeHistoryServices() and will also
-  // stop the scanner via process.exit() after flushing the buffer
 }
