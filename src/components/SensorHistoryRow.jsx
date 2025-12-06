@@ -4,10 +4,21 @@ import ButtonBase from '@mui/material/ButtonBase'
 import Sparkline from './Sparkline'
 
 /**
- * @typedef {Object} DataPoint
+ * @typedef {Object} HistoryDataPoint
  * @property {number} timestamp - Unix timestamp
- * @property {number} value - Data value
+ * @property {number} temperature - Temperature in Celsius
+ * @property {number} humidity - Humidity percentage
+ * @property {number} pressure - Pressure in hPa
  */
+
+/**
+ * Metric configuration with colors and units
+ */
+const METRICS = {
+  temperature: { color: '#ff7043', unit: '°C' },
+  humidity: { color: '#42a5f5', unit: '%' },
+  pressure: { color: '#66bb6a', unit: 'hPa' },
+}
 
 /**
  * SensorHistoryRow - clickable row displaying sensor name, sparkline, and current value
@@ -15,24 +26,20 @@ import Sparkline from './Sparkline'
  * @param {Object} props
  * @param {string} props.name - Sensor display name
  * @param {string} props.mac - Sensor MAC address
- * @param {DataPoint[]} [props.data] - Historical data for sparkline
- * @param {number|null} [props.currentValue] - Current sensor value
- * @param {string} [props.unit] - Unit suffix (e.g., '°C', '%')
+ * @param {HistoryDataPoint[]} [props.historyData] - Full history data with all metrics
+ * @param {string[]} [props.selectedMetrics] - Array of selected metric keys to display
  * @param {(mac: string) => void} [props.onSelect] - Callback when row is clicked
  * @param {boolean} [props.selected] - Whether this row is selected
- * @param {string} [props.color] - Sparkline color
  * @param {string} [props.timeRange] - Time range for X-axis formatting
  * @returns {JSX.Element}
  */
 const SensorHistoryRow = ({
   name,
   mac,
-  data,
-  currentValue,
-  unit = '°C',
+  historyData,
+  selectedMetrics = ['temperature'],
   onSelect,
   selected = false,
-  color,
   timeRange = '24h',
 }) => {
   /**
@@ -45,15 +52,29 @@ const SensorHistoryRow = ({
   }
 
   /**
-   * Format the current value for display
-   * @returns {string}
+   * Get current (latest) values for selected metrics
+   * @returns {Array<{metric: string, value: string, color: string}>} Formatted current values with colors
    */
-  const formatCurrentValue = () => {
-    if (currentValue === null || currentValue === undefined) {
-      return '-'
-    }
-    return `${currentValue}${unit}`
+  const getCurrentValues = () => {
+    if (!historyData || historyData.length === 0) return null
+    const latest = historyData[historyData.length - 1]
+
+    return selectedMetrics.map((metric) => {
+      const value = latest[metric]
+      const config = METRICS[metric]
+      if (value === null || value === undefined) {
+        return { metric, value: '-', color: config?.color || '#888' }
+      }
+      const rounded = Math.round(value * 10) / 10
+      return {
+        metric,
+        value: `${rounded}${config?.unit || ''}`,
+        color: config?.color || '#888',
+      }
+    })
   }
+
+  const currentValues = getCurrentValues()
 
   return (
     <ButtonBase
@@ -92,8 +113,8 @@ const SensorHistoryRow = ({
       {/* Sparkline */}
       <Box sx={{ flex: 1, mx: 2, minWidth: 0 }}>
         <Sparkline
-          data={data}
-          color={color}
+          historyData={historyData}
+          selectedMetrics={selectedMetrics}
           width="100%"
           height={100}
           timeRange={timeRange}
@@ -101,17 +122,40 @@ const SensorHistoryRow = ({
         />
       </Box>
 
-      {/* Current Value */}
-      <Typography
-        variant="body1"
+      {/* Current Value(s) */}
+      <Box
         sx={{
-          minWidth: 60,
-          textAlign: 'right',
-          fontWeight: 'medium',
+          minWidth: 80,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          gap: 0.25,
         }}
       >
-        {formatCurrentValue()}
-      </Typography>
+        {currentValues ? (
+          currentValues.map(({ metric, value, color }) => (
+            <Typography
+              key={metric}
+              variant="body2"
+              sx={{
+                color,
+                fontWeight: 'medium',
+                fontSize: '0.875rem',
+                lineHeight: 1.3,
+              }}
+            >
+              {value}
+            </Typography>
+          ))
+        ) : (
+          <Typography
+            variant="body2"
+            sx={{ color: '#888', fontWeight: 'medium' }}
+          >
+            -
+          </Typography>
+        )}
+      </Box>
     </ButtonBase>
   )
 }

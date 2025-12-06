@@ -1,8 +1,5 @@
-import { useState } from 'react'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
-import Tabs from '@mui/material/Tabs'
-import Tab from '@mui/material/Tab'
 import {
   ResponsiveContainer,
   LineChart,
@@ -11,6 +8,7 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
+  Legend,
 } from 'recharts'
 
 /**
@@ -22,7 +20,7 @@ import {
  */
 
 /**
- * Metric configuration for tabs
+ * Metric configuration
  * @type {Array<{key: string, label: string, unit: string, color: string}>}
  */
 const METRICS = [
@@ -111,11 +109,57 @@ const formatYAxisValue = (value) => {
 }
 
 /**
+ * @typedef {Object} SensorConfig
+ * @property {string} mac - Sensor MAC address (used as key)
+ * @property {string} name - Sensor display name
+ * @property {string} color - Line color for this sensor
+ */
+
+/**
+ * Merge multi-sensor data by timestamp for aligned chart display
+ * @param {Object<string, HistoryDataPoint[]>} multiSensorData - Data keyed by sensor MAC
+ * @param {SensorConfig[]} sensorConfigs - Sensor configurations
+ * @param {string[]} metricKeys - Array of metric keys to include
+ * @returns {Array} Merged data array with timestamp and sensor-specific values
+ */
+const mergeMultiSensorData = (multiSensorData, sensorConfigs, metricKeys) => {
+  // Collect all timestamps from all sensors
+  const timestampMap = new Map()
+
+  sensorConfigs.forEach((config) => {
+    const sensorData = multiSensorData[config.mac] || []
+    sensorData.forEach((point) => {
+      if (!timestampMap.has(point.timestamp)) {
+        timestampMap.set(point.timestamp, { timestamp: point.timestamp })
+      }
+      const entry = timestampMap.get(point.timestamp)
+      metricKeys.forEach((metricKey) => {
+        entry[`${metricKey}-${config.mac}`] = point[metricKey]
+      })
+    })
+  })
+
+  // Sort by timestamp and return as array
+  return Array.from(timestampMap.values()).sort(
+    (a, b) => a.timestamp - b.timestamp
+  )
+}
+
+/**
  * DetailChart - full-size chart for displaying sensor history
  *
+ * Supports two modes:
+ * 1. Single sensor mode: Use `data` and `sensorName` props
+ * 2. Multi-sensor mode: Use `multiSensorData` and `sensorConfigs` props
+ *
+ * In both modes, multiple metrics can be displayed simultaneously using checkboxes.
+ *
  * @param {Object} props
- * @param {HistoryDataPoint[]} [props.data] - Array of history data points
- * @param {string} props.sensorName - Name of the sensor
+ * @param {HistoryDataPoint[]} [props.data] - Array of history data points (single sensor mode)
+ * @param {string} [props.sensorName] - Name of the sensor (single sensor mode)
+ * @param {Object<string, HistoryDataPoint[]>} [props.multiSensorData] - Data keyed by MAC (multi-sensor mode)
+ * @param {SensorConfig[]} [props.sensorConfigs] - Sensor configurations (multi-sensor mode)
+ * @param {string[]} [props.selectedMetrics] - Array of metric keys to display (default: ['temperature'])
  * @param {string} [props.timeRange] - Current time range (1h, 6h, 24h, 7d, 30d, all)
  * @param {number} [props.height] - Chart height in pixels (default: 250)
  * @returns {JSX.Element}
@@ -123,54 +167,96 @@ const formatYAxisValue = (value) => {
 const DetailChart = ({
   data,
   sensorName,
+  multiSensorData,
+  sensorConfigs,
+  selectedMetrics = ['temperature'],
   timeRange = '24h',
   height = DEFAULT_HEIGHT,
 }) => {
-  const [selectedMetric, setSelectedMetric] = useState(0)
+  // Determine if we're in multi-sensor mode
+  const isMultiSensorMode = multiSensorData && sensorConfigs?.length > 0
 
-  // Normalize data to empty array if null/undefined
-  const normalizedData = data || []
+  // Get selected metrics as array of metric configs for iteration
+  const selectedMetricsArray = METRICS.filter((m) =>
+    selectedMetrics.includes(m.key)
+  )
 
-  // Get current metric configuration
-  const currentMetric = METRICS[selectedMetric]
-
-  /**
-   * Handle metric tab change
-   * @param {React.SyntheticEvent} _event - Change event
-   * @param {number} newValue - New tab index
-   */
-  const handleMetricChange = (_event, newValue) => {
-    setSelectedMetric(newValue)
-  }
+  // Prepare chart data based on mode
+  const chartData = isMultiSensorMode
+    ? mergeMultiSensorData(
+        multiSensorData,
+        sensorConfigs,
+        selectedMetricsArray.map((m) => m.key)
+      )
+    : data || []
 
   /**
    * Custom tooltip formatter
    * @param {number} value - The value
-   * @returns {[string, string]} Formatted value and name
+   * @param {string} name - The data key or name
+   * @returns {[string, string]} Formatted value and label
    */
-  const tooltipFormatter = (value) => [
-    formatTooltipValue(value, currentMetric.unit),
-    currentMetric.label,
-  ]
+  const tooltipFormatter = (value, name) => {
+    // Find the metric for this data key
+    let metricKey = name
+    let sensorLabel = ''
+
+    if (isMultiSensorMode) {
+      // Extract metric and sensor from dataKey (e.g., "temperature-sensor1")
+      const metric = METRICS.find((m) => name.startsWith(m.key))
+      if (metric) {
+        metricKey = metric.key
+        const mac = name.replace(`${metric.key}-`, '')
+        const config = sensorConfigs.find((c) => c.mac === mac)
+        sensorLabel = config?.name || mac
+      }
+    }
+
+    const metric = METRICS.find((m) => m.key === metricKey)
+    const unit = metric?.unit || ''
+    const label = isMultiSensorMode
+      ? `${metric?.label || metricKey} (${sensorLabel})`
+      : metric?.label || metricKey
+
+    return [formatTooltipValue(value, unit), label]
+  }
+
+  // Determine Y-axis positioning for selected metrics
+  // First metric uses left axis, subsequent use right
+  const getYAxisOrientation = (index) => (index === 0 ? 'left' : 'right')
+
+  // Build legend payload
+  const buildLegendPayload = () => {
+    if (isMultiSensorMode) {
+      // For multi-sensor, show sensor names with their colors
+      const payload = []
+      sensorConfigs.forEach((config) => {
+        selectedMetricsArray.forEach((metric) => {
+          payload.push({
+            value: `${config.name} - ${metric.label}`,
+            type: 'line',
+            color: config.color,
+          })
+        })
+      })
+      return payload
+    }
+    // For single sensor, show metric names
+    return selectedMetricsArray.map((metric) => ({
+      value: metric.label,
+      type: 'line',
+      color: metric.color,
+    }))
+  }
+
+  const legendPayload = buildLegendPayload()
 
   return (
     <Box>
-      {/* Sensor Name Title */}
+      {/* Title */}
       <Typography variant="h6" component="h2" gutterBottom>
-        {sensorName}
+        {isMultiSensorMode ? 'Sensor Comparison' : sensorName}
       </Typography>
-
-      {/* Metric Tabs */}
-      <Tabs
-        value={selectedMetric}
-        onChange={handleMetricChange}
-        aria-label="metric selection"
-        sx={{ mb: 1 }}
-      >
-        {METRICS.map((metric) => (
-          <Tab key={metric.key} label={metric.label} />
-        ))}
-      </Tabs>
 
       {/* Chart */}
       <Box
@@ -179,8 +265,13 @@ const DetailChart = ({
       >
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
-            data={normalizedData}
-            margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+            data={chartData}
+            margin={{
+              top: 5,
+              right: selectedMetricsArray.length > 1 ? 60 : 20,
+              left: 0,
+              bottom: 5,
+            }}
           >
             <CartesianGrid
               strokeDasharray="3 3"
@@ -192,13 +283,32 @@ const DetailChart = ({
               stroke="rgba(255,255,255,0.5)"
               tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }}
             />
-            <YAxis
-              domain={['auto', 'auto']}
-              tickFormatter={formatYAxisValue}
-              stroke="rgba(255,255,255,0.5)"
-              tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }}
-              width={45}
-            />
+
+            {/* Render Y-axis for each selected metric */}
+            {selectedMetricsArray.map((metric, index) => (
+              <YAxis
+                key={metric.key}
+                yAxisId={metric.key}
+                orientation={getYAxisOrientation(index)}
+                domain={['auto', 'auto']}
+                tickFormatter={formatYAxisValue}
+                stroke={metric.color}
+                tick={{ fill: metric.color, fontSize: 12 }}
+                width={45}
+                label={
+                  selectedMetricsArray.length > 1
+                    ? {
+                        value: metric.unit,
+                        angle: index === 0 ? -90 : 90,
+                        position: index === 0 ? 'insideLeft' : 'insideRight',
+                        fill: metric.color,
+                        fontSize: 11,
+                      }
+                    : undefined
+                }
+              />
+            ))}
+
             <Tooltip
               formatter={tooltipFormatter}
               labelFormatter={formatTooltipLabel}
@@ -208,15 +318,50 @@ const DetailChart = ({
                 borderRadius: 4,
               }}
             />
-            <Line
-              type="monotone"
-              dataKey={currentMetric.key}
-              stroke={currentMetric.color}
-              strokeWidth={2}
-              dot={false}
-              name={currentMetric.label}
-              isAnimationActive={false}
-            />
+
+            {(isMultiSensorMode || selectedMetricsArray.length > 1) && (
+              <Legend payload={legendPayload} />
+            )}
+
+            {/* Render lines based on mode */}
+            {isMultiSensorMode
+              ? // Multi-sensor mode: render line for each sensor × each metric
+                sensorConfigs.flatMap((config) =>
+                  selectedMetricsArray.map((metric) => (
+                    <Line
+                      key={`${metric.key}-${config.mac}`}
+                      type="monotone"
+                      dataKey={`${metric.key}-${config.mac}`}
+                      stroke={config.color}
+                      strokeWidth={2}
+                      strokeDasharray={
+                        metric.key === 'humidity'
+                          ? '5 5'
+                          : metric.key === 'pressure'
+                            ? '2 2'
+                            : undefined
+                      }
+                      dot={false}
+                      name={`${config.name} - ${metric.label}`}
+                      yAxisId={metric.key}
+                      isAnimationActive={false}
+                    />
+                  ))
+                )
+              : // Single sensor mode: render line for each selected metric
+                selectedMetricsArray.map((metric) => (
+                  <Line
+                    key={metric.key}
+                    type="monotone"
+                    dataKey={metric.key}
+                    stroke={metric.color}
+                    strokeWidth={2}
+                    dot={false}
+                    name={metric.label}
+                    yAxisId={metric.key}
+                    isAnimationActive={false}
+                  />
+                ))}
           </LineChart>
         </ResponsiveContainer>
       </Box>

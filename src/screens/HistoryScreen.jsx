@@ -3,6 +3,9 @@ import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import ToggleButton from '@mui/material/ToggleButton'
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
+import FormGroup from '@mui/material/FormGroup'
+import FormControlLabel from '@mui/material/FormControlLabel'
+import Checkbox from '@mui/material/Checkbox'
 import CircularProgress from '@mui/material/CircularProgress'
 import Alert from '@mui/material/Alert'
 import configs from '../configs'
@@ -24,12 +27,38 @@ const TIME_RANGES = [
 ]
 
 /**
+ * Metric configuration for checkboxes
+ * @type {Array<{key: string, label: string, color: string}>}
+ */
+const METRICS = [
+  { key: 'temperature', label: 'Temperature', color: '#ff7043' },
+  { key: 'humidity', label: 'Humidity', color: '#42a5f5' },
+  { key: 'pressure', label: 'Pressure', color: '#66bb6a' },
+]
+
+/**
+ * Default colors for sensors in multi-sensor view
+ * @type {string[]}
+ */
+const SENSOR_COLORS = [
+  '#ff7043', // Deep Orange
+  '#42a5f5', // Blue
+  '#66bb6a', // Green
+  '#ab47bc', // Purple
+  '#ffa726', // Orange
+  '#26c6da', // Cyan
+  '#ec407a', // Pink
+  '#8d6e63', // Brown
+]
+
+/**
  * History screen - displays historical sensor data with charts
  * @returns {JSX.Element}
  */
 const HistoryScreen = () => {
   const [selectedRange, setSelectedRange] = useState('24h')
   const [selectedSensor, setSelectedSensor] = useState(null)
+  const [selectedMetrics, setSelectedMetrics] = useState(['temperature'])
   const [historyData, setHistoryData] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -80,39 +109,32 @@ const HistoryScreen = () => {
   }
 
   /**
-   * Handle sensor selection
-   * @param {string} mac - MAC address of selected sensor
+   * Handle sensor selection (single select, click to toggle)
+   * @param {string} mac - MAC address of sensor to select
    */
   const handleSensorSelect = (mac) => {
     setSelectedSensor(mac === selectedSensor ? null : mac)
   }
 
   /**
-   * Get current value from history data, formatted to 1 decimal
-   * @param {Array} data - History data array
-   * @returns {number|null} Latest temperature value
+   * Handle metric checkbox toggle
+   * @param {string} metricKey - The metric key to toggle
    */
-  const getCurrentValue = (data) => {
-    if (!data || data.length === 0) return null
-    const temp = data[data.length - 1].temperature
-    return Math.round(temp * 10) / 10
+  const handleMetricToggle = (metricKey) => {
+    setSelectedMetrics((prev) => {
+      if (prev.includes(metricKey)) {
+        // Don't allow deselecting the last metric
+        if (prev.length > 1) {
+          return prev.filter((m) => m !== metricKey)
+        }
+        return prev
+      }
+      return [...prev, metricKey]
+    })
   }
 
   /**
-   * Transform history data to sparkline format
-   * @param {Array} data - History data array
-   * @returns {Array} Data formatted for sparkline
-   */
-  const toSparklineData = (data) => {
-    if (!data) return []
-    return data.map((point) => ({
-      timestamp: point.timestamp,
-      value: point.temperature,
-    }))
-  }
-
-  /**
-   * Get the selected sensor object
+   * Get the selected sensor config
    * @returns {Object|null} Selected sensor config
    */
   const getSelectedSensorConfig = () => {
@@ -145,6 +167,37 @@ const HistoryScreen = () => {
         </ToggleButtonGroup>
       </Box>
 
+      {/* Metric Selection Checkboxes */}
+      <Box mb={2}>
+        <FormGroup row aria-label="metric selection">
+          {METRICS.map((metric) => (
+            <FormControlLabel
+              key={metric.key}
+              control={
+                <Checkbox
+                  checked={selectedMetrics.includes(metric.key)}
+                  onChange={() => handleMetricToggle(metric.key)}
+                  size="small"
+                  sx={{
+                    color: metric.color,
+                    '&.Mui-checked': { color: metric.color },
+                  }}
+                />
+              }
+              label={metric.label}
+              sx={{
+                '& .MuiFormControlLabel-label': {
+                  fontSize: '0.875rem',
+                  color: selectedMetrics.includes(metric.key)
+                    ? metric.color
+                    : 'text.secondary',
+                },
+              }}
+            />
+          ))}
+        </FormGroup>
+      </Box>
+
       {/* Loading State */}
       {loading && (
         <Box
@@ -167,14 +220,36 @@ const HistoryScreen = () => {
       {/* Sensor List */}
       {!loading && !error && (
         <Box>
+          {/* Header row with column labels */}
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
+            px={1.5}
+            pb={0.5}
+            sx={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}
+          >
+            <Typography
+              variant="caption"
+              sx={{ minWidth: 100, color: 'text.secondary' }}
+            >
+              Sensor
+            </Typography>
+            <Box sx={{ flex: 1, mx: 2 }} />
+            <Typography
+              variant="caption"
+              sx={{ minWidth: 80, textAlign: 'right', color: 'text.secondary' }}
+            >
+              Current
+            </Typography>
+          </Box>
           {configs.ruuviTags.map((sensor) => (
             <SensorHistoryRow
               key={sensor.mac}
               name={sensor.name}
               mac={sensor.mac}
-              data={toSparklineData(historyData[sensor.mac])}
-              currentValue={getCurrentValue(historyData[sensor.mac])}
-              unit="°C"
+              historyData={historyData[sensor.mac]}
+              selectedMetrics={selectedMetrics}
               onSelect={handleSensorSelect}
               selected={selectedSensor === sensor.mac}
               timeRange={selectedRange}
@@ -189,6 +264,7 @@ const HistoryScreen = () => {
           <DetailChart
             data={historyData[selectedSensor]}
             sensorName={selectedSensorConfig.name}
+            selectedMetrics={selectedMetrics}
             timeRange={selectedRange}
           />
         </Box>

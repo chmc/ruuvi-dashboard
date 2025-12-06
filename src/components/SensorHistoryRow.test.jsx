@@ -13,7 +13,7 @@ jest.mock('recharts', () => ({
   ),
   Line: ({ dataKey, stroke }) => (
     <line
-      data-testid="sparkline-line"
+      data-testid={`sparkline-line-${dataKey}`}
       data-key={dataKey}
       data-stroke={stroke}
     />
@@ -24,20 +24,19 @@ jest.mock('recharts', () => ({
 }))
 
 describe('SensorHistoryRow', () => {
-  const mockData = [
-    { timestamp: 1000, value: 20 },
-    { timestamp: 2000, value: 21 },
-    { timestamp: 3000, value: 22 },
-    { timestamp: 4000, value: 21.5 },
-    { timestamp: 5000, value: 23 },
+  const mockHistoryData = [
+    { timestamp: 1000, temperature: 20, humidity: 45, pressure: 1013 },
+    { timestamp: 2000, temperature: 21, humidity: 46, pressure: 1014 },
+    { timestamp: 3000, temperature: 22, humidity: 44, pressure: 1012 },
+    { timestamp: 4000, temperature: 21.5, humidity: 45, pressure: 1015 },
+    { timestamp: 5000, temperature: 23, humidity: 47, pressure: 1013 },
   ]
 
   const defaultProps = {
     name: 'Living Room',
     mac: 'aa:bb:cc:dd:ee:ff',
-    data: mockData,
-    currentValue: 23,
-    unit: '°C',
+    historyData: mockHistoryData,
+    selectedMetrics: ['temperature'],
     onSelect: jest.fn(),
     selected: false,
   }
@@ -75,40 +74,73 @@ describe('SensorHistoryRow', () => {
     })
 
     it('should handle empty data array', () => {
-      render(<SensorHistoryRow {...defaultProps} data={[]} />)
+      render(<SensorHistoryRow {...defaultProps} historyData={[]} />)
 
       const chart = screen.getByTestId('line-chart')
       expect(chart).toHaveAttribute('data-points', '0')
     })
+
+    it('should render line for selected metric', () => {
+      render(<SensorHistoryRow {...defaultProps} />)
+
+      expect(screen.getByTestId('sparkline-line-temperature')).toBeInTheDocument()
+    })
+
+    it('should render multiple lines when multiple metrics selected', () => {
+      render(
+        <SensorHistoryRow
+          {...defaultProps}
+          selectedMetrics={['temperature', 'humidity']}
+        />
+      )
+
+      expect(screen.getByTestId('sparkline-line-temperature')).toBeInTheDocument()
+      expect(screen.getByTestId('sparkline-line-humidity')).toBeInTheDocument()
+    })
   })
 
   describe('current value display', () => {
-    it('should display current value with unit', () => {
+    it('should display current value with unit for single metric', () => {
       render(<SensorHistoryRow {...defaultProps} />)
 
       expect(screen.getByText('23°C')).toBeInTheDocument()
     })
 
-    it('should display value with different unit', () => {
-      render(<SensorHistoryRow {...defaultProps} currentValue={65} unit="%" />)
+    it('should display multiple values on separate lines when multiple metrics selected', () => {
+      render(
+        <SensorHistoryRow
+          {...defaultProps}
+          selectedMetrics={['temperature', 'humidity']}
+        />
+      )
 
-      expect(screen.getByText('65%')).toBeInTheDocument()
+      // Values now displayed on separate lines
+      expect(screen.getByText('23°C')).toBeInTheDocument()
+      expect(screen.getByText('47%')).toBeInTheDocument()
     })
 
-    it('should display decimal values', () => {
-      render(<SensorHistoryRow {...defaultProps} currentValue={22.5} />)
+    it('should display all three values on separate lines when all metrics selected', () => {
+      render(
+        <SensorHistoryRow
+          {...defaultProps}
+          selectedMetrics={['temperature', 'humidity', 'pressure']}
+        />
+      )
 
-      expect(screen.getByText('22.5°C')).toBeInTheDocument()
+      // Values now displayed on separate lines
+      expect(screen.getByText('23°C')).toBeInTheDocument()
+      expect(screen.getByText('47%')).toBeInTheDocument()
+      expect(screen.getByText('1013hPa')).toBeInTheDocument()
     })
 
-    it('should display dash when current value is null', () => {
-      render(<SensorHistoryRow {...defaultProps} currentValue={null} />)
+    it('should display dash when historyData is empty', () => {
+      render(<SensorHistoryRow {...defaultProps} historyData={[]} />)
 
       expect(screen.getByText('-')).toBeInTheDocument()
     })
 
-    it('should display dash when current value is undefined', () => {
-      render(<SensorHistoryRow {...defaultProps} currentValue={undefined} />)
+    it('should display dash when historyData is null', () => {
+      render(<SensorHistoryRow {...defaultProps} historyData={null} />)
 
       expect(screen.getByText('-')).toBeInTheDocument()
     })

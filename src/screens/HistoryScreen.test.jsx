@@ -42,6 +42,13 @@ jest.mock('recharts', () => ({
   Tooltip: () => <div data-testid="chart-tooltip" />,
   CartesianGrid: () => <g data-testid="cartesian-grid" />,
   ReferenceLine: () => <line data-testid="reference-line" />,
+  Legend: ({ payload }) => (
+    <div data-testid="chart-legend">
+      {payload?.map((entry) => (
+        <span key={entry.value}>{entry.value}</span>
+      ))}
+    </div>
+  ),
 }))
 
 describe('HistoryScreen', () => {
@@ -265,6 +272,131 @@ describe('HistoryScreen', () => {
       fireEvent.click(sensorRow)
 
       expect(screen.getByTestId('detail-chart-wrapper')).toBeInTheDocument()
+    })
+  })
+
+  describe('Metric Selection', () => {
+    it('should render metric checkboxes', async () => {
+      render(<HistoryScreen />)
+      await waitForLoadingComplete()
+
+      expect(screen.getByLabelText(/temperature/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/humidity/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/pressure/i)).toBeInTheDocument()
+    })
+
+    it('should have temperature selected by default', async () => {
+      render(<HistoryScreen />)
+      await waitForLoadingComplete()
+
+      const tempCheckbox = screen.getByLabelText(/temperature/i)
+      expect(tempCheckbox).toBeChecked()
+    })
+
+    it('should allow selecting multiple metrics', async () => {
+      render(<HistoryScreen />)
+      await waitForLoadingComplete()
+
+      const tempCheckbox = screen.getByLabelText(/temperature/i)
+      const humidityCheckbox = screen.getByLabelText(/humidity/i)
+
+      // Temperature is checked by default
+      expect(tempCheckbox).toBeChecked()
+
+      // Click humidity to add it
+      fireEvent.click(humidityCheckbox)
+
+      // Both should be checked now
+      expect(tempCheckbox).toBeChecked()
+      expect(humidityCheckbox).toBeChecked()
+    })
+
+    it('should allow deselecting a metric when multiple are selected', async () => {
+      render(<HistoryScreen />)
+      await waitForLoadingComplete()
+
+      const tempCheckbox = screen.getByLabelText(/temperature/i)
+      const humidityCheckbox = screen.getByLabelText(/humidity/i)
+
+      // Add humidity first
+      fireEvent.click(humidityCheckbox)
+
+      // Remove temperature
+      fireEvent.click(tempCheckbox)
+
+      expect(tempCheckbox).not.toBeChecked()
+      expect(humidityCheckbox).toBeChecked()
+    })
+
+    it('should not allow deselecting the last metric', async () => {
+      render(<HistoryScreen />)
+      await waitForLoadingComplete()
+
+      const tempCheckbox = screen.getByLabelText(/temperature/i)
+
+      // Try to deselect temperature (the only selected metric)
+      fireEvent.click(tempCheckbox)
+
+      // Should still be checked
+      expect(tempCheckbox).toBeChecked()
+    })
+  })
+
+  describe('Sensor Selection', () => {
+    it('should show chart when sensor row is clicked', async () => {
+      render(<HistoryScreen />)
+      await waitForLoadingComplete()
+
+      // Click on a sensor row
+      const sensorRow = screen.getByRole('button', {
+        name: /Living Room/i,
+      })
+      fireEvent.click(sensorRow)
+
+      expect(screen.getByTestId('detail-chart-wrapper')).toBeInTheDocument()
+    })
+
+    it('should hide chart when same sensor row is clicked again', async () => {
+      render(<HistoryScreen />)
+      await waitForLoadingComplete()
+
+      const sensorRow = screen.getByRole('button', {
+        name: /Living Room/i,
+      })
+
+      // Click to select
+      fireEvent.click(sensorRow)
+      expect(screen.getByTestId('detail-chart-wrapper')).toBeInTheDocument()
+
+      // Click again to deselect
+      fireEvent.click(sensorRow)
+      expect(
+        screen.queryByTestId('detail-chart-wrapper')
+      ).not.toBeInTheDocument()
+    })
+
+    it('should hide chart when no sensor is selected', async () => {
+      render(<HistoryScreen />)
+      await waitForLoadingComplete()
+
+      // Initially no sensor selected, no chart
+      expect(
+        screen.queryByTestId('detail-chart-wrapper')
+      ).not.toBeInTheDocument()
+    })
+
+    it('should show sensor name as chart title when selected', async () => {
+      render(<HistoryScreen />)
+      await waitForLoadingComplete()
+
+      const sensorRow = screen.getByRole('button', {
+        name: /Living Room/i,
+      })
+      fireEvent.click(sensorRow)
+
+      // Living Room appears twice: once in sensor list row, once as chart title
+      const livingRoomElements = screen.getAllByText('Living Room')
+      expect(livingRoomElements.length).toBe(2)
     })
   })
 })

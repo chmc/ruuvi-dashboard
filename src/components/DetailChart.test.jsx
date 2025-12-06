@@ -11,12 +11,13 @@ jest.mock('recharts', () => ({
       {children}
     </svg>
   ),
-  Line: ({ dataKey, stroke, name }) => (
+  Line: ({ dataKey, stroke, name, yAxisId }) => (
     <line
       data-testid={`chart-line-${dataKey}`}
       data-key={dataKey}
       data-stroke={stroke}
       data-name={name}
+      data-yaxis={yAxisId}
     />
   ),
   XAxis: ({ dataKey, tickFormatter }) => (
@@ -26,9 +27,10 @@ jest.mock('recharts', () => ({
       data-has-formatter={!!tickFormatter}
     />
   ),
-  YAxis: ({ domain, tickFormatter }) => (
+  YAxis: ({ yAxisId, orientation, domain, tickFormatter }) => (
     <g
-      data-testid="y-axis"
+      data-testid={`y-axis${yAxisId ? `-${yAxisId}` : ''}`}
+      data-orientation={orientation}
       data-domain={JSON.stringify(domain)}
       data-has-formatter={!!tickFormatter}
     />
@@ -41,6 +43,13 @@ jest.mock('recharts', () => ({
     />
   ),
   CartesianGrid: () => <g data-testid="cartesian-grid" />,
+  Legend: ({ payload }) => (
+    <div data-testid="chart-legend">
+      {payload?.map((entry) => (
+        <span key={entry.value}>{entry.value}</span>
+      ))}
+    </div>
+  ),
 }))
 
 describe('DetailChart', () => {
@@ -133,16 +142,16 @@ describe('DetailChart', () => {
   })
 
   describe('value axis (Y)', () => {
-    it('should render Y axis', () => {
+    it('should render Y axis for temperature by default', () => {
       render(<DetailChart {...defaultProps} />)
 
-      expect(screen.getByTestId('y-axis')).toBeInTheDocument()
+      expect(screen.getByTestId('y-axis-temperature')).toBeInTheDocument()
     })
 
     it('should have value formatter for Y axis', () => {
       render(<DetailChart {...defaultProps} />)
 
-      const yAxis = screen.getByTestId('y-axis')
+      const yAxis = screen.getByTestId('y-axis-temperature')
       expect(yAxis).toHaveAttribute('data-has-formatter', 'true')
     })
   })
@@ -169,58 +178,69 @@ describe('DetailChart', () => {
     })
   })
 
-  describe('metric tabs', () => {
-    it('should render metric tabs', () => {
+  describe('metric selection via props', () => {
+    it('should render temperature line by default', () => {
       render(<DetailChart {...defaultProps} />)
 
-      expect(screen.getByRole('tablist')).toBeInTheDocument()
+      expect(screen.getByTestId('chart-line-temperature')).toBeInTheDocument()
     })
 
-    it('should render temperature tab', () => {
-      render(<DetailChart {...defaultProps} />)
+    it('should render line for specified metric in props', () => {
+      render(<DetailChart {...defaultProps} selectedMetrics={['humidity']} />)
 
+      expect(screen.getByTestId('chart-line-humidity')).toBeInTheDocument()
       expect(
-        screen.getByRole('tab', { name: /temperature/i })
-      ).toBeInTheDocument()
+        screen.queryByTestId('chart-line-temperature')
+      ).not.toBeInTheDocument()
     })
 
-    it('should render humidity tab', () => {
-      render(<DetailChart {...defaultProps} />)
+    it('should render lines for all metrics when multiple specified', () => {
+      render(
+        <DetailChart
+          {...defaultProps}
+          selectedMetrics={['temperature', 'humidity']}
+        />
+      )
 
-      expect(screen.getByRole('tab', { name: /humidity/i })).toBeInTheDocument()
-    })
-
-    it('should render pressure tab', () => {
-      render(<DetailChart {...defaultProps} />)
-
-      expect(screen.getByRole('tab', { name: /pressure/i })).toBeInTheDocument()
-    })
-
-    it('should have temperature tab selected by default', () => {
-      render(<DetailChart {...defaultProps} />)
-
-      const tempTab = screen.getByRole('tab', { name: /temperature/i })
-      expect(tempTab).toHaveAttribute('aria-selected', 'true')
-    })
-
-    it('should switch to humidity when humidity tab is clicked', () => {
-      render(<DetailChart {...defaultProps} />)
-
-      const humidityTab = screen.getByRole('tab', { name: /humidity/i })
-      fireEvent.click(humidityTab)
-
-      expect(humidityTab).toHaveAttribute('aria-selected', 'true')
+      expect(screen.getByTestId('chart-line-temperature')).toBeInTheDocument()
       expect(screen.getByTestId('chart-line-humidity')).toBeInTheDocument()
     })
 
-    it('should switch to pressure when pressure tab is clicked', () => {
-      render(<DetailChart {...defaultProps} />)
+    it('should render three lines when all metrics specified', () => {
+      render(
+        <DetailChart
+          {...defaultProps}
+          selectedMetrics={['temperature', 'humidity', 'pressure']}
+        />
+      )
 
-      const pressureTab = screen.getByRole('tab', { name: /pressure/i })
-      fireEvent.click(pressureTab)
-
-      expect(pressureTab).toHaveAttribute('aria-selected', 'true')
+      expect(screen.getByTestId('chart-line-temperature')).toBeInTheDocument()
+      expect(screen.getByTestId('chart-line-humidity')).toBeInTheDocument()
       expect(screen.getByTestId('chart-line-pressure')).toBeInTheDocument()
+    })
+
+    it('should render multiple Y-axes for different metric types', () => {
+      render(
+        <DetailChart
+          {...defaultProps}
+          selectedMetrics={['temperature', 'humidity']}
+        />
+      )
+
+      expect(screen.getByTestId('y-axis-temperature')).toBeInTheDocument()
+      expect(screen.getByTestId('y-axis-humidity')).toBeInTheDocument()
+    })
+
+    it('should place secondary Y-axis on right side', () => {
+      render(
+        <DetailChart
+          {...defaultProps}
+          selectedMetrics={['temperature', 'humidity']}
+        />
+      )
+
+      const humidityAxis = screen.getByTestId('y-axis-humidity')
+      expect(humidityAxis).toHaveAttribute('data-orientation', 'right')
     })
   })
 
@@ -317,6 +337,148 @@ describe('DetailChart', () => {
       render(<DetailChart {...defaultProps} />)
 
       expect(screen.getByTestId('cartesian-grid')).toBeInTheDocument()
+    })
+  })
+
+  describe('multi-sensor support', () => {
+    const multiSensorData = {
+      sensor1: [
+        {
+          timestamp: 1700000000000,
+          temperature: 20.5,
+          humidity: 45,
+          pressure: 1013,
+        },
+        {
+          timestamp: 1700003600000,
+          temperature: 21.0,
+          humidity: 46,
+          pressure: 1014,
+        },
+      ],
+      sensor2: [
+        {
+          timestamp: 1700000000000,
+          temperature: 18.0,
+          humidity: 55,
+          pressure: 1010,
+        },
+        {
+          timestamp: 1700003600000,
+          temperature: 17.5,
+          humidity: 58,
+          pressure: 1011,
+        },
+      ],
+    }
+
+    const sensorConfigs = [
+      { mac: 'sensor1', name: 'Living Room', color: '#ff7043' },
+      { mac: 'sensor2', name: 'Bedroom', color: '#42a5f5' },
+    ]
+
+    it('should render multiple lines when given multi-sensor data', () => {
+      render(
+        <DetailChart
+          multiSensorData={multiSensorData}
+          sensorConfigs={sensorConfigs}
+        />
+      )
+
+      expect(
+        screen.getByTestId('chart-line-temperature-sensor1')
+      ).toBeInTheDocument()
+      expect(
+        screen.getByTestId('chart-line-temperature-sensor2')
+      ).toBeInTheDocument()
+    })
+
+    it('should render legend when multiple sensors are displayed', () => {
+      render(
+        <DetailChart
+          multiSensorData={multiSensorData}
+          sensorConfigs={sensorConfigs}
+        />
+      )
+
+      expect(screen.getByTestId('chart-legend')).toBeInTheDocument()
+    })
+
+    it('should show sensor names in legend', () => {
+      render(
+        <DetailChart
+          multiSensorData={multiSensorData}
+          sensorConfigs={sensorConfigs}
+        />
+      )
+
+      // In multi-sensor mode with temperature selected, legend shows "SensorName - Temperature"
+      expect(screen.getByText('Living Room - Temperature')).toBeInTheDocument()
+      expect(screen.getByText('Bedroom - Temperature')).toBeInTheDocument()
+    })
+
+    it('should use sensor-specific colors for each line', () => {
+      render(
+        <DetailChart
+          multiSensorData={multiSensorData}
+          sensorConfigs={sensorConfigs}
+        />
+      )
+
+      const line1 = screen.getByTestId('chart-line-temperature-sensor1')
+      const line2 = screen.getByTestId('chart-line-temperature-sensor2')
+
+      expect(line1).toHaveAttribute('data-stroke', '#ff7043')
+      expect(line2).toHaveAttribute('data-stroke', '#42a5f5')
+    })
+
+    it('should show humidity lines for all sensors when humidity is selected', () => {
+      render(
+        <DetailChart
+          multiSensorData={multiSensorData}
+          sensorConfigs={sensorConfigs}
+          selectedMetrics={['humidity']}
+        />
+      )
+
+      expect(
+        screen.getByTestId('chart-line-humidity-sensor1')
+      ).toBeInTheDocument()
+      expect(
+        screen.getByTestId('chart-line-humidity-sensor2')
+      ).toBeInTheDocument()
+    })
+
+    it('should merge data points by timestamp for aligned display', () => {
+      render(
+        <DetailChart
+          multiSensorData={multiSensorData}
+          sensorConfigs={sensorConfigs}
+        />
+      )
+
+      const chart = screen.getByTestId('line-chart')
+      // Should have 2 merged data points (timestamps are aligned)
+      expect(chart).toHaveAttribute('data-points', '2')
+    })
+
+    it('should display title indicating comparison mode', () => {
+      render(
+        <DetailChart
+          multiSensorData={multiSensorData}
+          sensorConfigs={sensorConfigs}
+        />
+      )
+
+      expect(screen.getByText(/comparison/i)).toBeInTheDocument()
+    })
+
+    it('should fall back to single sensor mode when only data prop is provided', () => {
+      render(<DetailChart {...defaultProps} />)
+
+      // Should still work with original single-sensor API
+      expect(screen.getByTestId('chart-line-temperature')).toBeInTheDocument()
+      expect(screen.getByText('Living Room')).toBeInTheDocument()
     })
   })
 })

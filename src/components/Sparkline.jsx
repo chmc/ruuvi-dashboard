@@ -16,6 +16,43 @@ import {
  */
 
 /**
+ * @typedef {Object} HistoryDataPoint
+ * @property {number} timestamp - Unix timestamp
+ * @property {number} temperature - Temperature in Celsius
+ * @property {number} humidity - Humidity percentage
+ * @property {number} pressure - Pressure in hPa
+ */
+
+/**
+ * Metric configuration
+ */
+const METRICS = {
+  temperature: { color: '#ff7043', unit: '°C', order: 0 },
+  humidity: { color: '#42a5f5', unit: '%', order: 1 },
+  pressure: { color: '#66bb6a', unit: 'hPa', order: 2 },
+}
+
+/**
+ * Calculate Y-axis domain for a specific metric
+ * @param {HistoryDataPoint[]} data - History data
+ * @param {string} metricKey - Metric key (temperature, humidity, pressure)
+ * @returns {[number, number]} Min and max values with padding
+ */
+const calculateMetricDomain = (data, metricKey) => {
+  if (!data || data.length === 0) return [0, 1]
+  const values = data.map((d) => d[metricKey]).filter((v) => v != null)
+  if (values.length === 0) return [0, 1]
+  const minValue = Math.min(...values)
+  const maxValue = Math.max(...values)
+  const range = maxValue - minValue
+  const padding = range > 0 ? range * 0.1 : 1
+  return [
+    Math.floor((minValue - padding) * 10) / 10,
+    Math.ceil((maxValue + padding) * 10) / 10,
+  ]
+}
+
+/**
  * Default line color (MUI primary blue)
  */
 const DEFAULT_COLOR = '#1976d2'
@@ -40,14 +77,17 @@ const formatXAxis = (timestamp, timeRange) => {
 
 /**
  * Sparkline component - line chart with Y-axis range and X-axis time indicators
+ * Supports both single-metric (legacy) and multi-metric modes.
  *
  * @param {Object} props
- * @param {DataPoint[]} [props.data] - Array of data points with timestamp and value
- * @param {string} [props.color] - Line color (default: MUI primary blue)
+ * @param {DataPoint[]} [props.data] - Legacy: Array of data points with timestamp and value
+ * @param {HistoryDataPoint[]} [props.historyData] - Full history data with all metrics
+ * @param {string[]} [props.selectedMetrics] - Array of metric keys to display (default: ['temperature'])
+ * @param {string} [props.color] - Line color for legacy mode (default: MUI primary blue)
  * @param {number|string} [props.width] - Chart width in pixels or '100%' (default: 100)
  * @param {number} [props.height] - Chart height in pixels (default: 80)
- * @param {boolean} [props.showValue] - Whether to display current value
- * @param {string} [props.unit] - Unit suffix for value display (e.g., '°C', '%')
+ * @param {boolean} [props.showValue] - Whether to display current value (legacy mode)
+ * @param {string} [props.unit] - Unit suffix for value display (legacy mode)
  * @param {number} [props.decimals] - Number of decimal places for value (default: 1)
  * @param {string} [props.timeRange] - Time range for X-axis formatting (e.g., '1h', '24h', '7d')
  * @param {boolean} [props.showAxes] - Whether to show axes (default: true)
@@ -55,6 +95,8 @@ const formatXAxis = (timestamp, timeRange) => {
  */
 const Sparkline = ({
   data,
+  historyData,
+  selectedMetrics = ['temperature'],
   color = DEFAULT_COLOR,
   width = 100,
   height = 80,
@@ -64,23 +106,44 @@ const Sparkline = ({
   timeRange = '24h',
   showAxes = true,
 }) => {
-  // Normalize data to empty array if null/undefined
-  const normalizedData = data || []
+  // Determine if we're in multi-metric mode
+  const isMultiMetricMode = historyData && selectedMetrics.length > 0
 
-  // Get current (latest) value from data
+  // Normalize data based on mode
+  const normalizedData = isMultiMetricMode ? historyData || [] : data || []
+
+  // For legacy mode, get current value
   const currentValue =
-    normalizedData.length > 0
+    !isMultiMetricMode && normalizedData.length > 0
       ? normalizedData[normalizedData.length - 1].value
       : null
 
-  // Calculate min/max for Y-axis with padding
-  const values = normalizedData.map((d) => d.value)
-  const minValue = values.length > 0 ? Math.min(...values) : 0
-  const maxValue = values.length > 0 ? Math.max(...values) : 0
-  const range = maxValue - minValue
-  const padding = range > 0 ? range * 0.1 : 1
-  const yMin = Math.floor((minValue - padding) * 10) / 10
-  const yMax = Math.ceil((maxValue + padding) * 10) / 10
+  // Calculate Y-axis domain for legacy single-value mode
+  const calculateLegacyYDomain = () => {
+    if (normalizedData.length === 0) return [0, 1]
+    const values = normalizedData.map((d) => d.value)
+    const minValue = Math.min(...values)
+    const maxValue = Math.max(...values)
+    const range = maxValue - minValue
+    const padding = range > 0 ? range * 0.1 : 1
+    return [
+      Math.floor((minValue - padding) * 10) / 10,
+      Math.ceil((maxValue + padding) * 10) / 10,
+    ]
+  }
+
+  // For legacy mode
+  const [yMin, yMax] = isMultiMetricMode ? [0, 1] : calculateLegacyYDomain()
+  const yMid = Math.round(((yMin + yMax) / 2) * 10) / 10
+  const yTicks = [yMin, yMid, yMax]
+
+  // Calculate domains for each selected metric in multi-metric mode
+  const metricDomains = isMultiMetricMode
+    ? selectedMetrics.reduce((acc, metricKey) => {
+        acc[metricKey] = calculateMetricDomain(normalizedData, metricKey)
+        return acc
+      }, {})
+    : {}
 
   /**
    * Format the current value with decimals and unit
@@ -101,12 +164,6 @@ const Sparkline = ({
    * @returns {string}
    */
   const formatYAxis = (value) => value.toFixed(1)
-
-  // Calculate the middle value for the reference line
-  const yMid = Math.round(((yMin + yMax) / 2) * 10) / 10
-
-  // Y-axis ticks: min, mid, max - ensures reference line always has a label
-  const yTicks = [yMin, yMid, yMax]
 
   // Handle width as either number (pixels) or string ('100%')
   const widthStyle = typeof width === 'number' ? `${width}px` : width
@@ -163,11 +220,12 @@ const Sparkline = ({
             data={normalizedData}
             margin={
               showAxes
-                ? { top: 5, right: 5, left: 35, bottom: 20 }
+                ? { top: 5, right: 5, left: 0, bottom: 20 }
                 : { top: 2, right: 2, left: 2, bottom: 2 }
             }
           >
-            {showAxes && (
+            {/* Legacy single-metric Y-axis */}
+            {showAxes && !isMultiMetricMode && (
               <YAxis
                 domain={[yMin, yMax]}
                 ticks={yTicks}
@@ -178,6 +236,30 @@ const Sparkline = ({
                 width={30}
               />
             )}
+            {/* Multi-metric Y-axes - one per metric with its own scale */}
+            {showAxes &&
+              isMultiMetricMode &&
+              selectedMetrics.map((metricKey) => {
+                const [metricMin, metricMax] = metricDomains[metricKey] || [0, 1]
+                const metricMid =
+                  Math.round(((metricMin + metricMax) / 2) * 10) / 10
+                // Compact width for each axis
+                const axisWidth = 32
+                return (
+                  <YAxis
+                    key={metricKey}
+                    yAxisId={metricKey}
+                    domain={[metricMin, metricMax]}
+                    ticks={[metricMin, metricMid, metricMax]}
+                    tickFormatter={formatYAxis}
+                    tick={{ fontSize: 9, fill: METRICS[metricKey]?.color || '#888' }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={axisWidth}
+                    orientation="left"
+                  />
+                )
+              })}
             {showAxes && (
               <XAxis
                 dataKey="timestamp"
@@ -192,18 +274,54 @@ const Sparkline = ({
                 scale="time"
               />
             )}
-            {/* Reference line at middle value */}
-            {showAxes && normalizedData.length > 0 && (
+            {/* Reference line at middle value - only for legacy mode */}
+            {showAxes && !isMultiMetricMode && normalizedData.length > 0 && (
               <ReferenceLine y={yMid} stroke="#444" strokeDasharray="3 3" />
             )}
-            <Line
-              type="monotone"
-              dataKey="value"
-              stroke={color}
-              strokeWidth={1.5}
-              dot={false}
-              isAnimationActive={false}
-            />
+            {/* Reference lines for multi-metric mode - one per metric */}
+            {showAxes &&
+              isMultiMetricMode &&
+              normalizedData.length > 0 &&
+              selectedMetrics.map((metricKey) => {
+                const [metricMin, metricMax] = metricDomains[metricKey] || [0, 1]
+                const metricMid =
+                  Math.round(((metricMin + metricMax) / 2) * 10) / 10
+                return (
+                  <ReferenceLine
+                    key={`ref-${metricKey}`}
+                    y={metricMid}
+                    yAxisId={metricKey}
+                    stroke={METRICS[metricKey]?.color || '#444'}
+                    strokeDasharray="3 3"
+                    strokeOpacity={0.3}
+                  />
+                )
+              })}
+
+            {/* Render lines based on mode */}
+            {isMultiMetricMode
+              ? selectedMetrics.map((metricKey) => (
+                  <Line
+                    key={metricKey}
+                    type="monotone"
+                    dataKey={metricKey}
+                    yAxisId={metricKey}
+                    stroke={METRICS[metricKey]?.color || DEFAULT_COLOR}
+                    strokeWidth={1.5}
+                    dot={false}
+                    isAnimationActive={false}
+                  />
+                ))
+              : // Legacy single-value mode
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke={color}
+                  strokeWidth={1.5}
+                  dot={false}
+                  isAnimationActive={false}
+                />
+            }
           </LineChart>
         </ResponsiveContainer>
       </Box>
