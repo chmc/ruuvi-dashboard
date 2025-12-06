@@ -295,4 +295,57 @@ describe('apiService', () => {
       expect(result).toEqual([])
     })
   })
+
+  describe('flushBuffer', () => {
+    it('should flush buffer and return success response', async () => {
+      const mockResponse = {
+        success: true,
+        flushedCount: 25,
+        message: 'Buffer flushed successfully',
+      }
+
+      global.fetch.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce(mockResponse),
+      })
+
+      const result = await apiService.flushBuffer()
+
+      expect(global.fetch).toHaveBeenCalledWith('/api/diagnostics/flush', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      expect(result).toEqual(mockResponse)
+    })
+
+    it('should throw error when response is not ok', async () => {
+      global.fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: jest.fn().mockResolvedValueOnce({ error: 'Failed to flush buffer' }),
+      })
+
+      await expect(apiService.flushBuffer()).rejects.toThrow(
+        'Failed to flush buffer'
+      )
+    })
+
+    it('should throw error when fetch fails', async () => {
+      global.fetch.mockRejectedValueOnce(new Error('Network error'))
+
+      await expect(apiService.flushBuffer()).rejects.toThrow('Network error')
+    })
+
+    it('should handle error response without error message', async () => {
+      global.fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: jest.fn().mockRejectedValueOnce(new Error('Parse error')),
+      })
+
+      await expect(apiService.flushBuffer()).rejects.toThrow('Unknown error')
+    })
+  })
 })

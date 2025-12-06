@@ -90,6 +90,24 @@ const fetchHistory = async (mac, range = '24h') => {
   return response.json()
 }
 
+/**
+ * Flush the buffer to database
+ * @returns {Promise<{success: boolean, flushedCount: number, message: string}>}
+ */
+const flushBuffer = async () => {
+  const response = await fetch('/api/diagnostics/flush', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Unknown error' }))
+    throw new Error(error.error || `Failed to flush buffer: ${response.status}`)
+  }
+  return response.json()
+}
+
 const apiService = {
   fetchRuuviData,
   fetchWeatherData,
@@ -97,6 +115,7 @@ const apiService = {
   fetchMinMaxTemperatures,
   fetchTrends,
   fetchHistory,
+  flushBuffer,
 }
 
 export default apiService
