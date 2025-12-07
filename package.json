@@ -2,6 +2,11 @@
   "name": "ruuvi-dashboard",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "packageManager": "pnpm@10.24.0",
   "dependencies": {
     "@abandonware/noble": "1.9.2-26",
     "@emotion/react": "^11.14.0",
