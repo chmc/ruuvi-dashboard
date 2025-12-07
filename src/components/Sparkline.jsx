@@ -239,12 +239,16 @@ const Sparkline = ({
             {/* Multi-metric Y-axes - one per metric with its own scale */}
             {showAxes &&
               isMultiMetricMode &&
-              selectedMetrics.map((metricKey) => {
-                const [metricMin, metricMax] = metricDomains[metricKey] || [0, 1]
+              selectedMetrics.map((metricKey, index) => {
+                const [metricMin, metricMax] = metricDomains[metricKey] || [
+                  0, 1,
+                ]
                 const metricMid =
                   Math.round(((metricMin + metricMax) / 2) * 10) / 10
                 // Compact width for each axis
                 const axisWidth = 32
+                // Alternate sides: first on left, second on right, etc.
+                const isRightSide = index % 2 === 1
                 return (
                   <YAxis
                     key={metricKey}
@@ -252,11 +256,14 @@ const Sparkline = ({
                     domain={[metricMin, metricMax]}
                     ticks={[metricMin, metricMid, metricMax]}
                     tickFormatter={formatYAxis}
-                    tick={{ fontSize: 9, fill: METRICS[metricKey]?.color || '#888' }}
+                    tick={{
+                      fontSize: 9,
+                      fill: METRICS[metricKey]?.color || '#888',
+                    }}
                     axisLine={false}
                     tickLine={false}
                     width={axisWidth}
-                    orientation="left"
+                    orientation={isRightSide ? 'right' : 'left'}
                   />
                 )
               })}
@@ -283,7 +290,9 @@ const Sparkline = ({
               isMultiMetricMode &&
               normalizedData.length > 0 &&
               selectedMetrics.map((metricKey) => {
-                const [metricMin, metricMax] = metricDomains[metricKey] || [0, 1]
+                const [metricMin, metricMax] = metricDomains[metricKey] || [
+                  0, 1,
+                ]
                 const metricMid =
                   Math.round(((metricMin + metricMax) / 2) * 10) / 10
                 return (
@@ -299,29 +308,30 @@ const Sparkline = ({
               })}
 
             {/* Render lines based on mode */}
-            {isMultiMetricMode
-              ? selectedMetrics.map((metricKey) => (
-                  <Line
-                    key={metricKey}
-                    type="monotone"
-                    dataKey={metricKey}
-                    yAxisId={metricKey}
-                    stroke={METRICS[metricKey]?.color || DEFAULT_COLOR}
-                    strokeWidth={1.5}
-                    dot={false}
-                    isAnimationActive={false}
-                  />
-                ))
-              : // Legacy single-value mode
+            {isMultiMetricMode ? (
+              selectedMetrics.map((metricKey) => (
                 <Line
+                  key={metricKey}
                   type="monotone"
-                  dataKey="value"
-                  stroke={color}
+                  dataKey={metricKey}
+                  yAxisId={metricKey}
+                  stroke={METRICS[metricKey]?.color || DEFAULT_COLOR}
                   strokeWidth={1.5}
                   dot={false}
                   isAnimationActive={false}
                 />
-            }
+              ))
+            ) : (
+              // Legacy single-value mode
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke={color}
+                strokeWidth={1.5}
+                dot={false}
+                isAnimationActive={false}
+              />
+            )}
           </LineChart>
         </ResponsiveContainer>
       </Box>
