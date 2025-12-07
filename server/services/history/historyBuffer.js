@@ -5,7 +5,13 @@
  * This reduces the number of disk writes, protecting SD cards from wear.
  *
  * The buffer stores readings as an array and flushes them in batches to the database.
+ *
+ * Optional tmpfs support allows the buffer to persist to a RAM-based filesystem,
+ * enabling recovery after service restarts (but not reboots).
  */
+
+const fs = require('fs')
+const path = require('path')
 
 /**
  * @typedef {Object} BufferedReading
@@ -17,8 +23,120 @@
  * @property {number} battery - Battery voltage
  */
 
+/**
+ * @typedef {Object} BufferConfig
+ * @property {boolean} useTmpfs - Whether to persist buffer to tmpfs
+ * @property {string|null} tmpfsPath - Path to tmpfs directory
+ */
+
 /** @type {BufferedReading[]} */
 let buffer = []
+
+/** @type {BufferConfig} */
+let config = {
+  useTmpfs: false,
+  tmpfsPath: null,
+}
+
+const BUFFER_FILENAME = 'buffer.json'
+
+/**
+ * Get the full path to the buffer file in tmpfs
+ * @returns {string|null}
+ */
+const getBufferFilePath = () => {
+  if (!config.useTmpfs || !config.tmpfsPath) {
+    return null
+  }
+  return path.join(config.tmpfsPath, BUFFER_FILENAME)
+}
+
+/**
+ * Persist the current buffer to tmpfs
+ */
+const persistToTmpfs = () => {
+  const filePath = getBufferFilePath()
+  if (!filePath) {
+    return
+  }
+
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(buffer), 'utf8')
+  } catch (err) {
+    // Log error but don't throw - tmpfs persistence is optional
+    console.error(`Failed to persist buffer to tmpfs: ${err.message}`)
+  }
+}
+
+/**
+ * Load buffer from tmpfs file if it exists
+ * @returns {BufferedReading[]}
+ */
+const loadFromTmpfs = () => {
+  const filePath = getBufferFilePath()
+  if (!filePath) {
+    return []
+  }
+
+  try {
+    if (fs.existsSync(filePath)) {
+      const contents = fs.readFileSync(filePath, 'utf8')
+      const readings = JSON.parse(contents)
+      if (Array.isArray(readings)) {
+        return readings
+      }
+    }
+  } catch (err) {
+    // Log error but don't throw - corrupted file should not crash the service
+    console.error(`Failed to load buffer from tmpfs: ${err.message}`)
+  }
+
+  return []
+}
+
+/**
+ * Configure the buffer with tmpfs settings
+ * @param {Object} options - Configuration options
+ * @param {boolean} options.useTmpfs - Whether to use tmpfs persistence
+ * @param {string|null} options.tmpfsPath - Path to tmpfs directory
+ */
+const configure = (options) => {
+  const { useTmpfs = false, tmpfsPath = null } = options
+
+  // Validate tmpfs path exists and is a directory
+  if (useTmpfs && tmpfsPath) {
+    try {
+      const stats = fs.statSync(tmpfsPath)
+      if (!stats.isDirectory()) {
+        console.error(`tmpfs path is not a directory: ${tmpfsPath}`)
+        config = { useTmpfs: false, tmpfsPath: null }
+        return
+      }
+    } catch (err) {
+      console.error(
+        `tmpfs path does not exist or is not accessible: ${tmpfsPath}`
+      )
+      config = { useTmpfs: false, tmpfsPath: null }
+      return
+    }
+
+    config = { useTmpfs: true, tmpfsPath }
+
+    // Load any existing buffer from tmpfs
+    const loadedReadings = loadFromTmpfs()
+    if (loadedReadings.length > 0) {
+      buffer = loadedReadings
+    }
+  } else {
+    config = { useTmpfs: false, tmpfsPath: null }
+  }
+}
+
+/**
+ * Get the current buffer configuration
+ * @returns {BufferConfig}
+ */
+const getConfig = () => ({ ...config })
 
 /**
  * Add a reading to the buffer
@@ -39,6 +157,11 @@ const addReading = (mac, data) => {
     pressure: data.pressure,
     battery: data.battery,
   })
+
+  // Persist to tmpfs after each addition if enabled
+  if (config.useTmpfs) {
+    persistToTmpfs()
+  }
 }
 
 /**
@@ -69,6 +192,11 @@ const flush = (historyDb) => {
   // Clear buffer after successful flush
   buffer = []
 
+  // Clear tmpfs file after successful flush
+  if (config.useTmpfs) {
+    persistToTmpfs()
+  }
+
   return { flushedCount: result.totalChanges }
 }
 
@@ -77,6 +205,11 @@ const flush = (historyDb) => {
  */
 const clear = () => {
   buffer = []
+
+  // Clear tmpfs file when buffer is cleared
+  if (config.useTmpfs) {
+    persistToTmpfs()
+  }
 }
 
 module.exports = {
@@ -85,4 +218,6 @@ module.exports = {
   getBufferContents,
   flush,
   clear,
+  configure,
+  getConfig,
 }
