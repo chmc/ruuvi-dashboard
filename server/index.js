@@ -141,7 +141,7 @@ const updateSensorCache = (sensorDataCollection) => {
 /**
  * Add sensor reading to history buffer
  * @param {string} mac - MAC address of the sensor
- * @param {object} sensorData - Sensor data with temperature, humidity, pressure, battery
+ * @param {object} sensorData - Sensor data with temperature, humidity, pressure, batteryVoltage
  */
 const addToHistoryBuffer = (mac, sensorData) => {
   historyBuffer.addReading(mac, {
@@ -149,7 +149,7 @@ const addToHistoryBuffer = (mac, sensorData) => {
     temperature: sensorData.temperature,
     humidity: sensorData.humidity,
     pressure: sensorData.pressure,
-    battery: sensorData.battery,
+    battery: sensorData.batteryVoltage,
   })
 }
 
