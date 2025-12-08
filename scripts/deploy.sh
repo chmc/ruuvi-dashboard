@@ -91,6 +91,11 @@ fi
 
 # Step 1: Pull latest code
 print_step "Pulling latest code from git..."
+
+# Reset package files to avoid merge conflicts from local pnpm changes
+# (pnpm approve-builds and pnpm install can modify these locally)
+git checkout -- package.json pnpm-lock.yaml 2>/dev/null || true
+
 git pull origin main
 print_success "Code updated"
 
