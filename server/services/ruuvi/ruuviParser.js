@@ -172,6 +172,7 @@ const toSensorData = (parsedData) => {
     temperature: parsedData.temperature,
     pressure: parsedData.pressure,
     mac: parsedData.mac,
+    batteryVoltage: parsedData.batteryVoltage,
   }
 }
 

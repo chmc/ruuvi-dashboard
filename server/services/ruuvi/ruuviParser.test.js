@@ -229,6 +229,7 @@ describe('RuuviParser', () => {
         temperature: 24.3,
         pressure: 100044,
         mac: 'aa:bb:cc:dd:ee:ff',
+        batteryVoltage: 2977,
       })
     })
 
