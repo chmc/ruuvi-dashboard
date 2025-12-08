@@ -614,3 +614,127 @@ Document new functionality.
 - Add tmpfs setup instructions for advanced users
 
 **Files:** `README.md`
+
+---
+
+## Phase 9: Enhanced Diagnostics
+
+### Task 9.1: Add Sensor Health Diagnostics
+
+Add per-sensor health metrics to diagnostics.
+
+**Test first:**
+- Test last seen timestamp displays for each sensor
+- Test RSSI (signal strength) displays for each sensor
+- Test stale sensor detection (>5 min since last reading)
+- Test offline sensor warning displays
+
+**Implementation:**
+- Track last seen timestamp per MAC in scanner
+- Track RSSI values from BLE advertisements
+- Add to diagnostics API response
+- Display in new "Sensor Health" section on diagnostics screen
+
+**Files:** `server/services/ruuvi/ruuviScanner.js`, `server/routes/diagnostics.js`, `src/screens/DiagnosticsScreen.js`
+
+---
+
+### Task 9.2: Add System Resource Monitoring
+
+Display system resource usage.
+
+**Test first:**
+- Test memory usage (heap used/total) displays
+- Test Node.js version displays
+- Test disk space remaining displays
+- Test values refresh on diagnostics reload
+
+**Implementation:**
+- Use `process.memoryUsage()` for heap stats
+- Use `process.version` for Node version
+- Use `fs.statfs` or similar for disk space
+- Add "System Resources" section to diagnostics screen
+
+**Files:** `server/routes/diagnostics.js`, `src/screens/DiagnosticsScreen.js`
+
+---
+
+### Task 9.3: Add External API Status
+
+Monitor external API health.
+
+**Test first:**
+- Test OpenWeatherMap API status displays (OK/Error/Unknown)
+- Test energy price API status displays
+- Test last successful fetch timestamp displays for each API
+- Test error message displays when API is failing
+
+**Implementation:**
+- Track last successful fetch and any errors for external APIs
+- Add status tracking to weather and energy price services
+- Add "External APIs" section to diagnostics screen
+- Show status indicator (green/yellow/red) for each API
+
+**Files:** `server/services/energyPrices.js`, `src/services/api.js`, `server/routes/diagnostics.js`, `src/screens/DiagnosticsScreen.js`
+
+---
+
+### Task 9.4: Add Database Statistics
+
+Show detailed database metrics.
+
+**Test first:**
+- Test total record count displays
+- Test records per sensor displays
+- Test storage growth rate displays (MB/day estimate)
+- Test last successful DB write timestamp displays
+
+**Implementation:**
+- Add query methods to historyDb for statistics
+- Calculate growth rate from oldest record and current size
+- Add "Database Statistics" section to diagnostics screen
+- Show record counts per sensor
+
+**Files:** `server/services/history/historyDb.js`, `server/routes/diagnostics.js`, `src/screens/DiagnosticsScreen.js`
+
+---
+
+### Task 9.5: Add Buffer Flush History
+
+Show recent buffer flush operations.
+
+**Test first:**
+- Test last 5 flush timestamps display
+- Test records flushed count displays for each flush
+- Test flush duration displays
+- Test "Never" shows when no flushes have occurred
+
+**Implementation:**
+- Track flush history in flushScheduler (timestamp, count, duration)
+- Keep last 5 flush records in memory
+- Add flush history to diagnostics API
+- Display as list in Buffer Status section
+
+**Files:** `server/services/history/flushScheduler.js`, `server/routes/diagnostics.js`, `src/screens/DiagnosticsScreen.js`
+
+---
+
+### Task 9.6: Add Data Quality Indicators
+
+Show data quality metrics.
+
+**Test first:**
+- Test out-of-range readings count displays
+- Test min/max values recorded today display
+- Test reading frequency (readings/hour) displays
+- Test data gaps detection displays
+
+**Implementation:**
+- Track out-of-range readings (temp < -40 or > 85, etc.)
+- Query min/max from database for today
+- Calculate average readings per hour
+- Detect gaps > 5 minutes in data
+- Add "Data Quality" section to diagnostics screen
+
+**Files:** `server/services/history/historyDb.js`, `server/routes/diagnostics.js`, `src/screens/DiagnosticsScreen.js`
+
