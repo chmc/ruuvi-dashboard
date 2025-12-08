@@ -2,6 +2,7 @@ import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import ButtonBase from '@mui/material/ButtonBase'
 import Sparkline from './Sparkline'
+import { getMetricColor, getMetricUnit } from '../constants/metrics'
 
 /**
  * @typedef {Object} HistoryDataPoint
@@ -10,15 +11,6 @@ import Sparkline from './Sparkline'
  * @property {number} humidity - Humidity percentage
  * @property {number} pressure - Pressure in hPa
  */
-
-/**
- * Metric configuration with colors and units
- */
-const METRICS = {
-  temperature: { color: '#ff7043', unit: '°C' },
-  humidity: { color: '#42a5f5', unit: '%' },
-  pressure: { color: '#66bb6a', unit: 'hPa' },
-}
 
 /**
  * SensorHistoryRow - clickable row displaying sensor name, sparkline, and current value
@@ -63,15 +55,14 @@ const SensorHistoryRow = ({
 
     return selectedMetrics.map((metric) => {
       const value = latest[metric]
-      const config = METRICS[metric]
       if (value === null || value === undefined) {
-        return { metric, value: '-', color: config?.color || '#888' }
+        return { metric, value: '-', color: getMetricColor(metric) }
       }
       const rounded = Math.round(value * 10) / 10
       return {
         metric,
-        value: `${rounded}${config?.unit || ''}`,
-        color: config?.color || '#888',
+        value: `${rounded}${getMetricUnit(metric)}`,
+        color: getMetricColor(metric),
       }
     })
   }

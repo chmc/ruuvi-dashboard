@@ -8,6 +8,7 @@ import {
   XAxis,
   ReferenceLine,
 } from 'recharts'
+import { METRICS_BY_KEY, getMetricColor } from '../constants/metrics'
 
 /**
  * @typedef {Object} DataPoint
@@ -22,15 +23,6 @@ import {
  * @property {number} humidity - Humidity percentage
  * @property {number} pressure - Pressure in hPa
  */
-
-/**
- * Metric configuration
- */
-const METRICS = {
-  temperature: { color: '#ff7043', unit: '°C', order: 0 },
-  humidity: { color: '#42a5f5', unit: '%', order: 1 },
-  pressure: { color: '#66bb6a', unit: 'hPa', order: 2 },
-}
 
 /**
  * Calculate Y-axis domain for a specific metric
@@ -265,7 +257,7 @@ const Sparkline = ({
                     tickFormatter={formatYAxis}
                     tick={{
                       fontSize: 9,
-                      fill: METRICS[metricKey]?.color || '#888',
+                      fill: getMetricColor(metricKey),
                     }}
                     axisLine={false}
                     tickLine={false}
@@ -307,7 +299,7 @@ const Sparkline = ({
                     key={`ref-${metricKey}`}
                     y={metricMid}
                     yAxisId={metricKey}
-                    stroke={METRICS[metricKey]?.color || '#444'}
+                    stroke={getMetricColor(metricKey)}
                     strokeDasharray="3 3"
                     strokeOpacity={0.3}
                   />
@@ -322,7 +314,7 @@ const Sparkline = ({
                   type="monotone"
                   dataKey={metricKey}
                   yAxisId={metricKey}
-                  stroke={METRICS[metricKey]?.color || DEFAULT_COLOR}
+                  stroke={getMetricColor(metricKey)}
                   strokeWidth={1.5}
                   dot={false}
                   isAnimationActive={false}

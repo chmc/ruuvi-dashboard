@@ -37,20 +37,20 @@
 
 ## High Priority
 
-### 2. Extract Shared Metric Constants
+### 2. Extract Shared Metric Constants [COMPLETED]
 
 **Problem:** METRICS definition duplicated in 4+ files with variations
 
 **Tasks:**
-- [ ] Create `src/constants/metrics.js` with unified METRICS definition
-- [ ] Add tests for metrics constants (`src/constants/metrics.test.js`)
-- [ ] Refactor `src/components/DetailChart.jsx` to use shared constants
-- [ ] Refactor `src/components/Sparkline.jsx` to use shared constants
-- [ ] Refactor `src/components/SensorHistoryRow.jsx` to use shared constants
-- [ ] Refactor `src/screens/HistoryScreen.jsx` to use shared constants
-- [ ] Update existing component tests
+- [x] Create `src/constants/metrics.js` with unified METRICS definition
+- [x] Add tests for metrics constants (`src/constants/metrics.test.js`)
+- [x] Refactor `src/components/DetailChart.jsx` to use shared constants
+- [x] Refactor `src/components/Sparkline.jsx` to use shared constants
+- [x] Refactor `src/components/SensorHistoryRow.jsx` to use shared constants
+- [x] Refactor `src/screens/HistoryScreen.jsx` to use shared constants
+- [x] Update existing component tests
 
-**Files to modify:**
+**Files modified:**
 - `src/constants/metrics.js` (new)
 - `src/constants/metrics.test.js` (new)
 - `src/components/DetailChart.jsx`

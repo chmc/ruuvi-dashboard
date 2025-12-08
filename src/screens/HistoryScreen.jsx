@@ -12,6 +12,7 @@ import configs from '../configs'
 import apiService from '../services/api'
 import SensorHistoryRow from '../components/SensorHistoryRow'
 import DetailChart from '../components/DetailChart'
+import { METRICS } from '../constants/metrics'
 
 /**
  * Available time range options for history data
@@ -24,16 +25,6 @@ const TIME_RANGES = [
   { value: '7d', label: '7d' },
   { value: '30d', label: '30d' },
   { value: 'all', label: 'All' },
-]
-
-/**
- * Metric configuration for checkboxes
- * @type {Array<{key: string, label: string, color: string}>}
- */
-const METRICS = [
-  { key: 'temperature', label: 'Temperature', color: '#ff7043' },
-  { key: 'humidity', label: 'Humidity', color: '#42a5f5' },
-  { key: 'pressure', label: 'Pressure', color: '#66bb6a' },
 ]
 
 /**

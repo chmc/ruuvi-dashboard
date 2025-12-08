@@ -10,6 +10,7 @@ import {
   CartesianGrid,
   Legend,
 } from 'recharts'
+import { METRICS } from '../constants/metrics'
 
 /**
  * @typedef {Object} HistoryDataPoint
@@ -18,16 +19,6 @@ import {
  * @property {number} humidity - Humidity percentage
  * @property {number} pressure - Pressure in hPa
  */
-
-/**
- * Metric configuration
- * @type {Array<{key: string, label: string, unit: string, color: string}>}
- */
-const METRICS = [
-  { key: 'temperature', label: 'Temperature', unit: '°C', color: '#ff7043' },
-  { key: 'humidity', label: 'Humidity', unit: '%', color: '#42a5f5' },
-  { key: 'pressure', label: 'Pressure', unit: 'hPa', color: '#66bb6a' },
-]
 
 /**
  * Default chart height in pixels
