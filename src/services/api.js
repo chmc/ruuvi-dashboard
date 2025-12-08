@@ -167,7 +167,9 @@ const flushBuffer = async () => {
     },
   })
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Unknown error' }))
+    const error = await response
+      .json()
+      .catch(() => ({ error: 'Unknown error' }))
     throw new Error(error.error || `Failed to flush buffer: ${response.status}`)
   }
   return response.json()

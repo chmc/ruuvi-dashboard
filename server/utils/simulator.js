@@ -5,10 +5,30 @@ const frequency = 0.1
 // Default sensor data templates (indoor, outdoor, bedroom, bathroom)
 // batteryVoltage in millivolts (typical range 2400-3100mV)
 const sensorDefaults = [
-  { humidity: 42.0, temperature: 22.37, pressure: 1013.07, batteryVoltage: 2950 },
-  { humidity: 73.17, temperature: 7.37, pressure: 1015.3, batteryVoltage: 2875 },
-  { humidity: 42.9, temperature: 24.42, pressure: 1013.58, batteryVoltage: 3010 },
-  { humidity: 79.2, temperature: 27.29, pressure: 997.28, batteryVoltage: 2800 },
+  {
+    humidity: 42.0,
+    temperature: 22.37,
+    pressure: 1013.07,
+    batteryVoltage: 2950,
+  },
+  {
+    humidity: 73.17,
+    temperature: 7.37,
+    pressure: 1015.3,
+    batteryVoltage: 2875,
+  },
+  {
+    humidity: 42.9,
+    temperature: 24.42,
+    pressure: 1013.58,
+    batteryVoltage: 3010,
+  },
+  {
+    humidity: 79.2,
+    temperature: 27.29,
+    pressure: 997.28,
+    batteryVoltage: 2800,
+  },
 ]
 
 const initSimulator = () => {

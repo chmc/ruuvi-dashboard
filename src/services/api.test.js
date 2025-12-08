@@ -381,7 +381,9 @@ describe('apiService', () => {
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
-        json: jest.fn().mockResolvedValueOnce({ error: 'Failed to flush buffer' }),
+        json: jest
+          .fn()
+          .mockResolvedValueOnce({ error: 'Failed to flush buffer' }),
       })
 
       await expect(apiService.flushBuffer()).rejects.toThrow(

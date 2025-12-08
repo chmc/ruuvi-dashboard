@@ -890,4 +890,132 @@ describe('Diagnostics API Endpoint', () => {
       })
     })
   })
+
+  describe('Data Quality', () => {
+    beforeEach(() => {
+      // Default mock for data quality methods
+      historyDb.getOutOfRangeCount.mockReturnValue(0)
+      historyDb.getTodayMinMax.mockReturnValue({
+        minTemperature: null,
+        maxTemperature: null,
+        minHumidity: null,
+        maxHumidity: null,
+      })
+      historyDb.getReadingFrequency.mockReturnValue(0)
+      historyDb.getDataGaps.mockReturnValue([])
+    })
+
+    it('should include data quality metrics in diagnostics response', async () => {
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.dataQuality).toBeDefined()
+    })
+
+    it('should include out-of-range readings count', async () => {
+      historyDb.getOutOfRangeCount.mockReturnValue(5)
+
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.dataQuality.outOfRangeCount).toBe(5)
+    })
+
+    it('should include min/max values recorded today', async () => {
+      historyDb.getTodayMinMax.mockReturnValue({
+        minTemperature: 18.5,
+        maxTemperature: 25.3,
+        minHumidity: 30,
+        maxHumidity: 70,
+      })
+
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.dataQuality.todayMinMax).toEqual({
+        minTemperature: 18.5,
+        maxTemperature: 25.3,
+        minHumidity: 30,
+        maxHumidity: 70,
+      })
+    })
+
+    it('should include reading frequency per sensor', async () => {
+      historyDb.getReadingFrequency.mockImplementation((mac) => {
+        if (mac === 'aa:bb:cc:dd:ee:01') return 60
+        if (mac === 'aa:bb:cc:dd:ee:02') return 58
+        return 0
+      })
+
+      const response = await request(app)
+        .get('/api/diagnostics')
+        .query({ macs: 'aa:bb:cc:dd:ee:01,aa:bb:cc:dd:ee:02' })
+
+      expect(response.status).toBe(200)
+      expect(response.body.dataQuality.readingFrequency).toBeDefined()
+      expect(response.body.dataQuality.readingFrequency).toHaveLength(2)
+      expect(response.body.dataQuality.readingFrequency[0]).toEqual({
+        mac: 'aa:bb:cc:dd:ee:01',
+        readingsPerHour: 60,
+      })
+    })
+
+    it('should include data gaps detection per sensor', async () => {
+      const now = Date.now()
+      historyDb.getDataGaps.mockImplementation((mac) => {
+        if (mac === 'aa:bb:cc:dd:ee:01') {
+          return [
+            {
+              startTime: now - 600000,
+              endTime: now - 300000,
+              gapDurationMs: 300000,
+            },
+          ]
+        }
+        return []
+      })
+
+      const response = await request(app)
+        .get('/api/diagnostics')
+        .query({ macs: 'aa:bb:cc:dd:ee:01,aa:bb:cc:dd:ee:02' })
+
+      expect(response.status).toBe(200)
+      expect(response.body.dataQuality.dataGaps).toBeDefined()
+      expect(
+        response.body.dataQuality.dataGaps['aa:bb:cc:dd:ee:01']
+      ).toHaveLength(1)
+      expect(
+        response.body.dataQuality.dataGaps['aa:bb:cc:dd:ee:02']
+      ).toHaveLength(0)
+    })
+
+    it('should return empty data quality when no MACs provided', async () => {
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.dataQuality.readingFrequency).toEqual([])
+      expect(response.body.dataQuality.dataGaps).toEqual({})
+    })
+
+    it('should handle database errors gracefully', async () => {
+      historyDb.getOutOfRangeCount.mockImplementation(() => {
+        throw new Error('Database error')
+      })
+
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.dataQuality).toEqual({
+        outOfRangeCount: 0,
+        todayMinMax: {
+          minTemperature: null,
+          maxTemperature: null,
+          minHumidity: null,
+          maxHumidity: null,
+        },
+        readingFrequency: [],
+        dataGaps: {},
+      })
+    })
+  })
 })

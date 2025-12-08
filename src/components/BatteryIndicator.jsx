@@ -88,7 +88,12 @@ const BatteryIndicator = ({ mac, voltage }) => {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={0.5}
+      >
         <Typography variant="body2" component="div">
           {sensorName}
         </Typography>
@@ -125,4 +130,3 @@ const BatteryIndicator = ({ mac, voltage }) => {
 }
 
 export default BatteryIndicator
-

@@ -799,7 +799,9 @@ describe('DiagnosticsScreen', () => {
         ...mockDiagnostics,
         flushHistory: undefined,
       }
-      apiService.getDiagnostics.mockResolvedValue(diagnosticsUndefinedFlushHistory)
+      apiService.getDiagnostics.mockResolvedValue(
+        diagnosticsUndefinedFlushHistory
+      )
 
       render(<DiagnosticsScreen />)
 
@@ -916,6 +918,195 @@ describe('DiagnosticsScreen', () => {
           .getByText(/growth rate/i)
           .closest('div')
         expect(growthRateSection).toBeInTheDocument()
+      })
+    })
+  })
+
+  describe('Data Quality', () => {
+    const now = Date.now()
+    const diagnosticsWithDataQuality = {
+      ...mockDiagnostics,
+      dataQuality: {
+        outOfRangeCount: 5,
+        todayMinMax: {
+          minTemperature: 18.5,
+          maxTemperature: 25.3,
+          minHumidity: 30,
+          maxHumidity: 70,
+        },
+        readingFrequency: [
+          { mac: 'aa:bb:cc:dd:ee:ff', readingsPerHour: 60 },
+          { mac: '11:22:33:44:55:66', readingsPerHour: 58 },
+        ],
+        dataGaps: {
+          'aa:bb:cc:dd:ee:ff': [],
+          '11:22:33:44:55:66': [
+            {
+              startTime: now - 600000,
+              endTime: now - 300000,
+              gapDurationMs: 300000,
+            },
+          ],
+        },
+      },
+    }
+
+    it('should render data quality section', async () => {
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithDataQuality)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/data quality/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should display out-of-range readings count', async () => {
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithDataQuality)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/out-of-range/i)).toBeInTheDocument()
+        // Find the Data Quality card and check for the count within it
+        const dataQualitySection = screen
+          .getByText(/out-of-range/i)
+          .closest('div')
+        expect(dataQualitySection).toHaveTextContent('5')
+      })
+    })
+
+    it('should display min/max temperature recorded today', async () => {
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithDataQuality)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/today's range/i)).toBeInTheDocument()
+        expect(screen.getByText(/18\.5.*°C.*25\.3.*°C/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should display min/max humidity recorded today', async () => {
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithDataQuality)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/30.*%.*70.*%/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should display reading frequency (readings/hour) for each sensor', async () => {
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithDataQuality)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/reading frequency/i)).toBeInTheDocument()
+        expect(screen.getByText(/60.*\/h/i)).toBeInTheDocument()
+        expect(screen.getByText(/58.*\/h/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should display data gaps detection', async () => {
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithDataQuality)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/data gaps/i)).toBeInTheDocument()
+        // One sensor has a gap, the other doesn't
+        expect(screen.getByText(/1.*gap/i)).toBeInTheDocument()
+        expect(screen.getByText(/no gaps/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should handle missing dataQuality gracefully', async () => {
+      const diagnosticsWithoutDataQuality = {
+        ...mockDiagnostics,
+        dataQuality: undefined,
+      }
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithoutDataQuality)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        // Should still render without crashing
+        expect(screen.getByText(/diagnostics/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should show N/A when min/max values are null', async () => {
+      const diagnosticsWithNullMinMax = {
+        ...mockDiagnostics,
+        dataQuality: {
+          outOfRangeCount: 0,
+          todayMinMax: {
+            minTemperature: null,
+            maxTemperature: null,
+            minHumidity: null,
+            maxHumidity: null,
+          },
+          readingFrequency: [],
+          dataGaps: {},
+        },
+      }
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithNullMinMax)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/data quality/i)).toBeInTheDocument()
+        // Should show N/A for temperature and humidity ranges
+        const naElements = screen.getAllByText(/N\/A/)
+        expect(naElements.length).toBeGreaterThanOrEqual(1)
+      })
+    })
+
+    it('should highlight out-of-range count when greater than zero', async () => {
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithDataQuality)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/out-of-range/i)).toBeInTheDocument()
+        // The count should be displayed with warning styling (we just check it's present)
+        const dataQualitySection = screen
+          .getByText(/out-of-range/i)
+          .closest('div')
+        expect(dataQualitySection).toHaveTextContent('5')
+      })
+    })
+
+    it('should show zero out-of-range readings when data is clean', async () => {
+      const diagnosticsWithCleanData = {
+        ...mockDiagnostics,
+        dataQuality: {
+          outOfRangeCount: 0,
+          todayMinMax: {
+            minTemperature: 20,
+            maxTemperature: 22,
+            minHumidity: 45,
+            maxHumidity: 55,
+          },
+          readingFrequency: [{ mac: 'aa:bb:cc:dd:ee:ff', readingsPerHour: 60 }],
+          dataGaps: {
+            'aa:bb:cc:dd:ee:ff': [],
+          },
+        },
+      }
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithCleanData)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/out-of-range/i)).toBeInTheDocument()
+        // Find the Data Quality section and check for 0
+        const dataQualitySection = screen
+          .getByText(/out-of-range/i)
+          .closest('div')
+        expect(dataQualitySection).toHaveTextContent('0')
       })
     })
   })

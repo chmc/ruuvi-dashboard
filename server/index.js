@@ -216,7 +216,6 @@ const initializeHistoryServices = () => {
     new Date().toLocaleString(),
     'Graceful shutdown handler registered'
   )
-
 }
 
 /**

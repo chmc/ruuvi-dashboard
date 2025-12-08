@@ -83,7 +83,9 @@ describe('SensorHistoryRow', () => {
     it('should render line for selected metric', () => {
       render(<SensorHistoryRow {...defaultProps} />)
 
-      expect(screen.getByTestId('sparkline-line-temperature')).toBeInTheDocument()
+      expect(
+        screen.getByTestId('sparkline-line-temperature')
+      ).toBeInTheDocument()
     })
 
     it('should render multiple lines when multiple metrics selected', () => {
@@ -94,7 +96,9 @@ describe('SensorHistoryRow', () => {
         />
       )
 
-      expect(screen.getByTestId('sparkline-line-temperature')).toBeInTheDocument()
+      expect(
+        screen.getByTestId('sparkline-line-temperature')
+      ).toBeInTheDocument()
       expect(screen.getByTestId('sparkline-line-humidity')).toBeInTheDocument()
     })
   })

@@ -56,6 +56,35 @@ import formatters from '../utils/formatters'
  */
 
 /**
+ * @typedef {Object} TodayMinMax
+ * @property {number | null} minTemperature - Minimum temperature recorded today
+ * @property {number | null} maxTemperature - Maximum temperature recorded today
+ * @property {number | null} minHumidity - Minimum humidity recorded today
+ * @property {number | null} maxHumidity - Maximum humidity recorded today
+ */
+
+/**
+ * @typedef {Object} ReadingFrequencyEntry
+ * @property {string} mac - Sensor MAC address
+ * @property {number} readingsPerHour - Average readings per hour
+ */
+
+/**
+ * @typedef {Object} DataGap
+ * @property {number} startTime - Gap start timestamp
+ * @property {number} endTime - Gap end timestamp
+ * @property {number} gapDurationMs - Gap duration in milliseconds
+ */
+
+/**
+ * @typedef {Object} DataQuality
+ * @property {number} outOfRangeCount - Number of out-of-range readings in database
+ * @property {TodayMinMax} todayMinMax - Min/max values recorded today
+ * @property {ReadingFrequencyEntry[]} readingFrequency - Reading frequency per sensor
+ * @property {Object.<string, DataGap[]>} dataGaps - Data gaps per sensor
+ */
+
+/**
  * @typedef {Object} DiagnosticsData
  * @property {number} bufferSize - Number of readings in buffer
  * @property {number | null} lastFlushTime - Timestamp of last flush
@@ -68,6 +97,7 @@ import formatters from '../utils/formatters'
  * @property {ExternalApisStatus} externalApis - External API status information
  * @property {DbStats} dbStats - Database statistics
  * @property {FlushHistoryEntry[]} flushHistory - Recent flush history
+ * @property {DataQuality} dataQuality - Data quality metrics
  */
 
 /**
@@ -225,57 +255,7 @@ const DiagnosticsScreen = () => {
       )}
 
       <Grid container spacing={2} sx={{ mt: 1 }}>
-        {/* Buffer Status Section */}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ height: '100%' }}>
-            <CardContent>
-              <Typography variant="h6" component="h2" gutterBottom>
-                Buffer Status
-              </Typography>
-              <Box display="flex" flexDirection="column" gap={1} mt={1}>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Buffer Size:
-                  </Typography>
-                  <Typography variant="body1">
-                    {diagnostics?.bufferSize ?? 0} readings
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Last Flush:
-                  </Typography>
-                  <Typography variant="body1">
-                    {diagnostics?.lastFlushTime
-                      ? formatters.toLocalDateTime(diagnostics.lastFlushTime)
-                      : 'Never'}
-                  </Typography>
-                </Box>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="small"
-                  onClick={handleFlushClick}
-                  disabled={isFlushing}
-                  startIcon={isFlushing ? <CircularProgress size={16} /> : null}
-                  sx={{ mt: 1 }}
-                >
-                  {isFlushing ? 'Flushing...' : 'Flush Buffer'}
-                </Button>
-                {flushSuccess && (
-                  <Alert severity="success" sx={{ mt: 1 }}>
-                    {flushSuccess}
-                  </Alert>
-                )}
-                {flushError && (
-                  <Alert severity="error" sx={{ mt: 1 }}>
-                    {flushError}
-                  </Alert>
-                )}
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+        {/* ROW 1: Tall cards - Sensor Health, Battery Levels, Database Statistics, Data Quality */}
 
         {/* Sensor Health Section */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -335,6 +315,179 @@ const DiagnosticsScreen = () => {
                   <Typography variant="body2" color="text.secondary">
                     No battery data available
                   </Typography>
+                )}
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Database Statistics Section */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent>
+              <Typography variant="h6" component="h2" gutterBottom>
+                Database Statistics
+              </Typography>
+              <Box display="flex" flexDirection="column" gap={1} mt={1}>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Total Records:
+                  </Typography>
+                  <Typography variant="body1">
+                    {diagnostics?.dbStats?.totalRecords != null
+                      ? formatNumber(diagnostics.dbStats.totalRecords)
+                      : 'N/A'}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Growth Rate:
+                  </Typography>
+                  <Typography variant="body1">
+                    {diagnostics?.dbStats?.growthRatePerDay != null
+                      ? `${formatBytes(diagnostics.dbStats.growthRatePerDay)}/day`
+                      : 'N/A'}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Last Write:
+                  </Typography>
+                  <Typography variant="body1">
+                    {diagnostics?.dbStats?.lastWriteTime
+                      ? formatters.toLocalDateTime(
+                          diagnostics.dbStats.lastWriteTime
+                        )
+                      : 'N/A'}
+                  </Typography>
+                </Box>
+                {diagnostics?.dbStats?.recordsByMac?.length > 0 && (
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Records Per Sensor:
+                    </Typography>
+                    {diagnostics.dbStats.recordsByMac.map((item) => {
+                      const sensorName =
+                        configs.ruuviTags.find((tag) => tag.mac === item.mac)
+                          ?.name || item.mac
+                      return (
+                        <Typography key={item.mac} variant="body2">
+                          {sensorName}: {formatNumber(item.count)}
+                        </Typography>
+                      )
+                    })}
+                  </Box>
+                )}
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Data Quality Section */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent>
+              <Typography variant="h6" component="h2" gutterBottom>
+                Data Quality
+              </Typography>
+              <Box display="flex" flexDirection="column" gap={1} mt={1}>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Out-of-Range Readings:
+                  </Typography>
+                  <Typography
+                    variant="body1"
+                    color={
+                      (diagnostics?.dataQuality?.outOfRangeCount ?? 0) > 0
+                        ? 'warning.main'
+                        : 'text.primary'
+                    }
+                  >
+                    {diagnostics?.dataQuality?.outOfRangeCount ?? 0}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Today&apos;s Range:
+                  </Typography>
+                  {diagnostics?.dataQuality?.todayMinMax?.minTemperature !=
+                    null &&
+                  diagnostics?.dataQuality?.todayMinMax?.maxTemperature !=
+                    null ? (
+                    <>
+                      <Typography variant="body2">
+                        {diagnostics.dataQuality.todayMinMax.minTemperature.toFixed(
+                          1
+                        )}
+                        °C &ndash;{' '}
+                        {diagnostics.dataQuality.todayMinMax.maxTemperature.toFixed(
+                          1
+                        )}
+                        °C
+                      </Typography>
+                      <Typography variant="body2">
+                        {diagnostics.dataQuality.todayMinMax.minHumidity ?? 0}%
+                        &ndash;{' '}
+                        {diagnostics.dataQuality.todayMinMax.maxHumidity ?? 0}%
+                      </Typography>
+                    </>
+                  ) : (
+                    <Typography variant="body1">N/A</Typography>
+                  )}
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* ROW 2: Short cards - Buffer Status, System Info, System Resources, External APIs */}
+
+        {/* Buffer Status Section */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent>
+              <Typography variant="h6" component="h2" gutterBottom>
+                Buffer Status
+              </Typography>
+              <Box display="flex" flexDirection="column" gap={1} mt={1}>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Buffer Size:
+                  </Typography>
+                  <Typography variant="body1">
+                    {diagnostics?.bufferSize ?? 0} readings
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Last Flush:
+                  </Typography>
+                  <Typography variant="body1">
+                    {diagnostics?.lastFlushTime
+                      ? formatters.toLocalDateTime(diagnostics.lastFlushTime)
+                      : 'Never'}
+                  </Typography>
+                </Box>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  onClick={handleFlushClick}
+                  disabled={isFlushing}
+                  startIcon={isFlushing ? <CircularProgress size={16} /> : null}
+                  sx={{ mt: 1 }}
+                >
+                  {isFlushing ? 'Flushing...' : 'Flush Buffer'}
+                </Button>
+                {flushSuccess && (
+                  <Alert severity="success" sx={{ mt: 1 }}>
+                    {flushSuccess}
+                  </Alert>
+                )}
+                {flushError && (
+                  <Alert severity="error" sx={{ mt: 1 }}>
+                    {flushError}
+                  </Alert>
                 )}
               </Box>
             </CardContent>
@@ -454,67 +607,7 @@ const DiagnosticsScreen = () => {
           </Card>
         </Grid>
 
-        {/* Database Statistics Section */}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ height: '100%' }}>
-            <CardContent>
-              <Typography variant="h6" component="h2" gutterBottom>
-                Database Statistics
-              </Typography>
-              <Box display="flex" flexDirection="column" gap={1} mt={1}>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Total Records:
-                  </Typography>
-                  <Typography variant="body1">
-                    {diagnostics?.dbStats?.totalRecords != null
-                      ? formatNumber(diagnostics.dbStats.totalRecords)
-                      : 'N/A'}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Growth Rate:
-                  </Typography>
-                  <Typography variant="body1">
-                    {diagnostics?.dbStats?.growthRatePerDay != null
-                      ? `${formatBytes(diagnostics.dbStats.growthRatePerDay)}/day`
-                      : 'N/A'}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Last Write:
-                  </Typography>
-                  <Typography variant="body1">
-                    {diagnostics?.dbStats?.lastWriteTime
-                      ? formatters.toLocalDateTime(
-                          diagnostics.dbStats.lastWriteTime
-                        )
-                      : 'N/A'}
-                  </Typography>
-                </Box>
-                {diagnostics?.dbStats?.recordsByMac?.length > 0 && (
-                  <Box>
-                    <Typography variant="body2" color="text.secondary">
-                      Records Per Sensor:
-                    </Typography>
-                    {diagnostics.dbStats.recordsByMac.map((item) => {
-                      const sensorName =
-                        configs.ruuviTags.find((tag) => tag.mac === item.mac)
-                          ?.name || item.mac
-                      return (
-                        <Typography key={item.mac} variant="body2">
-                          {sensorName}: {formatNumber(item.count)}
-                        </Typography>
-                      )
-                    })}
-                  </Box>
-                )}
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+        {/* ROW 3: Flush History, Reading Frequency, Data Gaps */}
 
         {/* Flush History Section */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -538,6 +631,75 @@ const DiagnosticsScreen = () => {
                 ) : (
                   <Typography variant="body2" color="text.secondary">
                     No flush history
+                  </Typography>
+                )}
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Reading Frequency Section */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent>
+              <Typography variant="h6" component="h2" gutterBottom>
+                Reading Frequency
+              </Typography>
+              <Box display="flex" flexDirection="column" gap={0.5} mt={1}>
+                {diagnostics?.dataQuality?.readingFrequency?.length > 0 ? (
+                  diagnostics.dataQuality.readingFrequency.map((entry) => {
+                    const sensorName =
+                      configs.ruuviTags.find((tag) => tag.mac === entry.mac)
+                        ?.name || entry.mac
+                    return (
+                      <Box key={entry.mac}>
+                        <Typography variant="body2">
+                          {sensorName}: {Math.round(entry.readingsPerHour)}/h
+                        </Typography>
+                      </Box>
+                    )
+                  })
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No frequency data
+                  </Typography>
+                )}
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Data Gaps Section */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent>
+              <Typography variant="h6" component="h2" gutterBottom>
+                Data Gaps
+              </Typography>
+              <Box display="flex" flexDirection="column" gap={0.5} mt={1}>
+                {diagnostics?.dataQuality?.dataGaps &&
+                Object.keys(diagnostics.dataQuality.dataGaps).length > 0 ? (
+                  Object.entries(diagnostics.dataQuality.dataGaps).map(
+                    ([mac, gaps]) => {
+                      const sensorName =
+                        configs.ruuviTags.find((tag) => tag.mac === mac)
+                          ?.name || mac
+                      const gapCount = gaps?.length ?? 0
+                      return (
+                        <Box key={mac}>
+                          <Typography variant="body2">
+                            {sensorName}:{' '}
+                            {gapCount > 0
+                              ? `${gapCount} gap${gapCount > 1 ? 's' : ''}`
+                              : 'No gaps'}
+                          </Typography>
+                        </Box>
+                      )
+                    }
+                  )
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No gap data
                   </Typography>
                 )}
               </Box>

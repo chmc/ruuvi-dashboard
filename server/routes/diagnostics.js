@@ -277,6 +277,58 @@ const getDbStats = () => {
 }
 
 /**
+ * Get data quality metrics
+ * @param {string[]} macs - MAC addresses to analyze
+ * @returns {{outOfRangeCount: number, todayMinMax: Object, readingFrequency: Array<{mac: string, readingsPerHour: number}>, dataGaps: Object.<string, Array>}}
+ */
+const getDataQuality = (macs) => {
+  try {
+    const outOfRangeCount = historyDb.getOutOfRangeCount()
+    const todayMinMax = historyDb.getTodayMinMax()
+
+    // Per-sensor metrics
+    const readingFrequency = []
+    const dataGaps = {}
+
+    if (macs && macs.length > 0) {
+      macs.forEach((mac) => {
+        const normalizedMac = mac.trim().toLowerCase()
+
+        // Get reading frequency (readings per hour over last hour)
+        const frequency = historyDb.getReadingFrequency(normalizedMac, 1)
+        readingFrequency.push({
+          mac: normalizedMac,
+          readingsPerHour: frequency,
+        })
+
+        // Get data gaps in last hour
+        const gaps = historyDb.getDataGaps(normalizedMac, 1)
+        dataGaps[normalizedMac] = gaps
+      })
+    }
+
+    return {
+      outOfRangeCount,
+      todayMinMax,
+      readingFrequency,
+      dataGaps,
+    }
+  } catch {
+    return {
+      outOfRangeCount: 0,
+      todayMinMax: {
+        minTemperature: null,
+        maxTemperature: null,
+        minHumidity: null,
+        maxHumidity: null,
+      },
+      readingFrequency: [],
+      dataGaps: {},
+    }
+  }
+}
+
+/**
  * Get battery levels for all configured sensors
  * Checks both database and in-memory buffer for the most recent data
  * @param {string[]} macs - MAC addresses to check
@@ -344,7 +396,8 @@ const getBatteryLevels = (macs) => {
  *   systemResources: {memory: {heapUsed, heapTotal, rss, external}, nodeVersion, disk: {free, total}},
  *   externalApis: {energyPrices: ApiStatusEntry, openWeatherMap: ApiStatusEntry},
  *   dbStats: {totalRecords, recordsByMac, growthRatePerDay, lastWriteTime},
- *   flushHistory: Array<{timestamp, count, durationMs}>
+ *   flushHistory: Array<{timestamp, count, durationMs}>,
+ *   dataQuality: {outOfRangeCount, todayMinMax, readingFrequency, dataGaps}
  * }
  */
 router.get('/diagnostics', (req, res) => {
@@ -364,6 +417,7 @@ router.get('/diagnostics', (req, res) => {
       externalApis: getExternalApiStatus(),
       dbStats: getDbStats(),
       flushHistory: flushScheduler.getFlushHistory(),
+      dataQuality: getDataQuality(macList),
     }
 
     return res.json(diagnostics)
