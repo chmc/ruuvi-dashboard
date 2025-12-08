@@ -54,7 +54,27 @@ const getOldestRecord = () => {
 }
 
 /**
+ * Get the latest reading from buffer for a specific MAC address
+ * @param {string} mac - MAC address to check
+ * @returns {{battery: number, timestamp: number} | null}
+ */
+const getLatestBufferReading = (mac) => {
+  const bufferContents = historyBuffer.getBufferContents()
+  const macReadings = bufferContents.filter((r) => r.mac === mac)
+
+  if (macReadings.length === 0) {
+    return null
+  }
+
+  // Return the most recent reading (last in array, or find max timestamp)
+  return macReadings.reduce((latest, current) =>
+    current.timestamp > latest.timestamp ? current : latest
+  )
+}
+
+/**
  * Get battery levels for all configured sensors
+ * Checks both database and in-memory buffer for the most recent data
  * @param {string[]} macs - MAC addresses to check
  * @returns {Array<{mac: string, voltage: number, lastSeen: number}>}
  */
@@ -65,9 +85,25 @@ const getBatteryLevels = (macs) => {
 
   return macs.map((mac) => {
     const normalizedMac = mac.trim().toLowerCase()
-    const reading = historyDb.getLatestReading(normalizedMac)
 
-    if (!reading) {
+    // Get readings from both DB and buffer
+    const dbReading = historyDb.getLatestReading(normalizedMac)
+    const bufferReading = getLatestBufferReading(normalizedMac)
+
+    // Determine which reading is more recent
+    let bestReading = null
+
+    if (dbReading && bufferReading) {
+      // Use whichever is more recent
+      bestReading =
+        bufferReading.timestamp > dbReading.timestamp ? bufferReading : dbReading
+    } else if (bufferReading) {
+      bestReading = bufferReading
+    } else if (dbReading) {
+      bestReading = dbReading
+    }
+
+    if (!bestReading) {
       return {
         mac: normalizedMac,
         voltage: null,
@@ -77,8 +113,8 @@ const getBatteryLevels = (macs) => {
 
     return {
       mac: normalizedMac,
-      voltage: reading.battery,
-      lastSeen: reading.timestamp,
+      voltage: bestReading.battery,
+      lastSeen: bestReading.timestamp,
     }
   })
 }

@@ -31,6 +31,7 @@ describe('Diagnostics API Endpoint', () => {
 
     // Default mock implementations
     historyBuffer.getBufferSize.mockReturnValue(0)
+    historyBuffer.getBufferContents.mockReturnValue([])
     flushScheduler.getLastFlushTime.mockReturnValue(null)
     historyDb.getLatestReading.mockReturnValue(undefined)
     historyDb.isOpen.mockReturnValue(true)
@@ -101,6 +102,81 @@ describe('Diagnostics API Endpoint', () => {
         mac: 'aa:bb:cc:dd:ee:02',
         voltage: 2.65,
         lastSeen: expect.any(Number),
+      })
+    })
+
+    it('should fall back to buffer for battery levels when DB has no data', async () => {
+      // DB returns nothing
+      historyDb.getLatestReading.mockReturnValue(undefined)
+
+      // Buffer has readings
+      const bufferTimestamp = Date.now()
+      historyBuffer.getBufferContents.mockReturnValue([
+        {
+          mac: 'aa:bb:cc:dd:ee:01',
+          battery: 2900,
+          timestamp: bufferTimestamp - 1000,
+        },
+        {
+          mac: 'aa:bb:cc:dd:ee:01',
+          battery: 2905,
+          timestamp: bufferTimestamp,
+        },
+        {
+          mac: 'aa:bb:cc:dd:ee:02',
+          battery: 2750,
+          timestamp: bufferTimestamp,
+        },
+      ])
+
+      const response = await request(app)
+        .get('/api/diagnostics')
+        .query({ macs: 'aa:bb:cc:dd:ee:01,aa:bb:cc:dd:ee:02' })
+
+      expect(response.status).toBe(200)
+      expect(response.body.batteries).toHaveLength(2)
+      // Should get the latest reading from buffer (2905, not 2900)
+      expect(response.body.batteries[0]).toEqual({
+        mac: 'aa:bb:cc:dd:ee:01',
+        voltage: 2905,
+        lastSeen: bufferTimestamp,
+      })
+      expect(response.body.batteries[1]).toEqual({
+        mac: 'aa:bb:cc:dd:ee:02',
+        voltage: 2750,
+        lastSeen: bufferTimestamp,
+      })
+    })
+
+    it('should prefer buffer battery data when more recent than DB', async () => {
+      const dbTimestamp = Date.now() - 60000 // 1 minute ago
+      const bufferTimestamp = Date.now() // now
+
+      historyDb.getLatestReading.mockImplementation((mac) => {
+        if (mac === 'aa:bb:cc:dd:ee:01') {
+          return { mac, battery: 2800, timestamp: dbTimestamp }
+        }
+        return undefined
+      })
+
+      historyBuffer.getBufferContents.mockReturnValue([
+        {
+          mac: 'aa:bb:cc:dd:ee:01',
+          battery: 2850,
+          timestamp: bufferTimestamp,
+        },
+      ])
+
+      const response = await request(app)
+        .get('/api/diagnostics')
+        .query({ macs: 'aa:bb:cc:dd:ee:01' })
+
+      expect(response.status).toBe(200)
+      // Should prefer the more recent buffer reading
+      expect(response.body.batteries[0]).toEqual({
+        mac: 'aa:bb:cc:dd:ee:01',
+        voltage: 2850,
+        lastSeen: bufferTimestamp,
       })
     })
 
