@@ -18,7 +18,7 @@ const renderWithRouter = (initialRoute = '/') =>
   )
 
 describe('NavigationFab', () => {
-  it('should render SpeedDial in bottom-right corner', () => {
+  it('should render SpeedDial in bottom-left corner', () => {
     renderWithRouter()
 
     const speedDial = screen.getByRole('button', { name: /open navigation/i })
@@ -29,7 +29,7 @@ describe('NavigationFab', () => {
     expect(speedDialRoot).toHaveStyle({
       position: 'fixed',
       bottom: '16px',
-      right: '16px',
+      left: '16px',
     })
   })
 

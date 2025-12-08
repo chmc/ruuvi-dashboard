@@ -45,7 +45,13 @@ const NavigationFab = () => {
       sx={{
         position: 'fixed',
         bottom: 16,
-        right: 16,
+        left: 16,
+        '& .MuiFab-primary': {
+          backgroundColor: 'rgba(46, 125, 50, 0.6)',
+          '&:hover': {
+            backgroundColor: 'rgba(46, 125, 50, 0.8)',
+          },
+        },
       }}
       icon={open ? <CloseIcon /> : <MenuIcon />}
       onClose={handleClose}
