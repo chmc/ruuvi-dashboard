@@ -16,7 +16,6 @@ const configs = {
   ruuviTags,
   mainIndoorMac: normalizeMac(import.meta.env.VITE_MAIN_INDOOR_RUUVITAG_MAC),
   mainOutdoorMac: normalizeMac(import.meta.env.VITE_MAIN_OUTDOOR_RUUVITAG_MAC),
-  openweatherApiKey: import.meta.env.VITE_OPENWEATHERMAP_APIKEY,
 }
 
 export default configs

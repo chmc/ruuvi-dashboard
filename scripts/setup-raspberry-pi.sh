@@ -208,7 +208,9 @@ VITE_RUUVITAG_MACS=AA:BB:CC:DD:EE:FF,11:22:33:44:55:66
 VITE_MAIN_INDOOR_RUUVITAG_MAC=AA:BB:CC:DD:EE:FF
 VITE_MAIN_OUTDOOR_RUUVITAG_MAC=11:22:33:44:55:66
 VITE_RUUVITAG_NAMES=Living room,Outdoor
-VITE_OPENWEATHERMAP_APIKEY=your-key
+
+# OpenWeatherMap API key (backend-only, not exposed to frontend)
+OPENWEATHERMAP_APIKEY=your-key
 EOF
         print_success "Created default .env file"
     fi

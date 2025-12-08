@@ -11,21 +11,21 @@
 
 ## Critical Priority
 
-### 1. Move OpenWeatherMap API to Backend Proxy
+### 1. Move OpenWeatherMap API to Backend Proxy [COMPLETED]
 
 **Problem:** API key exposed in frontend bundle (`src/services/api.js`)
 
 **Tasks:**
-- [ ] Create `server/routes/weather.js` with `/api/weather` endpoint
-- [ ] Add tests for weather route (`server/routes/weather.test.js`)
-- [ ] Move `VITE_OPENWEATHERMAP_APIKEY` to backend-only env var
-- [ ] Update `src/services/api.js` to call `/api/weather` instead
-- [ ] Update frontend tests for new weather API
-- [ ] Add server-side caching for weather data (30 min TTL)
-- [ ] Remove `VITE_OPENWEATHERMAP_APIKEY` from frontend configs
-- [ ] Update `.env.template` documentation
+- [x] Create `server/routes/weather.js` with `/api/weather` endpoint
+- [x] Add tests for weather route (`server/routes/weather.test.js`)
+- [x] Move `VITE_OPENWEATHERMAP_APIKEY` to backend-only env var
+- [x] Update `src/services/api.js` to call `/api/weather` instead
+- [x] Update frontend tests for new weather API
+- [x] Add server-side caching for weather data (30 min TTL)
+- [x] Remove `VITE_OPENWEATHERMAP_APIKEY` from frontend configs
+- [x] Update `.env.template` documentation
 
-**Files to modify:**
+**Files modified:**
 - `server/routes/weather.js` (new)
 - `server/routes/weather.test.js` (new)
 - `server/index.js`

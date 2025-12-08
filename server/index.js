@@ -16,6 +16,7 @@ const historySeeder = require('./services/history/historySeeder')
 const historyRouter = require('./routes/history')
 const trendsRouter = require('./routes/trends')
 const diagnosticsRouter = require('./routes/diagnostics')
+const weatherRouter = require('./routes/weather')
 const {
   setScannerHealthGetter,
   setExternalApiStatusGetter,
@@ -119,6 +120,9 @@ app.use('/api/ruuvi', trendsRouter)
 
 // Diagnostics API routes
 app.use('/api', diagnosticsRouter)
+
+// Weather API routes (proxies OpenWeatherMap)
+app.use('/api', weatherRouter)
 
 // Wire up external API status to diagnostics route (always enabled)
 setExternalApiStatusGetter(() => externalApiStatus.getStatus())

@@ -1,17 +1,5 @@
 import apiService from './api'
 
-// Mock configs
-jest.mock('../configs', () => ({
-  openweatherApiKey: 'test-api-key',
-}))
-
-// Mock formatters
-jest.mock('../utils/formatters', () => ({
-  toLocalDate: jest.fn((ts) => `2023/10/24`),
-  toLocalTime: jest.fn((ts) => 12),
-  toDayOfWeekUI: jest.fn((date) => 'Ti'),
-}))
-
 describe('apiService', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -47,69 +35,61 @@ describe('apiService', () => {
   })
 
   describe('fetchWeatherData', () => {
-    const mockWeatherResponse = {
-      list: [
+    const mockWeatherForecast = {
+      dailyForecast: [
         {
-          dt_txt: '2023-10-24 09:00:00',
-          dt: 1698138000,
-          main: { temp: 15.5 },
-          wind: { speed: 3.5 },
-          weather: [{ icon: '10d' }],
+          dateTimeUtcTxt: '2023-10-25 12:00:00',
+          dateTxt: '2023/10/25',
+          time: 12,
+          weekDay: 'Ke',
+          temp: 14.0,
+          wind: 5.0,
+          iconUrl: 'https://openweathermap.org/img/wn/04d@2x.png',
+        },
+      ],
+      hourlyForecast: [
+        {
+          dateTimeUtcTxt: '2023-10-24 09:00:00',
+          dateTxt: '2023/10/24',
+          time: 9,
+          weekDay: 'Ti',
+          temp: 15.5,
+          wind: 3.5,
+          iconUrl: 'https://openweathermap.org/img/wn/10d@2x.png',
         },
         {
-          dt_txt: '2023-10-24 12:00:00',
-          dt: 1698148800,
-          main: { temp: 18.2 },
-          wind: { speed: 4.0 },
-          weather: [{ icon: '02d' }],
-        },
-        {
-          dt_txt: '2023-10-24 15:00:00',
-          dt: 1698159600,
-          main: { temp: 17.0 },
-          wind: { speed: 3.8 },
-          weather: [{ icon: '03d' }],
-        },
-        {
-          dt_txt: '2023-10-25 12:00:00',
-          dt: 1698235200,
-          main: { temp: 14.0 },
-          wind: { speed: 5.0 },
-          weather: [{ icon: '04d' }],
+          dateTimeUtcTxt: '2023-10-24 12:00:00',
+          dateTxt: '2023/10/24',
+          time: 12,
+          weekDay: 'Ti',
+          temp: 18.2,
+          wind: 4.0,
+          iconUrl: 'https://openweathermap.org/img/wn/02d@2x.png',
         },
       ],
     }
 
-    it('should fetch and transform weather data', async () => {
-      // First call: weather API, Second call: status reporting
-      global.fetch
-        .mockResolvedValueOnce({
-          ok: true,
-          json: jest.fn().mockResolvedValueOnce(mockWeatherResponse),
-        })
-        .mockResolvedValueOnce({ ok: true, json: jest.fn() })
+    it('should fetch weather data from backend proxy', async () => {
+      global.fetch.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce(mockWeatherForecast),
+      })
 
       const result = await apiService.fetchWeatherData()
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('api.openweathermap.org/data/2.5/forecast')
-      )
+      expect(global.fetch).toHaveBeenCalledWith('/api/weather')
       expect(result).toHaveProperty('dailyForecast')
       expect(result).toHaveProperty('hourlyForecast')
     })
 
-    it('should transform weather list items correctly', async () => {
-      // First call: weather API, Second call: status reporting
-      global.fetch
-        .mockResolvedValueOnce({
-          ok: true,
-          json: jest.fn().mockResolvedValueOnce(mockWeatherResponse),
-        })
-        .mockResolvedValueOnce({ ok: true, json: jest.fn() })
+    it('should return weather data with expected structure', async () => {
+      global.fetch.mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValueOnce(mockWeatherForecast),
+      })
 
       const result = await apiService.fetchWeatherData()
 
-      // Check that hourly forecast contains expected properties
       expect(result.hourlyForecast.length).toBeGreaterThan(0)
       const firstItem = result.hourlyForecast[0]
       expect(firstItem).toHaveProperty('dateTimeUtcTxt')
@@ -121,85 +101,36 @@ describe('apiService', () => {
       expect(firstItem).toHaveProperty('iconUrl')
     })
 
-    it('should filter daily forecast to midday times (10-13)', async () => {
-      global.fetch
-        .mockResolvedValueOnce({
-          ok: true,
-          json: jest.fn().mockResolvedValueOnce(mockWeatherResponse),
-        })
-        .mockResolvedValueOnce({ ok: true, json: jest.fn() })
-
-      const result = await apiService.fetchWeatherData()
-
-      // Daily forecast should only include items with time between 10 and 13
-      // and skip the first one
-      expect(Array.isArray(result.dailyForecast)).toBe(true)
-    })
-
-    it('should filter hourly forecast to office hours (6-20)', async () => {
-      global.fetch
-        .mockResolvedValueOnce({
-          ok: true,
-          json: jest.fn().mockResolvedValueOnce(mockWeatherResponse),
-        })
-        .mockResolvedValueOnce({ ok: true, json: jest.fn() })
-
-      const result = await apiService.fetchWeatherData()
-
-      // Hourly forecast should be limited to first 4 items within office hours
-      expect(result.hourlyForecast.length).toBeLessThanOrEqual(4)
-    })
-
     it('should throw error when fetch fails', async () => {
-      // First call: weather API fails, Second call: status reporting
-      global.fetch
-        .mockRejectedValueOnce(new Error('API error'))
-        .mockResolvedValueOnce({ ok: true, json: jest.fn() })
-
-      await expect(apiService.fetchWeatherData()).rejects.toThrow('API error')
-    })
-
-    it('should report success status to backend on successful fetch', async () => {
-      global.fetch
-        .mockResolvedValueOnce({
-          ok: true,
-          json: jest.fn().mockResolvedValueOnce(mockWeatherResponse),
-        })
-        .mockResolvedValueOnce({ ok: true, json: jest.fn() })
-
-      await apiService.fetchWeatherData()
-
-      // Wait for async status report
-      await new Promise((resolve) => setTimeout(resolve, 10))
-
-      expect(global.fetch).toHaveBeenCalledWith('/api/diagnostics/api-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ api: 'openWeatherMap', status: 'success' }),
-      })
-    })
-
-    it('should report error status to backend on failed fetch', async () => {
-      global.fetch
-        .mockRejectedValueOnce(new Error('Network failure'))
-        .mockResolvedValueOnce({ ok: true, json: jest.fn() })
+      global.fetch.mockRejectedValueOnce(new Error('Network error'))
 
       await expect(apiService.fetchWeatherData()).rejects.toThrow(
-        'Network failure'
+        'Network error'
       )
+    })
 
-      // Wait for async status report
-      await new Promise((resolve) => setTimeout(resolve, 10))
-
-      expect(global.fetch).toHaveBeenCalledWith('/api/diagnostics/api-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          api: 'openWeatherMap',
-          status: 'error',
-          errorMessage: 'Network failure',
-        }),
+    it('should throw error with message from backend when response is not ok', async () => {
+      global.fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 502,
+        json: jest
+          .fn()
+          .mockResolvedValueOnce({ message: 'Failed to fetch weather data' }),
       })
+
+      await expect(apiService.fetchWeatherData()).rejects.toThrow(
+        'Failed to fetch weather data'
+      )
+    })
+
+    it('should throw error with HTTP status when backend returns no message', async () => {
+      global.fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: jest.fn().mockRejectedValueOnce(new Error('Parse error')),
+      })
+
+      await expect(apiService.fetchWeatherData()).rejects.toThrow('HTTP 500')
     })
   })
 
