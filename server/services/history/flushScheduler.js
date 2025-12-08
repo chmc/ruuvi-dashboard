@@ -16,6 +16,19 @@ let flushCallback = null
 /** @type {number | null} */
 let lastFlushTime = null
 
+/**
+ * @typedef {Object} FlushHistoryEntry
+ * @property {number} timestamp - When the flush occurred
+ * @property {number} count - Number of records flushed
+ * @property {number} durationMs - How long the flush took in milliseconds
+ */
+
+/** @type {FlushHistoryEntry[]} */
+let flushHistory = []
+
+/** Maximum number of flush history entries to keep */
+const MAX_HISTORY_ENTRIES = 5
+
 /** Default flush interval in seconds */
 const DEFAULT_INTERVAL_SECONDS = 900 // 15 minutes
 
@@ -40,6 +53,27 @@ const getDefaultIntervalMs = () => {
 }
 
 /**
+ * Record a flush operation in history
+ * @param {number} startTime - When the flush started
+ * @param {any} result - Result from the flush callback
+ */
+const recordFlush = (startTime, result) => {
+  const endTime = Date.now()
+  const entry = {
+    timestamp: endTime,
+    count: result?.flushedCount ?? 0,
+    durationMs: endTime - startTime,
+  }
+
+  flushHistory.push(entry)
+
+  // Keep only the most recent entries
+  if (flushHistory.length > MAX_HISTORY_ENTRIES) {
+    flushHistory = flushHistory.slice(-MAX_HISTORY_ENTRIES)
+  }
+}
+
+/**
  * Start the flush scheduler
  * @param {number} intervalMs - Interval in milliseconds between flushes
  * @param {() => any} callback - Function to call on each flush
@@ -52,11 +86,14 @@ const start = (intervalMs, callback) => {
 
   flushCallback = callback
   lastFlushTime = null
+  flushHistory = []
 
   intervalId = setInterval(() => {
     if (flushCallback) {
-      flushCallback()
+      const startTime = Date.now()
+      const result = flushCallback()
       lastFlushTime = Date.now()
+      recordFlush(startTime, result)
     }
   }, intervalMs)
 }
@@ -71,6 +108,7 @@ const stop = () => {
   }
   flushCallback = null
   lastFlushTime = null
+  flushHistory = []
 }
 
 /**
@@ -88,8 +126,10 @@ const forceFlush = () => {
     return null
   }
 
+  const startTime = Date.now()
   const result = flushCallback()
   lastFlushTime = Date.now()
+  recordFlush(startTime, result)
   return result
 }
 
@@ -99,6 +139,12 @@ const forceFlush = () => {
  */
 const getLastFlushTime = () => lastFlushTime
 
+/**
+ * Get the history of recent flush operations
+ * @returns {FlushHistoryEntry[]} Array of flush history entries (most recent last)
+ */
+const getFlushHistory = () => [...flushHistory]
+
 module.exports = {
   start,
   stop,
@@ -106,4 +152,5 @@ module.exports = {
   forceFlush,
   getDefaultIntervalMs,
   getLastFlushTime,
+  getFlushHistory,
 }

@@ -207,4 +207,142 @@ describe('flushScheduler', () => {
       expect(flushScheduler.getLastFlushTime()).toBe(now)
     })
   })
+
+  describe('getFlushHistory', () => {
+    it('should return empty array when no flushes have occurred', () => {
+      flushScheduler.start(60000, jest.fn())
+      expect(flushScheduler.getFlushHistory()).toEqual([])
+    })
+
+    it('should return flush history with timestamp, count, and duration', () => {
+      const flushCallback = jest.fn().mockReturnValue({ flushedCount: 10 })
+      const now = Date.now()
+      jest.setSystemTime(now)
+
+      flushScheduler.start(1000, flushCallback)
+
+      // Advance time to trigger flush
+      jest.advanceTimersByTime(1000)
+
+      const history = flushScheduler.getFlushHistory()
+      expect(history).toHaveLength(1)
+      expect(history[0]).toEqual({
+        timestamp: now + 1000,
+        count: 10,
+        durationMs: expect.any(Number),
+      })
+    })
+
+    it('should keep last 5 flush records', () => {
+      const flushCallback = jest.fn().mockReturnValue({ flushedCount: 5 })
+      const now = Date.now()
+      jest.setSystemTime(now)
+
+      flushScheduler.start(1000, flushCallback)
+
+      // Trigger 7 flushes
+      for (let i = 0; i < 7; i++) {
+        jest.advanceTimersByTime(1000)
+      }
+
+      const history = flushScheduler.getFlushHistory()
+      expect(history).toHaveLength(5)
+      // Should keep the most recent 5 flushes (timestamps 3-7)
+      expect(history[0].timestamp).toBe(now + 3000)
+      expect(history[4].timestamp).toBe(now + 7000)
+    })
+
+    it('should record correct count from flush callback result', () => {
+      let callCount = 0
+      const flushCallback = jest.fn().mockImplementation(() => {
+        callCount += 1
+        return { flushedCount: callCount * 10 }
+      })
+      const now = Date.now()
+      jest.setSystemTime(now)
+
+      flushScheduler.start(1000, flushCallback)
+
+      jest.advanceTimersByTime(1000)
+      jest.advanceTimersByTime(1000)
+      jest.advanceTimersByTime(1000)
+
+      const history = flushScheduler.getFlushHistory()
+      expect(history).toHaveLength(3)
+      expect(history[0].count).toBe(10)
+      expect(history[1].count).toBe(20)
+      expect(history[2].count).toBe(30)
+    })
+
+    it('should record flush duration', () => {
+      // Simulate a flush that takes some time
+      const flushCallback = jest.fn().mockReturnValue({ flushedCount: 15 })
+      const now = Date.now()
+      jest.setSystemTime(now)
+
+      flushScheduler.start(1000, flushCallback)
+      jest.advanceTimersByTime(1000)
+
+      const history = flushScheduler.getFlushHistory()
+      expect(history[0].durationMs).toBeGreaterThanOrEqual(0)
+    })
+
+    it('should record forceFlush in history', () => {
+      const flushCallback = jest.fn().mockReturnValue({ flushedCount: 25 })
+      const now = Date.now()
+      jest.setSystemTime(now)
+
+      flushScheduler.start(60000, flushCallback)
+      flushScheduler.forceFlush()
+
+      const history = flushScheduler.getFlushHistory()
+      expect(history).toHaveLength(1)
+      expect(history[0]).toEqual({
+        timestamp: now,
+        count: 25,
+        durationMs: expect.any(Number),
+      })
+    })
+
+    it('should handle flush callback returning zero count', () => {
+      const flushCallback = jest.fn().mockReturnValue({ flushedCount: 0 })
+      const now = Date.now()
+      jest.setSystemTime(now)
+
+      flushScheduler.start(1000, flushCallback)
+      jest.advanceTimersByTime(1000)
+
+      const history = flushScheduler.getFlushHistory()
+      expect(history).toHaveLength(1)
+      expect(history[0].count).toBe(0)
+    })
+
+    it('should handle flush callback returning null', () => {
+      const flushCallback = jest.fn().mockReturnValue(null)
+      const now = Date.now()
+      jest.setSystemTime(now)
+
+      flushScheduler.start(1000, flushCallback)
+      jest.advanceTimersByTime(1000)
+
+      const history = flushScheduler.getFlushHistory()
+      expect(history).toHaveLength(1)
+      expect(history[0].count).toBe(0)
+    })
+
+    it('should clear history when scheduler is stopped', () => {
+      const flushCallback = jest.fn().mockReturnValue({ flushedCount: 10 })
+      const now = Date.now()
+      jest.setSystemTime(now)
+
+      flushScheduler.start(1000, flushCallback)
+      jest.advanceTimersByTime(1000)
+
+      expect(flushScheduler.getFlushHistory()).toHaveLength(1)
+
+      flushScheduler.stop()
+
+      expect(flushScheduler.getFlushHistory()).toEqual([])
+    })
+  })
 })

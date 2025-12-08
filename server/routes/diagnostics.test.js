@@ -703,6 +703,69 @@ describe('Diagnostics API Endpoint', () => {
     })
   })
 
+  describe('Buffer Flush History', () => {
+    it('should include flush history in diagnostics response', async () => {
+      const now = Date.now()
+      flushScheduler.getFlushHistory.mockReturnValue([
+        { timestamp: now - 60000, count: 10, durationMs: 50 },
+        { timestamp: now - 30000, count: 15, durationMs: 45 },
+      ])
+
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.flushHistory).toBeDefined()
+      expect(response.body.flushHistory).toHaveLength(2)
+    })
+
+    it('should return flush timestamps in history', async () => {
+      const now = Date.now()
+      flushScheduler.getFlushHistory.mockReturnValue([
+        { timestamp: now - 60000, count: 10, durationMs: 50 },
+      ])
+
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.flushHistory[0].timestamp).toBe(now - 60000)
+    })
+
+    it('should return records flushed count for each flush', async () => {
+      const now = Date.now()
+      flushScheduler.getFlushHistory.mockReturnValue([
+        { timestamp: now - 60000, count: 25, durationMs: 50 },
+        { timestamp: now - 30000, count: 30, durationMs: 45 },
+      ])
+
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.flushHistory[0].count).toBe(25)
+      expect(response.body.flushHistory[1].count).toBe(30)
+    })
+
+    it('should return flush duration for each flush', async () => {
+      const now = Date.now()
+      flushScheduler.getFlushHistory.mockReturnValue([
+        { timestamp: now - 60000, count: 10, durationMs: 55 },
+      ])
+
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.flushHistory[0].durationMs).toBe(55)
+    })
+
+    it('should return empty array when no flushes have occurred', async () => {
+      flushScheduler.getFlushHistory.mockReturnValue([])
+
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.flushHistory).toEqual([])
+    })
+  })
+
   describe('Database Statistics', () => {
     beforeEach(() => {
       // Default mock for database statistics

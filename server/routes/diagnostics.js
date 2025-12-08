@@ -343,7 +343,8 @@ const getBatteryLevels = (macs) => {
  *   uptime: number,
  *   systemResources: {memory: {heapUsed, heapTotal, rss, external}, nodeVersion, disk: {free, total}},
  *   externalApis: {energyPrices: ApiStatusEntry, openWeatherMap: ApiStatusEntry},
- *   dbStats: {totalRecords, recordsByMac, growthRatePerDay, lastWriteTime}
+ *   dbStats: {totalRecords, recordsByMac, growthRatePerDay, lastWriteTime},
+ *   flushHistory: Array<{timestamp, count, durationMs}>
  * }
  */
 router.get('/diagnostics', (req, res) => {
@@ -362,6 +363,7 @@ router.get('/diagnostics', (req, res) => {
       systemResources: getSystemResources(),
       externalApis: getExternalApiStatus(),
       dbStats: getDbStats(),
+      flushHistory: flushScheduler.getFlushHistory(),
     }
 
     return res.json(diagnostics)

@@ -49,6 +49,13 @@ import formatters from '../utils/formatters'
  */
 
 /**
+ * @typedef {Object} FlushHistoryEntry
+ * @property {number} timestamp - When the flush occurred
+ * @property {number} count - Number of records flushed
+ * @property {number} durationMs - How long the flush took in milliseconds
+ */
+
+/**
  * @typedef {Object} DiagnosticsData
  * @property {number} bufferSize - Number of readings in buffer
  * @property {number | null} lastFlushTime - Timestamp of last flush
@@ -60,6 +67,7 @@ import formatters from '../utils/formatters'
  * @property {SystemResources} systemResources - System resource information
  * @property {ExternalApisStatus} externalApis - External API status information
  * @property {DbStats} dbStats - Database statistics
+ * @property {FlushHistoryEntry[]} flushHistory - Recent flush history
  */
 
 /**
@@ -502,6 +510,35 @@ const DiagnosticsScreen = () => {
                       )
                     })}
                   </Box>
+                )}
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Flush History Section */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent>
+              <Typography variant="h6" component="h2" gutterBottom>
+                Flush History
+              </Typography>
+              <Box display="flex" flexDirection="column" gap={0.5} mt={1}>
+                {diagnostics?.flushHistory?.length > 0 ? (
+                  diagnostics.flushHistory.map((entry) => (
+                    <Box key={entry.timestamp}>
+                      <Typography variant="body2" color="text.secondary">
+                        {formatters.toLocalDateTime(entry.timestamp)}
+                      </Typography>
+                      <Typography variant="body2">
+                        {entry.count} records ({entry.durationMs} ms)
+                      </Typography>
+                    </Box>
+                  ))
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No flush history
+                  </Typography>
                 )}
               </Box>
             </CardContent>

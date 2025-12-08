@@ -708,7 +708,7 @@ Show detailed database metrics.
 
 ---
 
-### Task 9.5: Add Buffer Flush History
+### Task 9.5: Add Buffer Flush History ✅ Completed
 
 Show recent buffer flush operations.
 
@@ -724,7 +724,7 @@ Show recent buffer flush operations.
 - Add flush history to diagnostics API
 - Display as list in Buffer Status section
 
-**Files:** `server/services/history/flushScheduler.js`, `server/routes/diagnostics.js`, `src/screens/DiagnosticsScreen.js`
+**Files:** `server/services/history/flushScheduler.js`, `server/routes/diagnostics.js`, `src/screens/DiagnosticsScreen.jsx`
 
 ---
 

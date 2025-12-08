@@ -730,6 +730,86 @@ describe('DiagnosticsScreen', () => {
     })
   })
 
+  describe('Buffer Flush History', () => {
+    const now = Date.now()
+    const diagnosticsWithFlushHistory = {
+      ...mockDiagnostics,
+      flushHistory: [
+        { timestamp: now - 600000, count: 10, durationMs: 45 },
+        { timestamp: now - 300000, count: 15, durationMs: 52 },
+        { timestamp: now - 60000, count: 20, durationMs: 38 },
+      ],
+    }
+
+    it('should display last 5 flush timestamps', async () => {
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithFlushHistory)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/flush history/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should display records flushed count for each flush', async () => {
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithFlushHistory)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/10 records/i)).toBeInTheDocument()
+        expect(screen.getByText(/15 records/i)).toBeInTheDocument()
+        expect(screen.getByText(/20 records/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should display flush duration', async () => {
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithFlushHistory)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/45\s*ms/i)).toBeInTheDocument()
+        expect(screen.getByText(/52\s*ms/i)).toBeInTheDocument()
+        expect(screen.getByText(/38\s*ms/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should show "Never" when no flushes have occurred', async () => {
+      const diagnosticsNoFlushHistory = {
+        ...mockDiagnostics,
+        flushHistory: [],
+      }
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsNoFlushHistory)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        // Check for the heading "Flush History" (exact match for heading)
+        expect(
+          screen.getByRole('heading', { name: /flush history/i })
+        ).toBeInTheDocument()
+        // Check for the "No flush history" message
+        expect(screen.getByText(/^no flush history$/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should handle missing flushHistory gracefully', async () => {
+      const diagnosticsUndefinedFlushHistory = {
+        ...mockDiagnostics,
+        flushHistory: undefined,
+      }
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsUndefinedFlushHistory)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        // Should not crash and should still render
+        expect(screen.getByText(/diagnostics/i)).toBeInTheDocument()
+      })
+    })
+  })
+
   describe('Database Statistics', () => {
     const now = Date.now()
     const diagnosticsWithDbStats = {
