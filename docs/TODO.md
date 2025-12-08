@@ -592,14 +592,23 @@ Add new environment variables to template.
 
 ### Task 8.2: Create Systemd Service File
 
-Create service file with graceful shutdown.
+Create standalone service file template with graceful shutdown support. Update setup and deploy scripts to use the template file, ensuring existing installations can be updated via deploy script.
 
 **Implementation:**
-- Create `scripts/ruuvi-dashboard.service`
-- Include ExecStop for flush
+- Create `scripts/ruuvi-dashboard.service` template file
+  - Include ExecStop for graceful data flush before shutdown
+  - Use placeholder variables (e.g., `{{WORKING_DIR}}`, `{{NODE_PATH}}`, `{{USER}}`) for substitution during installation
+- Update `scripts/setup-raspberry-pi.sh`
+  - Replace inline heredoc service definition with template file
+  - Add variable substitution logic to populate placeholders
+- Update `scripts/deploy.sh`
+  - Detect if service file template has changed
+  - Update installed service file with current template (with variable substitution)
+  - Run `systemctl daemon-reload` when service file is updated
+  - Ensure graceful restart uses ExecStop for data flush
 - Document installation in README
 
-**Files:** `scripts/ruuvi-dashboard.service`, `README.md`
+**Files:** `scripts/ruuvi-dashboard.service`, `scripts/setup-raspberry-pi.sh`, `scripts/deploy.sh`, `README.md`
 
 ---
 
