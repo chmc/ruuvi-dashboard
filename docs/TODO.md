@@ -85,18 +85,19 @@
 
 ---
 
-### 4. Extract Shared Sensor Colors
+### 4. Extract Shared Sensor Colors [COMPLETED]
 
 **Problem:** SENSOR_COLORS hardcoded in HistoryScreen
 
 **Tasks:**
-- [ ] Create `src/constants/colors.js` with SENSOR_COLORS
-- [ ] Add tests for color constants
-- [ ] Refactor `HistoryScreen.jsx` to use shared colors
-- [ ] Update tests
+- [x] Create `src/constants/colors.js` with SENSOR_COLORS
+- [x] Add tests for color constants
+- [x] Refactor `HistoryScreen.jsx` to use shared colors
+- [x] Update tests
 
-**Files to modify:**
+**Files modified:**
 - `src/constants/colors.js` (new)
+- `src/constants/colors.test.js` (new)
 - `src/screens/HistoryScreen.jsx`
 
 ---

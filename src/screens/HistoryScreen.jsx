@@ -14,21 +14,7 @@ import SensorHistoryRow from '../components/SensorHistoryRow'
 import DetailChart from '../components/DetailChart'
 import { METRICS } from '../constants/metrics'
 import { TIME_RANGES, DEFAULT_TIME_RANGE } from '../constants/timeRanges'
-
-/**
- * Default colors for sensors in multi-sensor view
- * @type {string[]}
- */
-const SENSOR_COLORS = [
-  '#ff7043', // Deep Orange
-  '#42a5f5', // Blue
-  '#66bb6a', // Green
-  '#ab47bc', // Purple
-  '#ffa726', // Orange
-  '#26c6da', // Cyan
-  '#ec407a', // Pink
-  '#8d6e63', // Brown
-]
+import { SENSOR_COLORS } from '../constants/colors'
 
 /**
  * History screen - displays historical sensor data with charts
