@@ -11,6 +11,12 @@ import {
   Legend,
 } from 'recharts'
 import { METRICS } from '../constants/metrics'
+import {
+  formatXAxisTime,
+  formatTooltipLabel,
+  formatTooltipValue,
+  formatYAxisValue,
+} from '../utils/chartFormatters'
 
 /**
  * @typedef {Object} HistoryDataPoint
@@ -24,80 +30,6 @@ import { METRICS } from '../constants/metrics'
  * Default chart height in pixels
  */
 const DEFAULT_HEIGHT = 250
-
-/**
- * Format timestamp for X axis based on time range
- * @param {number} timestamp - Unix timestamp in milliseconds
- * @param {string} [timeRange] - Time range (1h, 6h, 24h, 7d, 30d, all)
- * @returns {string} Formatted time string
- */
-const formatXAxisTime = (timestamp, timeRange) => {
-  const date = new Date(timestamp)
-
-  // For shorter ranges, show time only
-  if (timeRange === '1h' || timeRange === '6h') {
-    return date.toLocaleTimeString('fi-FI', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
-
-  // For 24h, show time
-  if (timeRange === '24h') {
-    return date.toLocaleTimeString('fi-FI', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
-
-  // For longer ranges, show date
-  if (timeRange === '7d') {
-    return date.toLocaleDateString('fi-FI', {
-      weekday: 'short',
-      day: 'numeric',
-    })
-  }
-
-  // For 30d and all, show date
-  return date.toLocaleDateString('fi-FI', { day: 'numeric', month: 'short' })
-}
-
-/**
- * Format timestamp for tooltip label
- * @param {number} timestamp - Unix timestamp in milliseconds
- * @returns {string} Formatted date/time string
- */
-const formatTooltipLabel = (timestamp) => {
-  const date = new Date(timestamp)
-  return date.toLocaleString('fi-FI', {
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-/**
- * Format value for tooltip display
- * @param {number} value - The metric value
- * @param {string} unit - The unit string
- * @returns {string} Formatted value with unit
- */
-const formatTooltipValue = (value, unit) => {
-  if (value === null || value === undefined) return '-'
-  const formatted = typeof value === 'number' ? value.toFixed(1) : value
-  return `${formatted}${unit}`
-}
-
-/**
- * Format value for Y axis display
- * @param {number} value - The metric value
- * @returns {string} Formatted value
- */
-const formatYAxisValue = (value) => {
-  if (value === null || value === undefined) return ''
-  return typeof value === 'number' ? value.toFixed(0) : value
-}
 
 /**
  * @typedef {Object} SensorConfig

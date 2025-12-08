@@ -440,59 +440,7 @@ const DiagnosticsScreen = () => {
           </Card>
         </Grid>
 
-        {/* ROW 2: Short cards - Buffer Status, System Info, System Resources, External APIs */}
-
-        {/* Buffer Status Section */}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ height: '100%' }}>
-            <CardContent>
-              <Typography variant="h6" component="h2" gutterBottom>
-                Buffer Status
-              </Typography>
-              <Box display="flex" flexDirection="column" gap={1} mt={1}>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Buffer Size:
-                  </Typography>
-                  <Typography variant="body1">
-                    {diagnostics?.bufferSize ?? 0} readings
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Last Flush:
-                  </Typography>
-                  <Typography variant="body1">
-                    {diagnostics?.lastFlushTime
-                      ? formatters.toLocalDateTime(diagnostics.lastFlushTime)
-                      : 'Never'}
-                  </Typography>
-                </Box>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="small"
-                  onClick={handleFlushClick}
-                  disabled={isFlushing}
-                  startIcon={isFlushing ? <CircularProgress size={16} /> : null}
-                  sx={{ mt: 1 }}
-                >
-                  {isFlushing ? 'Flushing...' : 'Flush Buffer'}
-                </Button>
-                {flushSuccess && (
-                  <Alert severity="success" sx={{ mt: 1 }}>
-                    {flushSuccess}
-                  </Alert>
-                )}
-                {flushError && (
-                  <Alert severity="error" sx={{ mt: 1 }}>
-                    {flushError}
-                  </Alert>
-                )}
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+        {/* ROW 2: Short cards - System Info, System Resources, External APIs, Buffer Status */}
 
         {/* System Info Section */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -601,6 +549,58 @@ const DiagnosticsScreen = () => {
                   <Typography variant="body2" color="text.secondary">
                     No external API data available
                   </Typography>
+                )}
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Buffer Status Section - positioned on right to prevent accidental clicks */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent>
+              <Typography variant="h6" component="h2" gutterBottom>
+                Buffer Status
+              </Typography>
+              <Box display="flex" flexDirection="column" gap={1} mt={1}>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Buffer Size:
+                  </Typography>
+                  <Typography variant="body1">
+                    {diagnostics?.bufferSize ?? 0} readings
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Last Flush:
+                  </Typography>
+                  <Typography variant="body1">
+                    {diagnostics?.lastFlushTime
+                      ? formatters.toLocalDateTime(diagnostics.lastFlushTime)
+                      : 'Never'}
+                  </Typography>
+                </Box>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  onClick={handleFlushClick}
+                  disabled={isFlushing}
+                  startIcon={isFlushing ? <CircularProgress size={16} /> : null}
+                  sx={{ mt: 1 }}
+                >
+                  {isFlushing ? 'Flushing...' : 'Flush Buffer'}
+                </Button>
+                {flushSuccess && (
+                  <Alert severity="success" sx={{ mt: 1 }}>
+                    {flushSuccess}
+                  </Alert>
+                )}
+                {flushError && (
+                  <Alert severity="error" sx={{ mt: 1 }}>
+                    {flushError}
+                  </Alert>
                 )}
               </Box>
             </CardContent>

@@ -60,23 +60,25 @@
 
 ---
 
-### 3. Extract Shared Time Range Constants
+### 3. Extract Shared Time Range Constants [COMPLETED]
 
 **Problem:** TIME_RANGES and chart time formatting duplicated
 
 **Tasks:**
-- [ ] Create `src/constants/timeRanges.js` with TIME_RANGES
-- [ ] Add tests for time range constants
-- [ ] Create `src/utils/chartFormatters.js` for shared time formatting
-- [ ] Add tests for chart formatters
-- [ ] Refactor `DetailChart.jsx` to use shared formatters
-- [ ] Refactor `Sparkline.jsx` to use shared formatters
-- [ ] Refactor `HistoryScreen.jsx` to use shared TIME_RANGES
-- [ ] Update existing tests
+- [x] Create `src/constants/timeRanges.js` with TIME_RANGES
+- [x] Add tests for time range constants
+- [x] Create `src/utils/chartFormatters.js` for shared time formatting
+- [x] Add tests for chart formatters
+- [x] Refactor `DetailChart.jsx` to use shared formatters
+- [x] Refactor `Sparkline.jsx` to use shared formatters
+- [x] Refactor `HistoryScreen.jsx` to use shared TIME_RANGES
+- [x] Update existing tests
 
-**Files to modify:**
+**Files modified:**
 - `src/constants/timeRanges.js` (new)
+- `src/constants/timeRanges.test.js` (new)
 - `src/utils/chartFormatters.js` (new)
+- `src/utils/chartFormatters.test.js` (new)
 - `src/components/DetailChart.jsx`
 - `src/components/Sparkline.jsx`
 - `src/screens/HistoryScreen.jsx`

@@ -13,19 +13,7 @@ import apiService from '../services/api'
 import SensorHistoryRow from '../components/SensorHistoryRow'
 import DetailChart from '../components/DetailChart'
 import { METRICS } from '../constants/metrics'
-
-/**
- * Available time range options for history data
- * @type {Array<{value: string, label: string}>}
- */
-const TIME_RANGES = [
-  { value: '1h', label: '1h' },
-  { value: '6h', label: '6h' },
-  { value: '24h', label: '24h' },
-  { value: '7d', label: '7d' },
-  { value: '30d', label: '30d' },
-  { value: 'all', label: 'All' },
-]
+import { TIME_RANGES, DEFAULT_TIME_RANGE } from '../constants/timeRanges'
 
 /**
  * Default colors for sensors in multi-sensor view
@@ -47,7 +35,7 @@ const SENSOR_COLORS = [
  * @returns {JSX.Element}
  */
 const HistoryScreen = () => {
-  const [selectedRange, setSelectedRange] = useState('24h')
+  const [selectedRange, setSelectedRange] = useState(DEFAULT_TIME_RANGE)
   const [selectedSensor, setSelectedSensor] = useState(null)
   const [selectedMetrics, setSelectedMetrics] = useState(['temperature'])
   const [historyData, setHistoryData] = useState({})

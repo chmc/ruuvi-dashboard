@@ -9,6 +9,7 @@ import {
   ReferenceLine,
 } from 'recharts'
 import { METRICS_BY_KEY, getMetricColor } from '../constants/metrics'
+import { formatXAxisTime, getXAxisTickCount } from '../utils/chartFormatters'
 
 /**
  * @typedef {Object} DataPoint
@@ -48,24 +49,6 @@ const calculateMetricDomain = (data, metricKey) => {
  * Default line color (MUI primary blue)
  */
 const DEFAULT_COLOR = '#1976d2'
-
-/**
- * Format timestamp for X-axis display
- * @param {number} timestamp - Unix timestamp in milliseconds
- * @param {string} timeRange - Selected time range
- * @returns {string} Formatted time string
- */
-const formatXAxis = (timestamp, timeRange) => {
-  const date = new Date(timestamp)
-  if (timeRange === '1h' || timeRange === '6h' || timeRange === '24h') {
-    return date.toLocaleTimeString('fi-FI', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
-  // For 7d, 30d, all - show date
-  return date.toLocaleDateString('fi-FI', { day: 'numeric', month: 'numeric' })
-}
 
 /**
  * Sparkline component - line chart with Y-axis range and X-axis time indicators
@@ -172,27 +155,8 @@ const Sparkline = ({
     const last = normalizedData[normalizedData.length - 1].timestamp
     const duration = last - first
 
-    // Determine number of ticks based on time range
-    let tickCount
-    switch (timeRange) {
-      case '1h':
-        tickCount = 4 // Every 15 minutes
-        break
-      case '6h':
-        tickCount = 6 // Every hour
-        break
-      case '24h':
-        tickCount = 6 // Every 4 hours
-        break
-      case '7d':
-        tickCount = 7 // Every day
-        break
-      case '30d':
-        tickCount = 6 // Every 5 days
-        break
-      default:
-        tickCount = 5
-    }
+    // Use shared tick count based on time range
+    const tickCount = getXAxisTickCount(timeRange)
 
     // Generate evenly spaced ticks
     const ticks = []
@@ -271,7 +235,7 @@ const Sparkline = ({
                 dataKey="timestamp"
                 type="number"
                 domain={['dataMin', 'dataMax']}
-                tickFormatter={(ts) => formatXAxis(ts, timeRange)}
+                tickFormatter={(ts) => formatXAxisTime(ts, timeRange)}
                 tick={{ fontSize: 10, fill: '#888' }}
                 axisLine={false}
                 tickLine={false}
