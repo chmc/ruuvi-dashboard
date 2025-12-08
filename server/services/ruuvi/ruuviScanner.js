@@ -44,12 +44,27 @@ const normalizeMac = (mac) => mac?.toLowerCase() || ''
  * @param {string[]} options.macs - MAC addresses to filter by
  * @returns {object} Scanner instance
  */
+/**
+ * @typedef {Object} SensorHealthData
+ * @property {number} lastSeen - Timestamp of last received reading
+ * @property {number | null} rssi - Signal strength (dBm), null if not available
+ */
+
+/**
+ * Create a RuuviTag scanner instance
+ * @param {object} options
+ * @param {string[]} options.macs - MAC addresses to filter by
+ * @returns {object} Scanner instance
+ */
 const createScanner = (options = {}) => {
   const emitter = new EventEmitter()
   const scanner = bleScanner.createScanner()
 
   /** @type {SensorDataCollection} */
   let sensorDataCollection = {}
+
+  /** @type {Object.<string, SensorHealthData>} */
+  let sensorHealthData = {}
 
   // Store normalized MAC filter (filtering done after parsing on macOS)
   const macFilter = (options.macs || []).map(normalizeMac).filter(Boolean)
@@ -86,6 +101,12 @@ const createScanner = (options = {}) => {
 
       // Update collection
       sensorDataCollection[mac] = sensorData
+
+      // Update health data
+      sensorHealthData[mac] = {
+        lastSeen: Date.now(),
+        rssi: typeof peripheral.rssi === 'number' ? peripheral.rssi : null,
+      }
 
       // Emit data event for this sensor
       emitter.emit('data', {
@@ -148,10 +169,19 @@ const createScanner = (options = {}) => {
     },
 
     /**
-     * Clear sensor data collection
+     * Clear sensor data collection and health data
      */
     clearSensorData() {
       sensorDataCollection = {}
+      sensorHealthData = {}
+    },
+
+    /**
+     * Get sensor health data
+     * @returns {Object.<string, SensorHealthData>}
+     */
+    getSensorHealth() {
+      return { ...sensorHealthData }
     },
 
     /**

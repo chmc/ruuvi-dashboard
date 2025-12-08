@@ -30,23 +30,38 @@ jest.mock('../utils/formatters', () => ({
 jest.mock('../services/api')
 
 describe('DiagnosticsScreen', () => {
+  const now = Date.now()
   const mockDiagnostics = {
     bufferSize: 42,
-    lastFlushTime: Date.now() - 600000, // 10 minutes ago
+    lastFlushTime: now - 600000, // 10 minutes ago
     batteries: [
       {
         mac: 'aa:bb:cc:dd:ee:ff',
         voltage: 2.8,
-        lastSeen: Date.now() - 30000, // 30 seconds ago
+        lastSeen: now - 30000, // 30 seconds ago
       },
       {
         mac: '11:22:33:44:55:66',
         voltage: 2.6,
-        lastSeen: Date.now() - 60000, // 1 minute ago
+        lastSeen: now - 60000, // 1 minute ago
+      },
+    ],
+    sensorHealth: [
+      {
+        mac: 'aa:bb:cc:dd:ee:ff',
+        lastSeen: now - 30000, // 30 seconds ago
+        rssi: -65,
+        status: 'online',
+      },
+      {
+        mac: '11:22:33:44:55:66',
+        lastSeen: now - 60000, // 1 minute ago
+        rssi: -80,
+        status: 'online',
       },
     ],
     dbSize: 1024000, // 1 MB
-    oldestRecord: Date.now() - 90 * 24 * 60 * 60 * 1000, // 90 days ago
+    oldestRecord: now - 90 * 24 * 60 * 60 * 1000, // 90 days ago
     uptime: 3600000, // 1 hour
   }
 
@@ -98,8 +113,9 @@ describe('DiagnosticsScreen', () => {
       render(<DiagnosticsScreen />)
 
       await waitFor(() => {
-        expect(screen.getByText(/indoor sensor/i)).toBeInTheDocument()
-        expect(screen.getByText(/outdoor sensor/i)).toBeInTheDocument()
+        // Sensor names appear in both Sensor Health and Battery Levels sections
+        expect(screen.getAllByText(/indoor sensor/i)).toHaveLength(2)
+        expect(screen.getAllByText(/outdoor sensor/i)).toHaveLength(2)
       })
     })
 
@@ -139,7 +155,9 @@ describe('DiagnosticsScreen', () => {
 
       await waitFor(() => {
         expect(apiService.getDiagnostics).toHaveBeenCalledTimes(1)
-        expect(screen.getByRole('button', { name: /flush buffer/i })).toBeInTheDocument()
+        expect(
+          screen.getByRole('button', { name: /flush buffer/i })
+        ).toBeInTheDocument()
       })
 
       const flushButton = screen.getByRole('button', { name: /flush buffer/i })
@@ -186,6 +204,79 @@ describe('DiagnosticsScreen', () => {
 
       await waitFor(() => {
         expect(screen.getByText(/system info/i)).toBeInTheDocument()
+      })
+    })
+  })
+
+  describe('Sensor Health', () => {
+    it('should render sensor health section', async () => {
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/sensor health/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should display last seen timestamp for each sensor', async () => {
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        // Should show sensor names in Sensor Health section
+        expect(screen.getByText(/sensor health/i)).toBeInTheDocument()
+        // Check that sensor name and online status are present
+        const onlineChips = screen.getAllByText(/online/i)
+        expect(onlineChips.length).toBeGreaterThanOrEqual(2)
+      })
+    })
+
+    it('should display RSSI (signal strength) for each sensor', async () => {
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/-65 dBm/i)).toBeInTheDocument()
+        expect(screen.getByText(/-80 dBm/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should show stale sensor warning', async () => {
+      const staleDiagnostics = {
+        ...mockDiagnostics,
+        sensorHealth: [
+          {
+            mac: 'aa:bb:cc:dd:ee:ff',
+            lastSeen: Date.now() - 6 * 60 * 1000, // 6 minutes ago (stale)
+            rssi: -65,
+            status: 'stale',
+          },
+        ],
+      }
+      apiService.getDiagnostics.mockResolvedValueOnce(staleDiagnostics)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/stale/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should show offline sensor warning', async () => {
+      const offlineDiagnostics = {
+        ...mockDiagnostics,
+        sensorHealth: [
+          {
+            mac: 'aa:bb:cc:dd:ee:ff',
+            lastSeen: null,
+            rssi: null,
+            status: 'offline',
+          },
+        ],
+      }
+      apiService.getDiagnostics.mockResolvedValueOnce(offlineDiagnostics)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/offline/i)).toBeInTheDocument()
       })
     })
   })
@@ -339,10 +430,15 @@ describe('DiagnosticsScreen', () => {
       await user.click(confirmButton)
 
       // Wait for error to appear and button to be re-enabled
-      await waitFor(() => {
-        expect(screen.getByText(/failed to flush buffer/i)).toBeInTheDocument()
-        expect(flushButton).not.toBeDisabled()
-      }, { timeout: 3000 })
+      await waitFor(
+        () => {
+          expect(
+            screen.getByText(/failed to flush buffer/i)
+          ).toBeInTheDocument()
+          expect(flushButton).not.toBeDisabled()
+        },
+        { timeout: 3000 }
+      )
     })
 
     it('should close confirmation dialog when canceling', async () => {
@@ -375,4 +471,3 @@ describe('DiagnosticsScreen', () => {
     })
   })
 })
-

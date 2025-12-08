@@ -95,6 +95,7 @@ const fetchHistory = async (mac, range = '24h') => {
  * @property {number} bufferSize - Number of readings in buffer
  * @property {number | null} lastFlushTime - Timestamp of last flush
  * @property {Array<{mac: string, voltage: number | null, lastSeen: number | null}>} batteries - Battery levels for sensors
+ * @property {Array<{mac: string, lastSeen: number | null, rssi: number | null, status: 'online' | 'stale' | 'offline'}>} sensorHealth - Sensor health data
  * @property {number} dbSize - Database size in bytes
  * @property {number | null} oldestRecord - Timestamp of oldest record
  * @property {number} uptime - Server uptime in milliseconds

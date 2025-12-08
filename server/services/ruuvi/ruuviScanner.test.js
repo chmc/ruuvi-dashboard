@@ -287,4 +287,157 @@ describe('RuuviScanner', () => {
       expect(errorCallback).toHaveBeenCalledWith(expect.any(Error))
     })
   })
+
+  describe('sensor health tracking', () => {
+    const mockPeripheral = {
+      id: 'aabbccddeeff',
+      address: 'AA:BB:CC:DD:EE:FF',
+      rssi: -65,
+      advertisement: {
+        manufacturerData: Buffer.from([0x99, 0x04, 0x05]),
+      },
+    }
+
+    const mockParsedData = {
+      dataFormat: 5,
+      temperature: 24.3,
+      humidity: 53.49,
+      pressure: 100044,
+      mac: 'aa:bb:cc:dd:ee:ff',
+    }
+
+    const mockSensorData = {
+      data_format: 5,
+      humidity: 53.49,
+      temperature: 24.3,
+      pressure: 100044,
+      mac: 'aa:bb:cc:dd:ee:ff',
+    }
+
+    beforeEach(() => {
+      ruuviParser.parse.mockReturnValue(mockParsedData)
+      ruuviParser.toSensorData.mockReturnValue(mockSensorData)
+    })
+
+    it('should track last seen timestamp for each sensor', () => {
+      scanner = ruuviScanner.createScanner()
+      scanner.start()
+
+      const beforeTime = Date.now()
+      discoverHandler(mockPeripheral)
+      const afterTime = Date.now()
+
+      const healthData = scanner.getSensorHealth()
+      expect(healthData['aa:bb:cc:dd:ee:ff']).toBeDefined()
+      expect(healthData['aa:bb:cc:dd:ee:ff'].lastSeen).toBeGreaterThanOrEqual(
+        beforeTime
+      )
+      expect(healthData['aa:bb:cc:dd:ee:ff'].lastSeen).toBeLessThanOrEqual(
+        afterTime
+      )
+    })
+
+    it('should track RSSI (signal strength) for each sensor', () => {
+      scanner = ruuviScanner.createScanner()
+      scanner.start()
+
+      discoverHandler(mockPeripheral)
+
+      const healthData = scanner.getSensorHealth()
+      expect(healthData['aa:bb:cc:dd:ee:ff'].rssi).toBe(-65)
+    })
+
+    it('should update last seen timestamp on each scan', () => {
+      jest.useFakeTimers()
+
+      scanner = ruuviScanner.createScanner()
+      scanner.start()
+
+      discoverHandler(mockPeripheral)
+      const firstSeen = scanner.getSensorHealth()['aa:bb:cc:dd:ee:ff'].lastSeen
+
+      // Advance time by 1 second
+      jest.advanceTimersByTime(1000)
+
+      discoverHandler(mockPeripheral)
+      const secondSeen = scanner.getSensorHealth()['aa:bb:cc:dd:ee:ff'].lastSeen
+
+      expect(secondSeen).toBeGreaterThan(firstSeen)
+
+      jest.useRealTimers()
+    })
+
+    it('should update RSSI on each scan', () => {
+      scanner = ruuviScanner.createScanner()
+      scanner.start()
+
+      // First scan with RSSI -65
+      discoverHandler(mockPeripheral)
+      expect(scanner.getSensorHealth()['aa:bb:cc:dd:ee:ff'].rssi).toBe(-65)
+
+      // Second scan with RSSI -70
+      const peripheralWithWeakerSignal = { ...mockPeripheral, rssi: -70 }
+      discoverHandler(peripheralWithWeakerSignal)
+      expect(scanner.getSensorHealth()['aa:bb:cc:dd:ee:ff'].rssi).toBe(-70)
+    })
+
+    it('should handle missing RSSI gracefully', () => {
+      scanner = ruuviScanner.createScanner()
+      scanner.start()
+
+      const peripheralWithoutRssi = {
+        id: 'aabbccddeeff',
+        address: 'AA:BB:CC:DD:EE:FF',
+        advertisement: {
+          manufacturerData: Buffer.from([0x99, 0x04, 0x05]),
+        },
+      }
+
+      discoverHandler(peripheralWithoutRssi)
+
+      const healthData = scanner.getSensorHealth()
+      expect(healthData['aa:bb:cc:dd:ee:ff'].rssi).toBeNull()
+    })
+
+    it('should track health for multiple sensors', () => {
+      scanner = ruuviScanner.createScanner()
+      scanner.start()
+
+      // First sensor
+      discoverHandler(mockPeripheral)
+
+      // Second sensor
+      const mockPeripheral2 = {
+        id: '112233445566',
+        address: '11:22:33:44:55:66',
+        rssi: -80,
+        advertisement: {
+          manufacturerData: Buffer.from([0x99, 0x04, 0x05]),
+        },
+      }
+
+      const mockParsedData2 = { ...mockParsedData, mac: '11:22:33:44:55:66' }
+      const mockSensorData2 = { ...mockSensorData, mac: '11:22:33:44:55:66' }
+      ruuviParser.parse.mockReturnValue(mockParsedData2)
+      ruuviParser.toSensorData.mockReturnValue(mockSensorData2)
+
+      discoverHandler(mockPeripheral2)
+
+      const healthData = scanner.getSensorHealth()
+      expect(Object.keys(healthData)).toHaveLength(2)
+      expect(healthData['aa:bb:cc:dd:ee:ff'].rssi).toBe(-65)
+      expect(healthData['11:22:33:44:55:66'].rssi).toBe(-80)
+    })
+
+    it('should clear health data when clearSensorData is called', () => {
+      scanner = ruuviScanner.createScanner()
+      scanner.start()
+
+      discoverHandler(mockPeripheral)
+      expect(Object.keys(scanner.getSensorHealth())).toHaveLength(1)
+
+      scanner.clearSensorData()
+      expect(Object.keys(scanner.getSensorHealth())).toHaveLength(0)
+    })
+  })
 })

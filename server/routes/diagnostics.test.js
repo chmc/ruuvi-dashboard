@@ -14,6 +14,7 @@ const historyDb = require('../services/history/historyDb')
 const historyBuffer = require('../services/history/historyBuffer')
 const flushScheduler = require('../services/history/flushScheduler')
 const diagnosticsRouter = require('./diagnostics')
+const { setScannerHealthGetter } = require('./diagnostics')
 
 const createTestApp = () => {
   const app = express()
@@ -243,6 +244,137 @@ describe('Diagnostics API Endpoint', () => {
       expect(response.body).toEqual({
         error: 'Failed to fetch diagnostics data',
       })
+    })
+  })
+
+  describe('Sensor Health', () => {
+    it('should include sensor health data when scanner is available', async () => {
+      const now = Date.now()
+      const mockScannerHealth = {
+        'aa:bb:cc:dd:ee:01': { lastSeen: now - 5000, rssi: -65 },
+        'aa:bb:cc:dd:ee:02': { lastSeen: now - 10000, rssi: -80 },
+      }
+
+      setScannerHealthGetter(() => mockScannerHealth)
+
+      const response = await request(app)
+        .get('/api/diagnostics')
+        .query({ macs: 'aa:bb:cc:dd:ee:01,aa:bb:cc:dd:ee:02' })
+
+      expect(response.status).toBe(200)
+      expect(response.body.sensorHealth).toBeDefined()
+      expect(response.body.sensorHealth).toHaveLength(2)
+    })
+
+    it('should include last seen timestamp for each sensor', async () => {
+      const now = Date.now()
+      const mockScannerHealth = {
+        'aa:bb:cc:dd:ee:01': { lastSeen: now - 5000, rssi: -65 },
+      }
+
+      setScannerHealthGetter(() => mockScannerHealth)
+
+      const response = await request(app)
+        .get('/api/diagnostics')
+        .query({ macs: 'aa:bb:cc:dd:ee:01' })
+
+      expect(response.status).toBe(200)
+      expect(response.body.sensorHealth[0].lastSeen).toBe(now - 5000)
+    })
+
+    it('should include RSSI (signal strength) for each sensor', async () => {
+      const now = Date.now()
+      const mockScannerHealth = {
+        'aa:bb:cc:dd:ee:01': { lastSeen: now, rssi: -65 },
+      }
+
+      setScannerHealthGetter(() => mockScannerHealth)
+
+      const response = await request(app)
+        .get('/api/diagnostics')
+        .query({ macs: 'aa:bb:cc:dd:ee:01' })
+
+      expect(response.status).toBe(200)
+      expect(response.body.sensorHealth[0].rssi).toBe(-65)
+    })
+
+    it('should detect stale sensors (>5 min since last reading)', async () => {
+      const now = Date.now()
+      const fiveMinutesAgo = now - 5 * 60 * 1000 - 1000 // Just over 5 minutes
+      const mockScannerHealth = {
+        'aa:bb:cc:dd:ee:01': { lastSeen: fiveMinutesAgo, rssi: -65 },
+      }
+
+      setScannerHealthGetter(() => mockScannerHealth)
+
+      const response = await request(app)
+        .get('/api/diagnostics')
+        .query({ macs: 'aa:bb:cc:dd:ee:01' })
+
+      expect(response.status).toBe(200)
+      expect(response.body.sensorHealth[0].status).toBe('stale')
+    })
+
+    it('should mark sensor as online when recently seen', async () => {
+      const now = Date.now()
+      const mockScannerHealth = {
+        'aa:bb:cc:dd:ee:01': { lastSeen: now - 30000, rssi: -65 }, // 30 seconds ago
+      }
+
+      setScannerHealthGetter(() => mockScannerHealth)
+
+      const response = await request(app)
+        .get('/api/diagnostics')
+        .query({ macs: 'aa:bb:cc:dd:ee:01' })
+
+      expect(response.status).toBe(200)
+      expect(response.body.sensorHealth[0].status).toBe('online')
+    })
+
+    it('should mark sensor as offline when never seen', async () => {
+      setScannerHealthGetter(() => ({}))
+
+      const response = await request(app)
+        .get('/api/diagnostics')
+        .query({ macs: 'aa:bb:cc:dd:ee:01' })
+
+      expect(response.status).toBe(200)
+      expect(response.body.sensorHealth[0].status).toBe('offline')
+      expect(response.body.sensorHealth[0].lastSeen).toBeNull()
+      expect(response.body.sensorHealth[0].rssi).toBeNull()
+    })
+
+    it('should handle missing scanner gracefully', async () => {
+      setScannerHealthGetter(null)
+
+      const response = await request(app)
+        .get('/api/diagnostics')
+        .query({ macs: 'aa:bb:cc:dd:ee:01' })
+
+      expect(response.status).toBe(200)
+      expect(response.body.sensorHealth).toBeDefined()
+      expect(response.body.sensorHealth[0].status).toBe('offline')
+    })
+
+    it('should include sensor health for all requested MACs', async () => {
+      const now = Date.now()
+      const mockScannerHealth = {
+        'aa:bb:cc:dd:ee:01': { lastSeen: now, rssi: -65 },
+        // aa:bb:cc:dd:ee:02 is not in scanner health (never seen)
+      }
+
+      setScannerHealthGetter(() => mockScannerHealth)
+
+      const response = await request(app)
+        .get('/api/diagnostics')
+        .query({ macs: 'aa:bb:cc:dd:ee:01,aa:bb:cc:dd:ee:02' })
+
+      expect(response.status).toBe(200)
+      expect(response.body.sensorHealth).toHaveLength(2)
+      expect(response.body.sensorHealth[0].mac).toBe('aa:bb:cc:dd:ee:01')
+      expect(response.body.sensorHealth[0].status).toBe('online')
+      expect(response.body.sensorHealth[1].mac).toBe('aa:bb:cc:dd:ee:02')
+      expect(response.body.sensorHealth[1].status).toBe('offline')
     })
   })
 

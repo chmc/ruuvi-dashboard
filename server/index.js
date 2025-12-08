@@ -16,6 +16,7 @@ const historySeeder = require('./services/history/historySeeder')
 const historyRouter = require('./routes/history')
 const trendsRouter = require('./routes/trends')
 const diagnosticsRouter = require('./routes/diagnostics')
+const { setScannerHealthGetter } = require('./routes/diagnostics')
 require('dotenv').config()
 
 // Only import ruuviScanner when not in test mode (requires native BLE module)
@@ -268,6 +269,9 @@ if (process.env.TEST || process.env.SIMULATE) {
   startServer()
 
   scannerInstance = ruuviScanner.createScanner({ macs })
+
+  // Wire up scanner health data to diagnostics route
+  setScannerHealthGetter(() => scannerInstance.getSensorHealth())
 
   // Register scanner stop for graceful shutdown
   shutdownHandler.registerScannerStop(() => {

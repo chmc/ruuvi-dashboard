@@ -13,6 +13,24 @@ const router = express.Router()
 /** Server start time for uptime calculation */
 const serverStartTime = Date.now()
 
+/** Stale threshold in milliseconds (5 minutes) */
+const STALE_THRESHOLD_MS = 5 * 60 * 1000
+
+/**
+ * Getter function to retrieve scanner health data
+ * Set by the server when the scanner is initialized
+ * @type {(() => Object.<string, {lastSeen: number, rssi: number | null}>) | null}
+ */
+let scannerHealthGetter = null
+
+/**
+ * Set the scanner health getter function
+ * @param {(() => Object.<string, {lastSeen: number, rssi: number | null}>) | null} getter
+ */
+const setScannerHealthGetter = (getter) => {
+  scannerHealthGetter = getter
+}
+
 /**
  * Get database size in bytes
  * @returns {number}
@@ -73,6 +91,57 @@ const getLatestBufferReading = (mac) => {
 }
 
 /**
+ * Get sensor health status based on last seen timestamp
+ * @param {number | null} lastSeen - Last seen timestamp in milliseconds
+ * @returns {'online' | 'stale' | 'offline'}
+ */
+const getSensorStatus = (lastSeen) => {
+  if (lastSeen === null) {
+    return 'offline'
+  }
+
+  const timeSinceLastSeen = Date.now() - lastSeen
+  if (timeSinceLastSeen > STALE_THRESHOLD_MS) {
+    return 'stale'
+  }
+  return 'online'
+}
+
+/**
+ * Get sensor health data for all configured sensors
+ * @param {string[]} macs - MAC addresses to check
+ * @returns {Array<{mac: string, lastSeen: number | null, rssi: number | null, status: 'online' | 'stale' | 'offline'}>}
+ */
+const getSensorHealth = (macs) => {
+  if (!macs || macs.length === 0) {
+    return []
+  }
+
+  const healthData = scannerHealthGetter ? scannerHealthGetter() : {}
+
+  return macs.map((mac) => {
+    const normalizedMac = mac.trim().toLowerCase()
+    const sensorHealth = healthData[normalizedMac]
+
+    if (!sensorHealth) {
+      return {
+        mac: normalizedMac,
+        lastSeen: null,
+        rssi: null,
+        status: 'offline',
+      }
+    }
+
+    return {
+      mac: normalizedMac,
+      lastSeen: sensorHealth.lastSeen,
+      rssi: sensorHealth.rssi,
+      status: getSensorStatus(sensorHealth.lastSeen),
+    }
+  })
+}
+
+/**
  * Get battery levels for all configured sensors
  * Checks both database and in-memory buffer for the most recent data
  * @param {string[]} macs - MAC addresses to check
@@ -96,7 +165,9 @@ const getBatteryLevels = (macs) => {
     if (dbReading && bufferReading) {
       // Use whichever is more recent
       bestReading =
-        bufferReading.timestamp > dbReading.timestamp ? bufferReading : dbReading
+        bufferReading.timestamp > dbReading.timestamp
+          ? bufferReading
+          : dbReading
     } else if (bufferReading) {
       bestReading = bufferReading
     } else if (dbReading) {
@@ -125,12 +196,13 @@ const getBatteryLevels = (macs) => {
  * Fetch system diagnostics data.
  *
  * Query parameters:
- * - macs (optional): Comma-separated MAC addresses for battery levels
+ * - macs (optional): Comma-separated MAC addresses for battery levels and sensor health
  *
  * Response: {
  *   bufferSize: number,
  *   lastFlushTime: number | null,
  *   batteries: Array<{mac, voltage, lastSeen}>,
+ *   sensorHealth: Array<{mac, lastSeen, rssi, status}>,
  *   dbSize: number,
  *   oldestRecord: number | null,
  *   uptime: number
@@ -145,6 +217,7 @@ router.get('/diagnostics', (req, res) => {
       bufferSize: historyBuffer.getBufferSize(),
       lastFlushTime: flushScheduler.getLastFlushTime(),
       batteries: getBatteryLevels(macList),
+      sensorHealth: getSensorHealth(macList),
       dbSize: getDbSize(),
       oldestRecord: getOldestRecord(),
       uptime: Date.now() - serverStartTime,
@@ -187,3 +260,4 @@ router.post('/diagnostics/flush', (req, res) => {
 })
 
 module.exports = router
+module.exports.setScannerHealthGetter = setScannerHealthGetter

@@ -13,6 +13,7 @@ import DialogActions from '@mui/material/DialogActions'
 import CircularProgress from '@mui/material/CircularProgress'
 import Alert from '@mui/material/Alert'
 import BatteryIndicator from '../components/BatteryIndicator'
+import SensorHealthIndicator from '../components/SensorHealthIndicator'
 import apiService from '../services/api'
 import configs from '../configs'
 import formatters from '../utils/formatters'
@@ -22,6 +23,7 @@ import formatters from '../utils/formatters'
  * @property {number} bufferSize - Number of readings in buffer
  * @property {number | null} lastFlushTime - Timestamp of last flush
  * @property {Array<{mac: string, voltage: number | null, lastSeen: number | null}>} batteries - Battery levels for sensors
+ * @property {Array<{mac: string, lastSeen: number | null, rssi: number | null, status: 'online' | 'stale' | 'offline'}>} sensorHealth - Sensor health data
  * @property {number} dbSize - Database size in bytes
  * @property {number | null} oldestRecord - Timestamp of oldest record
  * @property {number} uptime - Server uptime in milliseconds
@@ -37,7 +39,7 @@ const formatBytes = (bytes) => {
   const k = 1024
   const sizes = ['B', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
+  return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`
 }
 
 /**
@@ -132,7 +134,15 @@ const DiagnosticsScreen = () => {
 
   if (loading) {
     return (
-      <Box px={2} pt={2} pb={0} display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box
+        px={2}
+        pt={2}
+        pb={0}
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="400px"
+      >
         <CircularProgress />
       </Box>
     )
@@ -152,6 +162,7 @@ const DiagnosticsScreen = () => {
   }
 
   const batteries = diagnostics?.batteries || []
+  const sensorHealth = diagnostics?.sensorHealth || []
 
   return (
     <Box px={2} pt={2} pb={0}>
@@ -165,15 +176,15 @@ const DiagnosticsScreen = () => {
         </Alert>
       )}
 
-      <Grid container spacing={1.5} sx={{ mt: 1 }}>
+      <Grid container spacing={2} sx={{ mt: 1 }}>
         {/* Buffer Status Section */}
-        <Grid item xs={12}>
-          <Card>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ height: '100%' }}>
             <CardContent>
               <Typography variant="h6" component="h2" gutterBottom>
                 Buffer Status
               </Typography>
-              <Box display="flex" flexDirection="column" gap={1.5} mt={1}>
+              <Box display="flex" flexDirection="column" gap={1} mt={1}>
                 <Box>
                   <Typography variant="body2" color="text.secondary">
                     Buffer Size:
@@ -195,114 +206,163 @@ const DiagnosticsScreen = () => {
                 <Button
                   variant="contained"
                   color="primary"
+                  size="small"
                   onClick={handleFlushClick}
                   disabled={isFlushing}
-                  startIcon={isFlushing ? <CircularProgress size={20} /> : null}
+                  startIcon={isFlushing ? <CircularProgress size={16} /> : null}
+                  sx={{ mt: 1 }}
                 >
                   {isFlushing ? 'Flushing...' : 'Flush Buffer'}
                 </Button>
                 {flushSuccess && (
-                  <Alert severity="success">{flushSuccess}</Alert>
+                  <Alert severity="success" sx={{ mt: 1 }}>
+                    {flushSuccess}
+                  </Alert>
                 )}
-                {flushError && <Alert severity="error">{flushError}</Alert>}
+                {flushError && (
+                  <Alert severity="error" sx={{ mt: 1 }}>
+                    {flushError}
+                  </Alert>
+                )}
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Sensor Health Section */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent>
+              <Typography variant="h6" component="h2" gutterBottom>
+                Sensor Health
+              </Typography>
+              <Box>
+                {sensorHealth.length > 0 ? (
+                  sensorHealth.map((sensor) => {
+                    const sensorName =
+                      configs.ruuviTags.find((tag) => tag.mac === sensor.mac)
+                        ?.name || sensor.mac
+                    return (
+                      <SensorHealthIndicator
+                        key={sensor.mac}
+                        name={sensorName}
+                        lastSeen={sensor.lastSeen}
+                        rssi={sensor.rssi}
+                        status={sensor.status}
+                      />
+                    )
+                  })
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No sensor health data available
+                  </Typography>
+                )}
               </Box>
             </CardContent>
           </Card>
         </Grid>
 
         {/* Battery Levels Section */}
-        <Grid item xs={12}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" component="h2" gutterBottom>
-              Battery Levels
-            </Typography>
-            <Box display="flex" flexDirection="column" gap={1.5} mt={1}>
-              {batteries.length > 0 ? (
-                batteries.map((battery) => {
-                  const sensorName = configs.ruuviTags.find(
-                    (tag) => tag.mac === battery.mac
-                  )?.name || battery.mac
-                  return (
-                    <BatteryIndicator
-                      key={battery.mac}
-                      mac={sensorName}
-                      voltage={battery.voltage}
-                    />
-                  )
-                })
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  No battery data available
-                </Typography>
-              )}
-            </Box>
-          </CardContent>
-        </Card>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent>
+              <Typography variant="h6" component="h2" gutterBottom>
+                Battery Levels
+              </Typography>
+              <Box display="flex" flexDirection="column" gap={1} mt={1}>
+                {batteries.length > 0 ? (
+                  batteries.map((battery) => {
+                    const sensorName =
+                      configs.ruuviTags.find((tag) => tag.mac === battery.mac)
+                        ?.name || battery.mac
+                    return (
+                      <BatteryIndicator
+                        key={battery.mac}
+                        mac={sensorName}
+                        voltage={battery.voltage}
+                      />
+                    )
+                  })
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No battery data available
+                  </Typography>
+                )}
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
 
         {/* System Info Section */}
-        <Grid item xs={12}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" component="h2" gutterBottom>
-              System Info
-            </Typography>
-            <Box display="flex" flexDirection="column" gap={1.5} mt={1}>
-              <Box>
-                <Typography variant="body2" color="text.secondary">
-                  Database Size:
-                </Typography>
-                <Typography variant="body1">
-                  {diagnostics?.dbSize ? formatBytes(diagnostics.dbSize) : 'N/A'}
-                </Typography>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent>
+              <Typography variant="h6" component="h2" gutterBottom>
+                System Info
+              </Typography>
+              <Box display="flex" flexDirection="column" gap={1} mt={1}>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Database Size:
+                  </Typography>
+                  <Typography variant="body1">
+                    {diagnostics?.dbSize
+                      ? formatBytes(diagnostics.dbSize)
+                      : 'N/A'}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Oldest Record:
+                  </Typography>
+                  <Typography variant="body1">
+                    {diagnostics?.oldestRecord
+                      ? formatters.toLocalDateTime(diagnostics.oldestRecord)
+                      : 'N/A'}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Server Uptime:
+                  </Typography>
+                  <Typography variant="body1">
+                    {diagnostics?.uptime
+                      ? formatUptime(diagnostics.uptime)
+                      : 'N/A'}
+                  </Typography>
+                </Box>
               </Box>
-              <Box>
-                <Typography variant="body2" color="text.secondary">
-                  Oldest Record:
-                </Typography>
-                <Typography variant="body1">
-                  {diagnostics?.oldestRecord
-                    ? formatters.toLocalDateTime(diagnostics.oldestRecord)
-                    : 'N/A'}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="body2" color="text.secondary">
-                  Server Uptime:
-                </Typography>
-                <Typography variant="body1">
-                  {diagnostics?.uptime ? formatUptime(diagnostics.uptime) : 'N/A'}
-                </Typography>
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
         </Grid>
       </Grid>
 
       {/* Flush Confirmation Dialog */}
       <Dialog
-      open={flushDialogOpen}
-      onClose={handleFlushCancel}
-      aria-labelledby="flush-dialog-title"
-      aria-describedby="flush-dialog-description"
-    >
-      <DialogTitle id="flush-dialog-title">Confirm Flush</DialogTitle>
-      <DialogContent>
-        <DialogContentText id="flush-dialog-description">
-          Are you sure you want to flush the buffer? This will immediately write
-          all buffered readings to the database.
-        </DialogContentText>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleFlushCancel} color="inherit">
-          Cancel
-        </Button>
-        <Button onClick={handleFlushConfirm} color="primary" variant="contained">
-          Confirm
-        </Button>
-      </DialogActions>
+        open={flushDialogOpen}
+        onClose={handleFlushCancel}
+        aria-labelledby="flush-dialog-title"
+        aria-describedby="flush-dialog-description"
+      >
+        <DialogTitle id="flush-dialog-title">Confirm Flush</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="flush-dialog-description">
+            Are you sure you want to flush the buffer? This will immediately
+            write all buffered readings to the database.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleFlushCancel} color="inherit">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleFlushConfirm}
+            color="primary"
+            variant="contained"
+          >
+            Confirm
+          </Button>
+        </DialogActions>
       </Dialog>
     </Box>
   )
