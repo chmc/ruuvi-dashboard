@@ -80,8 +80,24 @@ This script will:
 - Pull latest code from git
 - Install/update dependencies
 - Regenerate systemd environment file
-- Restart the service
+- Update systemd service file if template changed (with daemon-reload)
+- Gracefully restart the service (data is flushed before shutdown)
 - Verify service is running
+
+## Systemd Service
+
+The application runs as a systemd service on Raspberry Pi with the following features:
+
+- **Auto-start on boot**: Service starts automatically after network and Bluetooth
+- **Graceful shutdown**: On stop/restart, the service receives SIGTERM which triggers:
+  - BLE scanner stops accepting new readings
+  - In-memory buffer flushes to SQLite database
+  - Process exits cleanly (30 second timeout)
+- **Auto-restart**: Service restarts on failure after 10 seconds
+- **Logging**: Output available via `journalctl -u ruuvi-dashboard`
+
+The service is configured from a template file at `scripts/ruuvi-dashboard.service`.
+Both setup and deploy scripts automatically update the installed service when the template changes.
 
 ## Enable Raspberry Pi remote access
 

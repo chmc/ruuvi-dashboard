@@ -1,0 +1,42 @@
+# Ruuvi Dashboard Systemd Service File
+# Template with placeholder variables - processed by setup/deploy scripts
+#
+# Placeholders:
+#   {{WORKING_DIR}} - Project directory (e.g., /home/pi/ruuvi-dashboard)
+#   {{NODE_PATH}}   - Absolute path to Node.js binary
+#   {{USER}}        - User to run the service as
+#   {{ENV_FILE}}    - EnvironmentFile directive (or comment if no .env)
+
+[Unit]
+Description=Ruuvi Dashboard - Home monitoring with RuuviTag sensors
+After=network.target bluetooth.target
+Wants=bluetooth.target
+
+[Service]
+Type=simple
+User={{USER}}
+WorkingDirectory={{WORKING_DIR}}
+
+# Load environment from .env file
+{{ENV_FILE}}
+Environment=NODE_ENV=production
+
+# Start the server
+ExecStart={{NODE_PATH}} {{WORKING_DIR}}/server/index.js
+
+# Graceful shutdown - SIGTERM triggers buffer flush via shutdownHandler
+# TimeoutStopSec gives the process time to flush data before force kill
+ExecStop=/bin/kill -TERM $MAINPID
+TimeoutStopSec=30
+
+# Restart policy
+Restart=on-failure
+RestartSec=10
+
+# Logging to journald
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ruuvi-dashboard
+
+[Install]
+WantedBy=multi-user.target

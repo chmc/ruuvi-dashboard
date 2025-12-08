@@ -91,19 +91,64 @@ print_step "Building React frontend..."
 pnpm run build
 print_success "Frontend built"
 
-# Step 4: Restart service (if systemd service exists)
+# Step 4: Update and restart service (if systemd service exists)
 if systemctl is-enabled ruuvi-dashboard &>/dev/null; then
-    print_step "Restarting systemd service..."
+    print_step "Updating systemd service..."
 
-    # Regenerate .env.systemd if .env changed
+    CURRENT_DIR=$(pwd)
+    CURRENT_USER=$(whoami)
+    NODE_PATH=$(which node)
+    SERVICE_TEMPLATE="$CURRENT_DIR/scripts/ruuvi-dashboard.service"
+    INSTALLED_SERVICE="/etc/systemd/system/ruuvi-dashboard.service"
+    DAEMON_RELOAD_NEEDED=false
+
+    # Regenerate .env.systemd if .env exists
     if [[ -f .env ]]; then
         grep -v '^#' .env | \
             grep -v '^[[:space:]]*$' | \
             sed 's/^export //' | \
             sed 's/[[:space:]]*=[[:space:]]*/=/' > .env.systemd
         print_success "Updated .env.systemd"
+        ENV_FILE_LINE="EnvironmentFile=$CURRENT_DIR/.env.systemd"
+    else
+        ENV_FILE_LINE="# No .env file"
     fi
 
+    # Update service file if template exists and has changed
+    if [[ -f "$SERVICE_TEMPLATE" ]]; then
+        # Generate new service file content
+        NEW_SERVICE_CONTENT=$(sed -e "s|{{WORKING_DIR}}|$CURRENT_DIR|g" \
+            -e "s|{{NODE_PATH}}|$NODE_PATH|g" \
+            -e "s|{{USER}}|$CURRENT_USER|g" \
+            -e "s|{{ENV_FILE}}|$ENV_FILE_LINE|g" \
+            "$SERVICE_TEMPLATE")
+
+        # Compare with installed service file
+        if [[ -f "$INSTALLED_SERVICE" ]]; then
+            CURRENT_SERVICE_CONTENT=$(sudo cat "$INSTALLED_SERVICE")
+            if [[ "$NEW_SERVICE_CONTENT" != "$CURRENT_SERVICE_CONTENT" ]]; then
+                echo "$NEW_SERVICE_CONTENT" | sudo tee "$INSTALLED_SERVICE" > /dev/null
+                print_success "Updated service file from template"
+                DAEMON_RELOAD_NEEDED=true
+            else
+                print_success "Service file unchanged"
+            fi
+        else
+            echo "$NEW_SERVICE_CONTENT" | sudo tee "$INSTALLED_SERVICE" > /dev/null
+            print_success "Created service file from template"
+            DAEMON_RELOAD_NEEDED=true
+        fi
+    fi
+
+    # Run daemon-reload if service file was updated
+    if [[ "$DAEMON_RELOAD_NEEDED" == "true" ]]; then
+        print_step "Reloading systemd daemon..."
+        sudo systemctl daemon-reload
+        print_success "Daemon reloaded"
+    fi
+
+    # Restart service (graceful - SIGTERM allows data flush)
+    print_step "Restarting service..."
     sudo systemctl restart ruuvi-dashboard
     sleep 2
 

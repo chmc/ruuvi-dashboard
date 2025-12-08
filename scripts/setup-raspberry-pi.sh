@@ -338,37 +338,21 @@ setup_systemd_service() {
         ENV_FILE_LINE="# No .env file"
     fi
 
-    sudo tee /etc/systemd/system/ruuvi-dashboard.service > /dev/null << EOF
-[Unit]
-Description=Ruuvi Dashboard
-After=network.target bluetooth.target
-Wants=bluetooth.target
+    # Check for service template file
+    SERVICE_TEMPLATE="$CURRENT_DIR/scripts/ruuvi-dashboard.service"
+    if [[ ! -f "$SERVICE_TEMPLATE" ]]; then
+        print_error "Service template not found: $SERVICE_TEMPLATE"
+        return 1
+    fi
 
-[Service]
-Type=simple
-User=$CURRENT_USER
-WorkingDirectory=$CURRENT_DIR
+    # Process template: replace placeholders with actual values
+    sed -e "s|{{WORKING_DIR}}|$CURRENT_DIR|g" \
+        -e "s|{{NODE_PATH}}|$NODE_PATH|g" \
+        -e "s|{{USER}}|$CURRENT_USER|g" \
+        -e "s|{{ENV_FILE}}|$ENV_FILE_LINE|g" \
+        "$SERVICE_TEMPLATE" | sudo tee /etc/systemd/system/ruuvi-dashboard.service > /dev/null
 
-# Load environment from .env file
-$ENV_FILE_LINE
-Environment=NODE_ENV=production
-
-# Run node directly with absolute path
-ExecStart=$NODE_PATH $CURRENT_DIR/server/index.js
-
-Restart=on-failure
-RestartSec=10
-
-# Logging
-StandardOutput=journal
-StandardError=journal
-SyslogIdentifier=ruuvi-dashboard
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-    print_success "Created systemd service"
+    print_success "Created systemd service from template"
 
     # Grant BLE capabilities to node binary (more reliable than AmbientCapabilities)
     print_step "Ensuring BLE permissions for node..."
