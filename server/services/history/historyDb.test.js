@@ -476,4 +476,276 @@ describe('HistoryDb', () => {
       expect(latest).toBeUndefined()
     })
   })
+
+  describe('getTotalRecordCount', () => {
+    it('should return 0 for empty database', () => {
+      historyDb.open(testDbPath)
+
+      const count = historyDb.getTotalRecordCount()
+
+      expect(count).toBe(0)
+    })
+
+    it('should return correct count after inserting readings', () => {
+      historyDb.open(testDbPath)
+      const readings = [
+        {
+          mac: 'aa:bb:cc:dd:ee:ff',
+          timestamp: 1700000000000,
+          temperature: 22.0,
+          humidity: 45.0,
+          pressure: 101000,
+          battery: 2.9,
+        },
+        {
+          mac: 'aa:bb:cc:dd:ee:ff',
+          timestamp: 1700000060000,
+          temperature: 22.5,
+          humidity: 45.5,
+          pressure: 101100,
+          battery: 2.9,
+        },
+        {
+          mac: '11:22:33:44:55:66',
+          timestamp: 1700000000000,
+          temperature: 18.0,
+          humidity: 60.0,
+          pressure: 100000,
+          battery: 3.0,
+        },
+      ]
+      historyDb.insertBatch(readings)
+
+      const count = historyDb.getTotalRecordCount()
+
+      expect(count).toBe(3)
+    })
+  })
+
+  describe('getRecordCountByMac', () => {
+    beforeEach(() => {
+      historyDb.open(testDbPath)
+      const readings = [
+        {
+          mac: 'aa:bb:cc:dd:ee:ff',
+          timestamp: 1700000000000,
+          temperature: 22.0,
+          humidity: 45.0,
+          pressure: 101000,
+          battery: 2.9,
+        },
+        {
+          mac: 'aa:bb:cc:dd:ee:ff',
+          timestamp: 1700000060000,
+          temperature: 22.5,
+          humidity: 45.5,
+          pressure: 101100,
+          battery: 2.9,
+        },
+        {
+          mac: 'aa:bb:cc:dd:ee:ff',
+          timestamp: 1700000120000,
+          temperature: 23.0,
+          humidity: 46.0,
+          pressure: 101200,
+          battery: 2.9,
+        },
+        {
+          mac: '11:22:33:44:55:66',
+          timestamp: 1700000000000,
+          temperature: 18.0,
+          humidity: 60.0,
+          pressure: 100000,
+          battery: 3.0,
+        },
+      ]
+      historyDb.insertBatch(readings)
+    })
+
+    it('should return record counts grouped by MAC address', () => {
+      const counts = historyDb.getRecordCountByMac()
+
+      expect(counts).toEqual(
+        expect.arrayContaining([
+          { mac: 'aa:bb:cc:dd:ee:ff', count: 3 },
+          { mac: '11:22:33:44:55:66', count: 1 },
+        ])
+      )
+    })
+
+    it('should return empty array for empty database', () => {
+      // Close and recreate with fresh db
+      historyDb.close()
+      const emptyDbPath = path.join(
+        os.tmpdir(),
+        `ruuvi-test-empty-${Date.now()}.db`
+      )
+      historyDb.open(emptyDbPath)
+
+      const counts = historyDb.getRecordCountByMac()
+
+      expect(counts).toEqual([])
+
+      // Cleanup
+      historyDb.close()
+      const filesToDelete = [
+        emptyDbPath,
+        `${emptyDbPath}-wal`,
+        `${emptyDbPath}-shm`,
+      ]
+      filesToDelete.forEach((file) => {
+        if (fs.existsSync(file)) {
+          fs.unlinkSync(file)
+        }
+      })
+    })
+  })
+
+  describe('getOldestTimestamp', () => {
+    it('should return null for empty database', () => {
+      historyDb.open(testDbPath)
+
+      const oldest = historyDb.getOldestTimestamp()
+
+      expect(oldest).toBeNull()
+    })
+
+    it('should return oldest timestamp from database', () => {
+      historyDb.open(testDbPath)
+      const readings = [
+        {
+          mac: 'aa:bb:cc:dd:ee:ff',
+          timestamp: 1700000120000,
+          temperature: 23.0,
+          humidity: 46.0,
+          pressure: 101200,
+          battery: 2.9,
+        },
+        {
+          mac: 'aa:bb:cc:dd:ee:ff',
+          timestamp: 1700000000000, // oldest
+          temperature: 22.0,
+          humidity: 45.0,
+          pressure: 101000,
+          battery: 2.9,
+        },
+        {
+          mac: '11:22:33:44:55:66',
+          timestamp: 1700000060000,
+          temperature: 18.0,
+          humidity: 60.0,
+          pressure: 100000,
+          battery: 3.0,
+        },
+      ]
+      historyDb.insertBatch(readings)
+
+      const oldest = historyDb.getOldestTimestamp()
+
+      expect(oldest).toBe(1700000000000)
+    })
+  })
+
+  describe('getNewestTimestamp', () => {
+    it('should return null for empty database', () => {
+      historyDb.open(testDbPath)
+
+      const newest = historyDb.getNewestTimestamp()
+
+      expect(newest).toBeNull()
+    })
+
+    it('should return newest timestamp from database', () => {
+      historyDb.open(testDbPath)
+      const readings = [
+        {
+          mac: 'aa:bb:cc:dd:ee:ff',
+          timestamp: 1700000000000,
+          temperature: 22.0,
+          humidity: 45.0,
+          pressure: 101000,
+          battery: 2.9,
+        },
+        {
+          mac: 'aa:bb:cc:dd:ee:ff',
+          timestamp: 1700000120000, // newest
+          temperature: 23.0,
+          humidity: 46.0,
+          pressure: 101200,
+          battery: 2.9,
+        },
+        {
+          mac: '11:22:33:44:55:66',
+          timestamp: 1700000060000,
+          temperature: 18.0,
+          humidity: 60.0,
+          pressure: 100000,
+          battery: 3.0,
+        },
+      ]
+      historyDb.insertBatch(readings)
+
+      const newest = historyDb.getNewestTimestamp()
+
+      expect(newest).toBe(1700000120000)
+    })
+  })
+
+  describe('getDbStatistics', () => {
+    it('should return all database statistics', () => {
+      historyDb.open(testDbPath)
+      const readings = [
+        {
+          mac: 'aa:bb:cc:dd:ee:ff',
+          timestamp: 1700000000000,
+          temperature: 22.0,
+          humidity: 45.0,
+          pressure: 101000,
+          battery: 2.9,
+        },
+        {
+          mac: 'aa:bb:cc:dd:ee:ff',
+          timestamp: 1700000060000,
+          temperature: 22.5,
+          humidity: 45.5,
+          pressure: 101100,
+          battery: 2.9,
+        },
+        {
+          mac: '11:22:33:44:55:66',
+          timestamp: 1700000000000,
+          temperature: 18.0,
+          humidity: 60.0,
+          pressure: 100000,
+          battery: 3.0,
+        },
+      ]
+      historyDb.insertBatch(readings)
+
+      const stats = historyDb.getDbStatistics()
+
+      expect(stats).toEqual({
+        totalRecords: 3,
+        recordsByMac: expect.arrayContaining([
+          { mac: 'aa:bb:cc:dd:ee:ff', count: 2 },
+          { mac: '11:22:33:44:55:66', count: 1 },
+        ]),
+        oldestTimestamp: 1700000000000,
+        newestTimestamp: 1700000060000,
+      })
+    })
+
+    it('should return empty statistics for empty database', () => {
+      historyDb.open(testDbPath)
+
+      const stats = historyDb.getDbStatistics()
+
+      expect(stats).toEqual({
+        totalRecords: 0,
+        recordsByMac: [],
+        oldestTimestamp: null,
+        newestTimestamp: null,
+      })
+    })
+  })
 })

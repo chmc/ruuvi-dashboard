@@ -702,4 +702,129 @@ describe('Diagnostics API Endpoint', () => {
       expect(response.body).toEqual({ error: 'Missing required field: status' })
     })
   })
+
+  describe('Database Statistics', () => {
+    beforeEach(() => {
+      // Default mock for database statistics
+      historyDb.getDbStatistics.mockReturnValue({
+        totalRecords: 0,
+        recordsByMac: [],
+        oldestTimestamp: null,
+        newestTimestamp: null,
+      })
+    })
+
+    it('should include total record count', async () => {
+      historyDb.getDbStatistics.mockReturnValue({
+        totalRecords: 12500,
+        recordsByMac: [],
+        oldestTimestamp: null,
+        newestTimestamp: null,
+      })
+
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.dbStats).toBeDefined()
+      expect(response.body.dbStats.totalRecords).toBe(12500)
+    })
+
+    it('should include records per sensor', async () => {
+      historyDb.getDbStatistics.mockReturnValue({
+        totalRecords: 15000,
+        recordsByMac: [
+          { mac: 'aa:bb:cc:dd:ee:01', count: 10000 },
+          { mac: 'aa:bb:cc:dd:ee:02', count: 5000 },
+        ],
+        oldestTimestamp: null,
+        newestTimestamp: null,
+      })
+
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.dbStats.recordsByMac).toEqual([
+        { mac: 'aa:bb:cc:dd:ee:01', count: 10000 },
+        { mac: 'aa:bb:cc:dd:ee:02', count: 5000 },
+      ])
+    })
+
+    it('should include storage growth rate (MB/day estimate)', async () => {
+      const now = Date.now()
+      const tenDaysAgo = now - 10 * 24 * 60 * 60 * 1000
+
+      historyDb.getDbStatistics.mockReturnValue({
+        totalRecords: 15000,
+        recordsByMac: [],
+        oldestTimestamp: tenDaysAgo,
+        newestTimestamp: now,
+      })
+
+      // Mock DB size of 10 MB (10 * 1024 * 1024 bytes)
+      const mockDb = {
+        pragma: jest.fn().mockImplementation((query) => {
+          if (query === 'page_count') return [{ page_count: 2560 }]
+          if (query === 'page_size') return [{ page_size: 4096 }]
+          return []
+        }),
+        prepare: jest.fn().mockReturnValue({
+          get: jest.fn().mockReturnValue({ oldest_timestamp: tenDaysAgo }),
+        }),
+      }
+      historyDb.getDb.mockReturnValue(mockDb)
+
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.dbStats.growthRatePerDay).toBeDefined()
+      // 10 MB over 10 days = ~1 MB/day = ~1048576 bytes/day
+      expect(response.body.dbStats.growthRatePerDay).toBeCloseTo(1048576, -4)
+    })
+
+    it('should return null growth rate when no data history', async () => {
+      historyDb.getDbStatistics.mockReturnValue({
+        totalRecords: 0,
+        recordsByMac: [],
+        oldestTimestamp: null,
+        newestTimestamp: null,
+      })
+
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.dbStats.growthRatePerDay).toBeNull()
+    })
+
+    it('should include last successful DB write timestamp', async () => {
+      const lastWriteTime = Date.now() - 30000 // 30 seconds ago
+      historyDb.getDbStatistics.mockReturnValue({
+        totalRecords: 1000,
+        recordsByMac: [],
+        oldestTimestamp: Date.now() - 86400000,
+        newestTimestamp: lastWriteTime,
+      })
+
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.dbStats.lastWriteTime).toBe(lastWriteTime)
+    })
+
+    it('should handle database not open for statistics', async () => {
+      historyDb.getDb.mockReturnValue(null)
+      historyDb.getDbStatistics.mockImplementation(() => {
+        throw new Error('Database not open')
+      })
+
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.dbStats).toEqual({
+        totalRecords: 0,
+        recordsByMac: [],
+        growthRatePerDay: null,
+        lastWriteTime: null,
+      })
+    })
+  })
 })

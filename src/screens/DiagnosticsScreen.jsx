@@ -41,6 +41,14 @@ import formatters from '../utils/formatters'
  */
 
 /**
+ * @typedef {Object} DbStats
+ * @property {number} totalRecords - Total number of records in database
+ * @property {Array<{mac: string, count: number}>} recordsByMac - Records per sensor
+ * @property {number | null} growthRatePerDay - Storage growth rate in bytes per day
+ * @property {number | null} lastWriteTime - Timestamp of last successful DB write
+ */
+
+/**
  * @typedef {Object} DiagnosticsData
  * @property {number} bufferSize - Number of readings in buffer
  * @property {number | null} lastFlushTime - Timestamp of last flush
@@ -51,6 +59,7 @@ import formatters from '../utils/formatters'
  * @property {number} uptime - Server uptime in milliseconds
  * @property {SystemResources} systemResources - System resource information
  * @property {ExternalApisStatus} externalApis - External API status information
+ * @property {DbStats} dbStats - Database statistics
  */
 
 /**
@@ -88,6 +97,13 @@ const formatUptime = (ms) => {
   }
   return `${seconds}s`
 }
+
+/**
+ * Format number with thousand separators
+ * @param {number} num
+ * @returns {string}
+ */
+const formatNumber = (num) => num.toLocaleString()
 
 /**
  * Diagnostics screen - displays system status and buffer information
@@ -424,6 +440,68 @@ const DiagnosticsScreen = () => {
                   <Typography variant="body2" color="text.secondary">
                     No external API data available
                   </Typography>
+                )}
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Database Statistics Section */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent>
+              <Typography variant="h6" component="h2" gutterBottom>
+                Database Statistics
+              </Typography>
+              <Box display="flex" flexDirection="column" gap={1} mt={1}>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Total Records:
+                  </Typography>
+                  <Typography variant="body1">
+                    {diagnostics?.dbStats?.totalRecords != null
+                      ? formatNumber(diagnostics.dbStats.totalRecords)
+                      : 'N/A'}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Growth Rate:
+                  </Typography>
+                  <Typography variant="body1">
+                    {diagnostics?.dbStats?.growthRatePerDay != null
+                      ? `${formatBytes(diagnostics.dbStats.growthRatePerDay)}/day`
+                      : 'N/A'}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Last Write:
+                  </Typography>
+                  <Typography variant="body1">
+                    {diagnostics?.dbStats?.lastWriteTime
+                      ? formatters.toLocalDateTime(
+                          diagnostics.dbStats.lastWriteTime
+                        )
+                      : 'N/A'}
+                  </Typography>
+                </Box>
+                {diagnostics?.dbStats?.recordsByMac?.length > 0 && (
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Records Per Sensor:
+                    </Typography>
+                    {diagnostics.dbStats.recordsByMac.map((item) => {
+                      const sensorName =
+                        configs.ruuviTags.find((tag) => tag.mac === item.mac)
+                          ?.name || item.mac
+                      return (
+                        <Typography key={item.mac} variant="body2">
+                          {sensorName}: {formatNumber(item.count)}
+                        </Typography>
+                      )
+                    })}
+                  </Box>
                 )}
               </Box>
             </CardContent>

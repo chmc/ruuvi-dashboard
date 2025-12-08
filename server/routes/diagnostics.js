@@ -230,6 +230,53 @@ const getSystemResources = () => {
 }
 
 /**
+ * Calculate storage growth rate in bytes per day
+ * @param {number} dbSizeBytes - Current database size in bytes
+ * @param {number | null} oldestTimestamp - Oldest record timestamp
+ * @returns {number | null} - Growth rate in bytes per day, or null if cannot calculate
+ */
+const calculateGrowthRate = (dbSizeBytes, oldestTimestamp) => {
+  if (!oldestTimestamp || dbSizeBytes === 0) {
+    return null
+  }
+
+  const now = Date.now()
+  const ageInDays = (now - oldestTimestamp) / (24 * 60 * 60 * 1000)
+
+  if (ageInDays < 0.01) {
+    // Less than ~15 minutes of data
+    return null
+  }
+
+  return dbSizeBytes / ageInDays
+}
+
+/**
+ * Get database statistics
+ * @returns {{totalRecords: number, recordsByMac: Array<{mac: string, count: number}>, growthRatePerDay: number | null, lastWriteTime: number | null}}
+ */
+const getDbStats = () => {
+  try {
+    const stats = historyDb.getDbStatistics()
+    const dbSize = getDbSize()
+
+    return {
+      totalRecords: stats.totalRecords,
+      recordsByMac: stats.recordsByMac,
+      growthRatePerDay: calculateGrowthRate(dbSize, stats.oldestTimestamp),
+      lastWriteTime: stats.newestTimestamp,
+    }
+  } catch {
+    return {
+      totalRecords: 0,
+      recordsByMac: [],
+      growthRatePerDay: null,
+      lastWriteTime: null,
+    }
+  }
+}
+
+/**
  * Get battery levels for all configured sensors
  * Checks both database and in-memory buffer for the most recent data
  * @param {string[]} macs - MAC addresses to check
@@ -295,7 +342,8 @@ const getBatteryLevels = (macs) => {
  *   oldestRecord: number | null,
  *   uptime: number,
  *   systemResources: {memory: {heapUsed, heapTotal, rss, external}, nodeVersion, disk: {free, total}},
- *   externalApis: {energyPrices: ApiStatusEntry, openWeatherMap: ApiStatusEntry}
+ *   externalApis: {energyPrices: ApiStatusEntry, openWeatherMap: ApiStatusEntry},
+ *   dbStats: {totalRecords, recordsByMac, growthRatePerDay, lastWriteTime}
  * }
  */
 router.get('/diagnostics', (req, res) => {
@@ -313,6 +361,7 @@ router.get('/diagnostics', (req, res) => {
       uptime: Date.now() - serverStartTime,
       systemResources: getSystemResources(),
       externalApis: getExternalApiStatus(),
+      dbStats: getDbStats(),
     }
 
     return res.json(diagnostics)

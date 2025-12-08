@@ -290,6 +290,88 @@ const getLatestReading = (mac) => {
   return stmt.get(mac)
 }
 
+// ============================================================================
+// Statistics Methods
+// ============================================================================
+
+/**
+ * Get total number of records in the database
+ * @returns {number}
+ */
+const getTotalRecordCount = () => {
+  if (!db) {
+    throw new Error('Database not open')
+  }
+
+  const stmt = db.prepare('SELECT COUNT(*) as count FROM readings')
+  const result = stmt.get()
+  return result.count
+}
+
+/**
+ * Get record counts grouped by MAC address
+ * @returns {Array<{mac: string, count: number}>}
+ */
+const getRecordCountByMac = () => {
+  if (!db) {
+    throw new Error('Database not open')
+  }
+
+  const stmt = db.prepare(`
+    SELECT mac, COUNT(*) as count
+    FROM readings
+    GROUP BY mac
+    ORDER BY count DESC
+  `)
+
+  return stmt.all()
+}
+
+/**
+ * Get oldest timestamp in the database
+ * @returns {number | null}
+ */
+const getOldestTimestamp = () => {
+  if (!db) {
+    throw new Error('Database not open')
+  }
+
+  const stmt = db.prepare('SELECT MIN(timestamp) as oldest FROM readings')
+  const result = stmt.get()
+  return result?.oldest || null
+}
+
+/**
+ * Get newest timestamp in the database
+ * @returns {number | null}
+ */
+const getNewestTimestamp = () => {
+  if (!db) {
+    throw new Error('Database not open')
+  }
+
+  const stmt = db.prepare('SELECT MAX(timestamp) as newest FROM readings')
+  const result = stmt.get()
+  return result?.newest || null
+}
+
+/**
+ * Get all database statistics in one call
+ * @returns {{totalRecords: number, recordsByMac: Array<{mac: string, count: number}>, oldestTimestamp: number | null, newestTimestamp: number | null}}
+ */
+const getDbStatistics = () => {
+  if (!db) {
+    throw new Error('Database not open')
+  }
+
+  return {
+    totalRecords: getTotalRecordCount(),
+    recordsByMac: getRecordCountByMac(),
+    oldestTimestamp: getOldestTimestamp(),
+    newestTimestamp: getNewestTimestamp(),
+  }
+}
+
 module.exports = {
   open,
   close,
@@ -304,4 +386,9 @@ module.exports = {
   insertBatch,
   getReadings,
   getLatestReading,
+  getTotalRecordCount,
+  getRecordCountByMac,
+  getOldestTimestamp,
+  getNewestTimestamp,
+  getDbStatistics,
 }

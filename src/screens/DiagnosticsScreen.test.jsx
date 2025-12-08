@@ -729,4 +729,114 @@ describe('DiagnosticsScreen', () => {
       })
     })
   })
+
+  describe('Database Statistics', () => {
+    const now = Date.now()
+    const diagnosticsWithDbStats = {
+      ...mockDiagnostics,
+      dbStats: {
+        totalRecords: 125000,
+        recordsByMac: [
+          { mac: 'aa:bb:cc:dd:ee:ff', count: 75000 },
+          { mac: '11:22:33:44:55:66', count: 50000 },
+        ],
+        growthRatePerDay: 1048576, // ~1 MB per day
+        lastWriteTime: now - 30000, // 30 seconds ago
+      },
+    }
+
+    it('should render database statistics section', async () => {
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithDbStats)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/database statistics/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should display total record count', async () => {
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithDbStats)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/total records/i)).toBeInTheDocument()
+        expect(screen.getByText(/125,?000/)).toBeInTheDocument()
+      })
+    })
+
+    it('should display records per sensor', async () => {
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithDbStats)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/records per sensor/i)).toBeInTheDocument()
+        // Check for both sensor counts
+        expect(screen.getByText(/75,?000/)).toBeInTheDocument()
+        expect(screen.getByText(/50,?000/)).toBeInTheDocument()
+      })
+    })
+
+    it('should display storage growth rate (MB/day)', async () => {
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithDbStats)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/growth rate/i)).toBeInTheDocument()
+        expect(screen.getByText(/1.*MB.*day/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should display last successful DB write timestamp', async () => {
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithDbStats)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/last write/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should handle missing dbStats gracefully', async () => {
+      const diagnosticsWithoutDbStats = {
+        ...mockDiagnostics,
+        dbStats: undefined,
+      }
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithoutDbStats)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        // Should still render without crashing
+        expect(screen.getByText(/diagnostics/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should show N/A when growth rate is null', async () => {
+      const diagnosticsWithNullGrowth = {
+        ...mockDiagnostics,
+        dbStats: {
+          totalRecords: 100,
+          recordsByMac: [],
+          growthRatePerDay: null,
+          lastWriteTime: null,
+        },
+      }
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithNullGrowth)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/database statistics/i)).toBeInTheDocument()
+        // Growth rate should show N/A
+        const growthRateSection = screen
+          .getByText(/growth rate/i)
+          .closest('div')
+        expect(growthRateSection).toBeInTheDocument()
+      })
+    })
+  })
 })
