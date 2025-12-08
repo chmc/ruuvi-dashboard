@@ -14,6 +14,7 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Alert from '@mui/material/Alert'
 import BatteryIndicator from '../components/BatteryIndicator'
 import SensorHealthIndicator from '../components/SensorHealthIndicator'
+import ApiStatusIndicator from '../components/ApiStatusIndicator'
 import apiService from '../services/api'
 import configs from '../configs'
 import formatters from '../utils/formatters'
@@ -26,6 +27,20 @@ import formatters from '../utils/formatters'
  */
 
 /**
+ * @typedef {Object} ApiStatusEntry
+ * @property {'ok' | 'error' | 'unknown'} status - Current status
+ * @property {number | null} lastSuccess - Timestamp of last successful fetch
+ * @property {number | null} lastError - Timestamp of last error
+ * @property {string | null} errorMessage - Last error message
+ */
+
+/**
+ * @typedef {Object} ExternalApisStatus
+ * @property {ApiStatusEntry} energyPrices - Energy prices API status
+ * @property {ApiStatusEntry} openWeatherMap - OpenWeatherMap API status
+ */
+
+/**
  * @typedef {Object} DiagnosticsData
  * @property {number} bufferSize - Number of readings in buffer
  * @property {number | null} lastFlushTime - Timestamp of last flush
@@ -35,6 +50,7 @@ import formatters from '../utils/formatters'
  * @property {number | null} oldestRecord - Timestamp of oldest record
  * @property {number} uptime - Server uptime in milliseconds
  * @property {SystemResources} systemResources - System resource information
+ * @property {ExternalApisStatus} externalApis - External API status information
  */
 
 /**
@@ -380,6 +396,35 @@ const DiagnosticsScreen = () => {
                       : 'N/A'}
                   </Typography>
                 </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* External APIs Section */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent>
+              <Typography variant="h6" component="h2" gutterBottom>
+                External APIs
+              </Typography>
+              <Box display="flex" flexDirection="column" gap={0.5}>
+                {diagnostics?.externalApis ? (
+                  <>
+                    <ApiStatusIndicator
+                      name="Energy Prices"
+                      statusData={diagnostics.externalApis.energyPrices}
+                    />
+                    <ApiStatusIndicator
+                      name="OpenWeatherMap"
+                      statusData={diagnostics.externalApis.openWeatherMap}
+                    />
+                  </>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No external API data available
+                  </Typography>
+                )}
               </Box>
             </CardContent>
           </Card>

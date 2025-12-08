@@ -33,6 +33,45 @@ const setScannerHealthGetter = (getter) => {
 }
 
 /**
+ * @typedef {Object} ApiStatusEntry
+ * @property {'ok' | 'error' | 'unknown'} status - Current status
+ * @property {number | null} lastSuccess - Timestamp of last successful fetch
+ * @property {number | null} lastError - Timestamp of last error
+ * @property {string | null} errorMessage - Last error message
+ */
+
+/**
+ * @typedef {Object} ExternalApiStatusData
+ * @property {ApiStatusEntry} energyPrices - Energy prices API status
+ * @property {ApiStatusEntry} openWeatherMap - OpenWeatherMap API status
+ */
+
+/**
+ * Getter function to retrieve external API status
+ * @type {(() => ExternalApiStatusData) | null}
+ */
+let externalApiStatusGetter = null
+
+/**
+ * Set the external API status getter function
+ * @param {(() => ExternalApiStatusData) | null} getter
+ */
+const setExternalApiStatusGetter = (getter) => {
+  externalApiStatusGetter = getter
+}
+
+/**
+ * Get external API status
+ * @returns {ExternalApiStatusData | null}
+ */
+const getExternalApiStatus = () => {
+  if (!externalApiStatusGetter) {
+    return null
+  }
+  return externalApiStatusGetter()
+}
+
+/**
  * Get database size in bytes
  * @returns {number}
  */
@@ -255,7 +294,8 @@ const getBatteryLevels = (macs) => {
  *   dbSize: number,
  *   oldestRecord: number | null,
  *   uptime: number,
- *   systemResources: {memory: {heapUsed, heapTotal, rss, external}, nodeVersion, disk: {free, total}}
+ *   systemResources: {memory: {heapUsed, heapTotal, rss, external}, nodeVersion, disk: {free, total}},
+ *   externalApis: {energyPrices: ApiStatusEntry, openWeatherMap: ApiStatusEntry}
  * }
  */
 router.get('/diagnostics', (req, res) => {
@@ -272,6 +312,7 @@ router.get('/diagnostics', (req, res) => {
       oldestRecord: getOldestRecord(),
       uptime: Date.now() - serverStartTime,
       systemResources: getSystemResources(),
+      externalApis: getExternalApiStatus(),
     }
 
     return res.json(diagnostics)
@@ -310,5 +351,61 @@ router.post('/diagnostics/flush', (req, res) => {
   }
 })
 
+/** Valid API names for status reporting */
+const VALID_REPORT_APIS = ['openWeatherMap']
+
+/** Valid statuses */
+const VALID_STATUSES = ['success', 'error']
+
+/**
+ * POST /api/diagnostics/api-status
+ *
+ * Report external API status from frontend.
+ *
+ * Body: { api: string, status: 'success' | 'error', errorMessage?: string }
+ *
+ * Response: { success: boolean }
+ */
+router.post('/diagnostics/api-status', (req, res) => {
+  const { api, status, errorMessage } = req.body
+
+  // Validate required fields
+  if (!api) {
+    return res.status(400).json({ error: 'Missing required field: api' })
+  }
+  if (!status) {
+    return res.status(400).json({ error: 'Missing required field: status' })
+  }
+
+  // Validate API name
+  if (!VALID_REPORT_APIS.includes(api)) {
+    return res.status(400).json({ error: 'Invalid API name' })
+  }
+
+  // Validate status
+  if (!VALID_STATUSES.includes(status)) {
+    return res.status(400).json({ error: 'Invalid status' })
+  }
+
+  // Get the external API status service
+  const externalApiStatusData = getExternalApiStatus()
+  if (!externalApiStatusData) {
+    return res.status(500).json({ error: 'External API status not available' })
+  }
+
+  // Record the status using the externalApiStatus module directly
+  // eslint-disable-next-line global-require
+  const externalApiStatus = require('../services/externalApiStatus')
+
+  if (status === 'success') {
+    externalApiStatus.recordSuccess(api)
+  } else {
+    externalApiStatus.recordError(api, errorMessage || 'Unknown error')
+  }
+
+  return res.json({ success: true })
+})
+
 module.exports = router
 module.exports.setScannerHealthGetter = setScannerHealthGetter
+module.exports.setExternalApiStatusGetter = setExternalApiStatusGetter

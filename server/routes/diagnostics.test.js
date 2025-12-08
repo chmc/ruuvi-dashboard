@@ -9,12 +9,17 @@ const express = require('express')
 jest.mock('../services/history/historyDb')
 jest.mock('../services/history/historyBuffer')
 jest.mock('../services/history/flushScheduler')
+jest.mock('../services/externalApiStatus')
 
 const historyDb = require('../services/history/historyDb')
 const historyBuffer = require('../services/history/historyBuffer')
 const flushScheduler = require('../services/history/flushScheduler')
+const externalApiStatus = require('../services/externalApiStatus')
 const diagnosticsRouter = require('./diagnostics')
-const { setScannerHealthGetter } = require('./diagnostics')
+const {
+  setScannerHealthGetter,
+  setExternalApiStatusGetter,
+} = require('./diagnostics')
 
 const createTestApp = () => {
   const app = express()
@@ -40,6 +45,25 @@ describe('Diagnostics API Endpoint', () => {
     historyDb.getDb.mockReturnValue({
       pragma: jest.fn().mockReturnValue([{ page_count: 100, page_size: 4096 }]),
     })
+
+    // Default external API status mock
+    externalApiStatus.getStatus.mockReturnValue({
+      energyPrices: {
+        status: 'unknown',
+        lastSuccess: null,
+        lastError: null,
+        errorMessage: null,
+      },
+      openWeatherMap: {
+        status: 'unknown',
+        lastSuccess: null,
+        lastError: null,
+        errorMessage: null,
+      },
+    })
+
+    // Set up the external API status getter
+    setExternalApiStatusGetter(() => externalApiStatus.getStatus())
   })
 
   describe('GET /api/diagnostics', () => {
@@ -442,6 +466,116 @@ describe('Diagnostics API Endpoint', () => {
     })
   })
 
+  describe('External API Status', () => {
+    it('should include external API status for energy prices', async () => {
+      externalApiStatus.getStatus.mockReturnValue({
+        energyPrices: {
+          status: 'ok',
+          lastSuccess: 1700000000000,
+          lastError: null,
+          errorMessage: null,
+        },
+        openWeatherMap: {
+          status: 'unknown',
+          lastSuccess: null,
+          lastError: null,
+          errorMessage: null,
+        },
+      })
+
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.externalApis).toBeDefined()
+      expect(response.body.externalApis.energyPrices.status).toBe('ok')
+      expect(response.body.externalApis.energyPrices.lastSuccess).toBe(
+        1700000000000
+      )
+    })
+
+    it('should include external API status for OpenWeatherMap', async () => {
+      externalApiStatus.getStatus.mockReturnValue({
+        energyPrices: {
+          status: 'unknown',
+          lastSuccess: null,
+          lastError: null,
+          errorMessage: null,
+        },
+        openWeatherMap: {
+          status: 'ok',
+          lastSuccess: 1700000000000,
+          lastError: null,
+          errorMessage: null,
+        },
+      })
+
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.externalApis).toBeDefined()
+      expect(response.body.externalApis.openWeatherMap.status).toBe('ok')
+      expect(response.body.externalApis.openWeatherMap.lastSuccess).toBe(
+        1700000000000
+      )
+    })
+
+    it('should include error message when API has error', async () => {
+      externalApiStatus.getStatus.mockReturnValue({
+        energyPrices: {
+          status: 'error',
+          lastSuccess: 1699000000000,
+          lastError: 1700000000000,
+          errorMessage: 'Network timeout',
+        },
+        openWeatherMap: {
+          status: 'unknown',
+          lastSuccess: null,
+          lastError: null,
+          errorMessage: null,
+        },
+      })
+
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.externalApis.energyPrices.status).toBe('error')
+      expect(response.body.externalApis.energyPrices.errorMessage).toBe(
+        'Network timeout'
+      )
+      expect(response.body.externalApis.energyPrices.lastError).toBe(
+        1700000000000
+      )
+    })
+
+    it('should include last successful fetch timestamp', async () => {
+      const lastSuccessTime = Date.now() - 60000
+      externalApiStatus.getStatus.mockReturnValue({
+        energyPrices: {
+          status: 'ok',
+          lastSuccess: lastSuccessTime,
+          lastError: null,
+          errorMessage: null,
+        },
+        openWeatherMap: {
+          status: 'ok',
+          lastSuccess: lastSuccessTime,
+          lastError: null,
+          errorMessage: null,
+        },
+      })
+
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.externalApis.energyPrices.lastSuccess).toBe(
+        lastSuccessTime
+      )
+      expect(response.body.externalApis.openWeatherMap.lastSuccess).toBe(
+        lastSuccessTime
+      )
+    })
+  })
+
   describe('POST /api/diagnostics/flush', () => {
     it('should trigger immediate flush', async () => {
       flushScheduler.forceFlush.mockReturnValue({ flushedCount: 25 })
@@ -499,6 +633,73 @@ describe('Diagnostics API Endpoint', () => {
       expect(response.body).toEqual({
         error: 'Failed to flush buffer',
       })
+    })
+  })
+
+  describe('POST /api/diagnostics/api-status', () => {
+    it('should record success status for openWeatherMap', async () => {
+      const response = await request(app)
+        .post('/api/diagnostics/api-status')
+        .send({ api: 'openWeatherMap', status: 'success' })
+
+      expect(response.status).toBe(200)
+      expect(response.body).toEqual({ success: true })
+      expect(externalApiStatus.recordSuccess).toHaveBeenCalledWith(
+        'openWeatherMap'
+      )
+    })
+
+    it('should record error status for openWeatherMap', async () => {
+      const response = await request(app)
+        .post('/api/diagnostics/api-status')
+        .send({
+          api: 'openWeatherMap',
+          status: 'error',
+          errorMessage: 'Invalid API key',
+        })
+
+      expect(response.status).toBe(200)
+      expect(response.body).toEqual({ success: true })
+      expect(externalApiStatus.recordError).toHaveBeenCalledWith(
+        'openWeatherMap',
+        'Invalid API key'
+      )
+    })
+
+    it('should reject invalid API name', async () => {
+      const response = await request(app)
+        .post('/api/diagnostics/api-status')
+        .send({ api: 'invalidApi', status: 'success' })
+
+      expect(response.status).toBe(400)
+      expect(response.body).toEqual({ error: 'Invalid API name' })
+    })
+
+    it('should reject invalid status', async () => {
+      const response = await request(app)
+        .post('/api/diagnostics/api-status')
+        .send({ api: 'openWeatherMap', status: 'invalid' })
+
+      expect(response.status).toBe(400)
+      expect(response.body).toEqual({ error: 'Invalid status' })
+    })
+
+    it('should require api parameter', async () => {
+      const response = await request(app)
+        .post('/api/diagnostics/api-status')
+        .send({ status: 'success' })
+
+      expect(response.status).toBe(400)
+      expect(response.body).toEqual({ error: 'Missing required field: api' })
+    })
+
+    it('should require status parameter', async () => {
+      const response = await request(app)
+        .post('/api/diagnostics/api-status')
+        .send({ api: 'openWeatherMap' })
+
+      expect(response.status).toBe(400)
+      expect(response.body).toEqual({ error: 'Missing required field: status' })
     })
   })
 })

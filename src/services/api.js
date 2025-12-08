@@ -10,39 +10,76 @@ const fetchRuuviData = async () => {
  * @returns {WeatherForecast}
  */
 const fetchWeatherData = async () => {
-  const response = await fetch(
-    `https://api.openweathermap.org/data/2.5/forecast?lat=60.1695&lon=24.9355&units=metric&appid=${configs.openweatherApiKey}`
-  )
-  /** @type {WeatherData} */
-  const json = await response.json()
+  try {
+    const response = await fetch(
+      `https://api.openweathermap.org/data/2.5/forecast?lat=60.1695&lon=24.9355&units=metric&appid=${configs.openweatherApiKey}`
+    )
 
-  /** @type {Weather[]} */
-  const allWeathers = json.list.map((daily) => ({
-    dateTimeUtcTxt: daily.dt_txt,
-    dateTxt: formatters.toLocalDate(daily.dt),
-    time: formatters.toLocalTime(daily.dt),
-    weekDay: formatters.toDayOfWeekUI(daily.dt_txt),
-    temp: daily.main.temp,
-    wind: daily.wind.speed,
-    iconUrl: `https://openweathermap.org/img/wn/${daily.weather[0].icon}@2x.png`,
-  }))
+    if (!response.ok) {
+      const errorMessage = `HTTP ${response.status}: ${response.statusText}`
+      // Report error to backend (fire and forget)
+      fetch('/api/diagnostics/api-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          api: 'openWeatherMap',
+          status: 'error',
+          errorMessage,
+        }),
+      }).catch(() => {})
+      throw new Error(errorMessage)
+    }
 
-  const dailyForecast = allWeathers
-    .filter((item) => item.time > 10 && item.time < 13)
-    .slice(1)
+    /** @type {WeatherData} */
+    const json = await response.json()
 
-  const officeHours = allWeathers.filter(
-    (item) => item.time > 6 && item.time < 20
-  )
-  const hourlyForecast = officeHours.slice(0, 4)
+    /** @type {Weather[]} */
+    const allWeathers = json.list.map((daily) => ({
+      dateTimeUtcTxt: daily.dt_txt,
+      dateTxt: formatters.toLocalDate(daily.dt),
+      time: formatters.toLocalTime(daily.dt),
+      weekDay: formatters.toDayOfWeekUI(daily.dt_txt),
+      temp: daily.main.temp,
+      wind: daily.wind.speed,
+      iconUrl: `https://openweathermap.org/img/wn/${daily.weather[0].icon}@2x.png`,
+    }))
 
-  /** @type {WeatherForecast} */
-  const forecast = {
-    dailyForecast,
-    hourlyForecast,
+    const dailyForecast = allWeathers
+      .filter((item) => item.time > 10 && item.time < 13)
+      .slice(1)
+
+    const officeHours = allWeathers.filter(
+      (item) => item.time > 6 && item.time < 20
+    )
+    const hourlyForecast = officeHours.slice(0, 4)
+
+    /** @type {WeatherForecast} */
+    const forecast = {
+      dailyForecast,
+      hourlyForecast,
+    }
+
+    // Report success to backend (fire and forget)
+    fetch('/api/diagnostics/api-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api: 'openWeatherMap', status: 'success' }),
+    }).catch(() => {})
+
+    return forecast
+  } catch (error) {
+    // Report error to backend (fire and forget)
+    fetch('/api/diagnostics/api-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        api: 'openWeatherMap',
+        status: 'error',
+        errorMessage: error.message || 'Unknown error',
+      }),
+    }).catch(() => {})
+    throw error
   }
-
-  return forecast
 }
 
 const fetchEnergyPrices = async () => {
@@ -136,6 +173,28 @@ const flushBuffer = async () => {
   return response.json()
 }
 
+/**
+ * Report external API status to backend
+ * @param {'openWeatherMap'} api - API name
+ * @param {'success' | 'error'} status - Status to report
+ * @param {string} [errorMessage] - Error message (required if status is 'error')
+ * @returns {Promise<{success: boolean}>}
+ */
+const reportApiStatus = async (api, status, errorMessage) => {
+  const response = await fetch('/api/diagnostics/api-status', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ api, status, errorMessage }),
+  })
+  if (!response.ok) {
+    // Silently fail - don't break the app if status reporting fails
+    return { success: false }
+  }
+  return response.json()
+}
+
 const apiService = {
   fetchRuuviData,
   fetchWeatherData,
@@ -145,6 +204,7 @@ const apiService = {
   fetchHistory,
   getDiagnostics,
   flushBuffer,
+  reportApiStatus,
 }
 
 export default apiService

@@ -574,4 +574,159 @@ describe('DiagnosticsScreen', () => {
       expect(apiService.flushBuffer).not.toHaveBeenCalled()
     })
   })
+
+  describe('External APIs Section', () => {
+    const diagnosticsWithExternalApis = {
+      ...mockDiagnostics,
+      externalApis: {
+        energyPrices: {
+          status: 'ok',
+          lastSuccess: Date.now() - 60000, // 1 minute ago
+          lastError: null,
+          errorMessage: null,
+        },
+        openWeatherMap: {
+          status: 'ok',
+          lastSuccess: Date.now() - 120000, // 2 minutes ago
+          lastError: null,
+          errorMessage: null,
+        },
+      },
+    }
+
+    it('should render external APIs section', async () => {
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithExternalApis)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/external apis/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should display energy prices API status as OK', async () => {
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithExternalApis)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/energy prices/i)).toBeInTheDocument()
+        // Should show OK chip in the External APIs section
+        expect(screen.getAllByText(/^OK$/i).length).toBeGreaterThanOrEqual(1)
+      })
+    })
+
+    it('should display OpenWeatherMap API status as OK', async () => {
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithExternalApis)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/openweathermap/i)).toBeInTheDocument()
+        // Should show OK chip in the External APIs section
+        expect(screen.getAllByText(/^OK$/i).length).toBeGreaterThanOrEqual(2)
+      })
+    })
+
+    it('should display last successful fetch timestamp for each API', async () => {
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithExternalApis)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        // Check that last success times are displayed
+        expect(
+          screen.getAllByText(/last success/i).length
+        ).toBeGreaterThanOrEqual(1)
+      })
+    })
+
+    it('should display error status with error message when API fails', async () => {
+      const diagnosticsWithError = {
+        ...mockDiagnostics,
+        externalApis: {
+          energyPrices: {
+            status: 'error',
+            lastSuccess: Date.now() - 3600000, // 1 hour ago
+            lastError: Date.now() - 60000, // 1 minute ago
+            errorMessage: 'Network timeout',
+          },
+          openWeatherMap: {
+            status: 'ok',
+            lastSuccess: Date.now() - 120000,
+            lastError: null,
+            errorMessage: null,
+          },
+        },
+      }
+
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithError)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/energy prices/i)).toBeInTheDocument()
+        expect(screen.getByText(/network timeout/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should display unknown status when API has not been called', async () => {
+      const diagnosticsWithUnknown = {
+        ...mockDiagnostics,
+        externalApis: {
+          energyPrices: {
+            status: 'unknown',
+            lastSuccess: null,
+            lastError: null,
+            errorMessage: null,
+          },
+          openWeatherMap: {
+            status: 'unknown',
+            lastSuccess: null,
+            lastError: null,
+            errorMessage: null,
+          },
+        },
+      }
+
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithUnknown)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        // Should show unknown status indicators
+        expect(screen.getAllByText(/unknown/i).length).toBeGreaterThanOrEqual(1)
+      })
+    })
+
+    it('should show status indicator with appropriate color', async () => {
+      const diagnosticsWithMixedStatus = {
+        ...mockDiagnostics,
+        externalApis: {
+          energyPrices: {
+            status: 'ok',
+            lastSuccess: Date.now(),
+            lastError: null,
+            errorMessage: null,
+          },
+          openWeatherMap: {
+            status: 'error',
+            lastSuccess: Date.now() - 3600000,
+            lastError: Date.now(),
+            errorMessage: 'Invalid API key',
+          },
+        },
+      }
+
+      apiService.getDiagnostics.mockResolvedValue(diagnosticsWithMixedStatus)
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/energy prices/i)).toBeInTheDocument()
+        expect(screen.getByText(/openweathermap/i)).toBeInTheDocument()
+        expect(screen.getByText(/invalid api key/i)).toBeInTheDocument()
+      })
+    })
+  })
 })

@@ -1,6 +1,7 @@
 const energyPricesFromApi = require('./energyPricesFromApi')
 const storage = require('../storage')
 const energyPricesService = require('./energyPrices')
+const externalApiStatus = require('./externalApiStatus')
 
 describe('energyPricesService', () => {
   describe('getEnergyPrices()', () => {
@@ -84,6 +85,80 @@ describe('energyPricesService', () => {
 
       // Assert
       expect(result).toMatchSnapshot()
+    })
+  })
+
+  describe('External API Status Integration', () => {
+    beforeAll(() => {
+      jest.useFakeTimers()
+    })
+
+    afterAll(() => {
+      jest.useRealTimers()
+    })
+
+    beforeEach(() => {
+      externalApiStatus.reset()
+    })
+
+    it('should record success status when API call succeeds', async () => {
+      // Arrange
+      jest.setSystemTime(new Date('2023-10-27T12:11:00'))
+      const apiResponseJson = `
+      [{
+        "Rank": 1,
+        "DateTime": "2023-10-27T00:00:00+03:00",
+        "PriceNoTax": 0.0342,
+        "PriceWithTax": 0.0424
+      }]`
+      jest.spyOn(storage, 'loadOrDefault').mockResolvedValue(undefined)
+      jest.spyOn(storage, 'save').mockImplementation(jest.fn)
+      jest
+        .spyOn(energyPricesFromApi, 'getEnergyPricesFromApi')
+        .mockResolvedValue(apiResponseJson)
+
+      // Act
+      await energyPricesService.getEnergyPrices(undefined)
+
+      // Assert
+      const status = externalApiStatus.getStatus()
+      expect(status.energyPrices.status).toBe('ok')
+      expect(status.energyPrices.lastSuccess).not.toBeNull()
+    })
+
+    it('should record error status when API call fails', async () => {
+      // Arrange
+      jest.setSystemTime(new Date('2023-10-27T12:11:00'))
+      jest.spyOn(storage, 'loadOrDefault').mockResolvedValue(undefined)
+      jest
+        .spyOn(energyPricesFromApi, 'getEnergyPricesFromApi')
+        .mockResolvedValue(undefined)
+
+      // Act
+      await energyPricesService.getEnergyPrices(undefined)
+
+      // Assert
+      const status = externalApiStatus.getStatus()
+      expect(status.energyPrices.status).toBe('error')
+      expect(status.energyPrices.lastError).not.toBeNull()
+      expect(status.energyPrices.errorMessage).toBeTruthy()
+    })
+
+    it('should record error status when JSON parsing fails', async () => {
+      // Arrange
+      jest.setSystemTime(new Date('2023-10-27T12:11:00'))
+      jest.spyOn(storage, 'loadOrDefault').mockResolvedValue(undefined)
+      jest
+        .spyOn(energyPricesFromApi, 'getEnergyPricesFromApi')
+        .mockResolvedValue('invalid json')
+
+      // Act
+      await energyPricesService.getEnergyPrices(undefined)
+
+      // Assert
+      const status = externalApiStatus.getStatus()
+      expect(status.energyPrices.status).toBe('error')
+      expect(status.energyPrices.errorMessage).toBeTruthy()
     })
   })
 })

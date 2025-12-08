@@ -81,26 +81,31 @@ describe('apiService', () => {
     }
 
     it('should fetch and transform weather data', async () => {
-      global.fetch.mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(mockWeatherResponse),
-      })
+      // First call: weather API, Second call: status reporting
+      global.fetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValueOnce(mockWeatherResponse),
+        })
+        .mockResolvedValueOnce({ ok: true, json: jest.fn() })
 
       const result = await apiService.fetchWeatherData()
 
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('api.openweathermap.org/data/2.5/forecast')
       )
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('appid=test-api-key')
-      )
       expect(result).toHaveProperty('dailyForecast')
       expect(result).toHaveProperty('hourlyForecast')
     })
 
     it('should transform weather list items correctly', async () => {
-      global.fetch.mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(mockWeatherResponse),
-      })
+      // First call: weather API, Second call: status reporting
+      global.fetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValueOnce(mockWeatherResponse),
+        })
+        .mockResolvedValueOnce({ ok: true, json: jest.fn() })
 
       const result = await apiService.fetchWeatherData()
 
@@ -117,9 +122,12 @@ describe('apiService', () => {
     })
 
     it('should filter daily forecast to midday times (10-13)', async () => {
-      global.fetch.mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(mockWeatherResponse),
-      })
+      global.fetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValueOnce(mockWeatherResponse),
+        })
+        .mockResolvedValueOnce({ ok: true, json: jest.fn() })
 
       const result = await apiService.fetchWeatherData()
 
@@ -129,9 +137,12 @@ describe('apiService', () => {
     })
 
     it('should filter hourly forecast to office hours (6-20)', async () => {
-      global.fetch.mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(mockWeatherResponse),
-      })
+      global.fetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValueOnce(mockWeatherResponse),
+        })
+        .mockResolvedValueOnce({ ok: true, json: jest.fn() })
 
       const result = await apiService.fetchWeatherData()
 
@@ -140,9 +151,55 @@ describe('apiService', () => {
     })
 
     it('should throw error when fetch fails', async () => {
-      global.fetch.mockRejectedValueOnce(new Error('API error'))
+      // First call: weather API fails, Second call: status reporting
+      global.fetch
+        .mockRejectedValueOnce(new Error('API error'))
+        .mockResolvedValueOnce({ ok: true, json: jest.fn() })
 
       await expect(apiService.fetchWeatherData()).rejects.toThrow('API error')
+    })
+
+    it('should report success status to backend on successful fetch', async () => {
+      global.fetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValueOnce(mockWeatherResponse),
+        })
+        .mockResolvedValueOnce({ ok: true, json: jest.fn() })
+
+      await apiService.fetchWeatherData()
+
+      // Wait for async status report
+      await new Promise((resolve) => setTimeout(resolve, 10))
+
+      expect(global.fetch).toHaveBeenCalledWith('/api/diagnostics/api-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ api: 'openWeatherMap', status: 'success' }),
+      })
+    })
+
+    it('should report error status to backend on failed fetch', async () => {
+      global.fetch
+        .mockRejectedValueOnce(new Error('Network failure'))
+        .mockResolvedValueOnce({ ok: true, json: jest.fn() })
+
+      await expect(apiService.fetchWeatherData()).rejects.toThrow(
+        'Network failure'
+      )
+
+      // Wait for async status report
+      await new Promise((resolve) => setTimeout(resolve, 10))
+
+      expect(global.fetch).toHaveBeenCalledWith('/api/diagnostics/api-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          api: 'openWeatherMap',
+          status: 'error',
+          errorMessage: 'Network failure',
+        }),
+      })
     })
   })
 

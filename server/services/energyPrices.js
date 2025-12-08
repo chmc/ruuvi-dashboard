@@ -3,6 +3,7 @@
 const energypricesFromApi = require('./energyPricesFromApi')
 const storage = require('../storage')
 const dateUtils = require('../utils/date')
+const externalApiStatus = require('./externalApiStatus')
 
 /**
  * @param   {EnergyPrices} energyPrices
@@ -63,6 +64,9 @@ const getEnergyPrices = async (energyPrices) => {
       }
       await storage.save(updatedAppStorage)
 
+      // Record successful API call
+      externalApiStatus.recordSuccess('energyPrices')
+
       return {
         updatedAt: updatedAppStorage.todayEnergyPrices.updatedAt,
         todayEnergyPrices: updatedAppStorage.todayEnergyPrices,
@@ -71,6 +75,10 @@ const getEnergyPrices = async (energyPrices) => {
     }
 
     console.log('Use energy prices from cache')
+
+    // Record success since we have valid cached data (API worked previously)
+    externalApiStatus.recordSuccess('energyPrices')
+
     return {
       updatedAt: energyPrices.todayEnergyPrices.updatedAt,
       todayEnergyPrices: energyPrices.todayEnergyPrices,
@@ -78,6 +86,11 @@ const getEnergyPrices = async (energyPrices) => {
     }
   } catch (error) {
     console.error('getEnergyPrices: ', error)
+    // Record API error
+    externalApiStatus.recordError(
+      'energyPrices',
+      error.message || 'Unknown error'
+    )
     return undefined
   }
 }
