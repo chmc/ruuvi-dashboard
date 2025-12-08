@@ -85,7 +85,7 @@ const formatXAxis = (timestamp, timeRange) => {
  * @param {string[]} [props.selectedMetrics] - Array of metric keys to display (default: ['temperature'])
  * @param {string} [props.color] - Line color for legacy mode (default: MUI primary blue)
  * @param {number|string} [props.width] - Chart width in pixels or '100%' (default: 100)
- * @param {number} [props.height] - Chart height in pixels (default: 80)
+ * @param {number|string} [props.height] - Chart height in pixels or '100%' (default: 80)
  * @param {boolean} [props.showValue] - Whether to display current value (legacy mode)
  * @param {string} [props.unit] - Unit suffix for value display (legacy mode)
  * @param {number} [props.decimals] - Number of decimal places for value (default: 1)
@@ -167,6 +167,8 @@ const Sparkline = ({
 
   // Handle width as either number (pixels) or string ('100%')
   const widthStyle = typeof width === 'number' ? `${width}px` : width
+  // Handle height as either number (pixels) or string ('100%')
+  const heightStyle = typeof height === 'number' ? `${height}px` : height
 
   /**
    * Get evenly distributed X-axis ticks based on time range
@@ -210,10 +212,15 @@ const Sparkline = ({
   }
 
   return (
-    <Box display="flex" alignItems="center" gap={1}>
+    <Box
+      display="flex"
+      alignItems="center"
+      gap={1}
+      sx={{ height: heightStyle === '100%' ? '100%' : 'auto' }}
+    >
       <Box
         data-testid="sparkline-wrapper"
-        sx={{ width: widthStyle, height: `${height}px` }}
+        sx={{ width: widthStyle, height: heightStyle, flex: 1 }}
       >
         <ResponsiveContainer width="100%" height="100%">
           <LineChart

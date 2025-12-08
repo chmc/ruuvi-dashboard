@@ -88,6 +88,22 @@ describe('HistoryScreen', () => {
       ).toBeInTheDocument()
     })
 
+    it('should use full viewport height for the container', async () => {
+      render(<HistoryScreen />)
+      await waitForLoadingComplete()
+
+      const container = screen.getByTestId('history-screen-container')
+      expect(container).toHaveStyle({ height: '100vh' })
+    })
+
+    it('should have sensor rows container that grows to fill space', async () => {
+      render(<HistoryScreen />)
+      await waitForLoadingComplete()
+
+      const sensorContainer = screen.getByTestId('sensor-rows-container')
+      expect(sensorContainer).toHaveStyle({ flex: '1' })
+    })
+
     it('should render time range buttons', async () => {
       render(<HistoryScreen />)
       await waitForLoadingComplete()

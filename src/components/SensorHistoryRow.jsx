@@ -31,6 +31,7 @@ const METRICS = {
  * @param {(mac: string) => void} [props.onSelect] - Callback when row is clicked
  * @param {boolean} [props.selected] - Whether this row is selected
  * @param {string} [props.timeRange] - Time range for X-axis formatting
+ * @param {number} [props.sensorCount] - Total number of sensors (for dynamic height)
  * @returns {JSX.Element}
  */
 const SensorHistoryRow = ({
@@ -41,6 +42,7 @@ const SensorHistoryRow = ({
   onSelect,
   selected = false,
   timeRange = '24h',
+  sensorCount = 1,
 }) => {
   /**
    * Handle row click
@@ -82,13 +84,15 @@ const SensorHistoryRow = ({
       data-selected={selected}
       aria-label={`${name} sensor history`}
       sx={{
+        flex: 1,
         width: '100%',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        py: 1,
+        py: 0.5,
         px: 1.5,
         borderRadius: 1,
+        minHeight: 0,
         backgroundColor: selected ? 'rgba(34, 139, 34, 0.15)' : 'transparent',
         '&:hover': {
           backgroundColor: selected
@@ -111,12 +115,12 @@ const SensorHistoryRow = ({
       </Typography>
 
       {/* Sparkline */}
-      <Box sx={{ flex: 1, mx: 2, minWidth: 0 }}>
+      <Box sx={{ flex: 1, mx: 2, minWidth: 0, height: '100%' }}>
         <Sparkline
           historyData={historyData}
           selectedMetrics={selectedMetrics}
           width="100%"
-          height={100}
+          height="100%"
           timeRange={timeRange}
           showAxes
         />

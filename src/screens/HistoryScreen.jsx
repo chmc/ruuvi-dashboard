@@ -144,8 +144,22 @@ const HistoryScreen = () => {
 
   const selectedSensorConfig = getSelectedSensorConfig()
 
+  // Calculate dynamic row height based on number of sensors
+  const sensorCount = configs.ruuviTags.length
+
   return (
-    <Box px={2} pt={2} pb={0}>
+    <Box
+      data-testid="history-screen-container"
+      sx={{
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        px: 2,
+        pt: 2,
+        pb: 0,
+        boxSizing: 'border-box',
+      }}
+    >
       <Typography variant="h4" component="h1" gutterBottom>
         History
       </Typography>
@@ -217,9 +231,17 @@ const HistoryScreen = () => {
         </Alert>
       )}
 
-      {/* Sensor List */}
+      {/* Sensor List - grows to fill available space */}
       {!loading && !error && (
-        <Box>
+        <Box
+          data-testid="sensor-rows-container"
+          sx={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: 0,
+          }}
+        >
           {/* Header row with column labels */}
           <Box
             display="flex"
@@ -243,18 +265,29 @@ const HistoryScreen = () => {
               Current
             </Typography>
           </Box>
-          {configs.ruuviTags.map((sensor) => (
-            <SensorHistoryRow
-              key={sensor.mac}
-              name={sensor.name}
-              mac={sensor.mac}
-              historyData={historyData[sensor.mac]}
-              selectedMetrics={selectedMetrics}
-              onSelect={handleSensorSelect}
-              selected={selectedSensor === sensor.mac}
-              timeRange={selectedRange}
-            />
-          ))}
+          {/* Sensor rows container - fills remaining space */}
+          <Box
+            sx={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 0,
+            }}
+          >
+            {configs.ruuviTags.map((sensor) => (
+              <SensorHistoryRow
+                key={sensor.mac}
+                name={sensor.name}
+                mac={sensor.mac}
+                historyData={historyData[sensor.mac]}
+                selectedMetrics={selectedMetrics}
+                onSelect={handleSensorSelect}
+                selected={selectedSensor === sensor.mac}
+                timeRange={selectedRange}
+                sensorCount={sensorCount}
+              />
+            ))}
+          </Box>
         </Box>
       )}
 
