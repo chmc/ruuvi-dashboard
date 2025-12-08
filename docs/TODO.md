@@ -648,7 +648,7 @@ Add per-sensor health metrics to diagnostics.
 
 ---
 
-### Task 9.2: Add System Resource Monitoring
+### Task 9.2: Add System Resource Monitoring ✅ Completed
 
 Display system resource usage.
 

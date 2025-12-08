@@ -19,6 +19,13 @@ import configs from '../configs'
 import formatters from '../utils/formatters'
 
 /**
+ * @typedef {Object} SystemResources
+ * @property {{heapUsed: number, heapTotal: number, rss: number, external: number}} memory - Memory usage
+ * @property {string} nodeVersion - Node.js version
+ * @property {{free: number, total: number}} disk - Disk space
+ */
+
+/**
  * @typedef {Object} DiagnosticsData
  * @property {number} bufferSize - Number of readings in buffer
  * @property {number | null} lastFlushTime - Timestamp of last flush
@@ -27,6 +34,7 @@ import formatters from '../utils/formatters'
  * @property {number} dbSize - Database size in bytes
  * @property {number | null} oldestRecord - Timestamp of oldest record
  * @property {number} uptime - Server uptime in milliseconds
+ * @property {SystemResources} systemResources - System resource information
  */
 
 /**
@@ -328,6 +336,47 @@ const DiagnosticsScreen = () => {
                   <Typography variant="body1">
                     {diagnostics?.uptime
                       ? formatUptime(diagnostics.uptime)
+                      : 'N/A'}
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* System Resources Section */}
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent>
+              <Typography variant="h6" component="h2" gutterBottom>
+                System Resources
+              </Typography>
+              <Box display="flex" flexDirection="column" gap={1} mt={1}>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Node.js:
+                  </Typography>
+                  <Typography variant="body1">
+                    {diagnostics?.systemResources?.nodeVersion ?? 'N/A'}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Heap Memory:
+                  </Typography>
+                  <Typography variant="body1">
+                    {diagnostics?.systemResources?.memory
+                      ? `${formatBytes(diagnostics.systemResources.memory.heapUsed)} / ${formatBytes(diagnostics.systemResources.memory.heapTotal)}`
+                      : 'N/A'}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Disk Space:
+                  </Typography>
+                  <Typography variant="body1">
+                    {diagnostics?.systemResources?.disk?.free != null
+                      ? `${formatBytes(diagnostics.systemResources.disk.free)} free`
                       : 'N/A'}
                   </Typography>
                 </Box>

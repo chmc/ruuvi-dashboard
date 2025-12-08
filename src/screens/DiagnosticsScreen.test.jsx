@@ -281,6 +281,110 @@ describe('DiagnosticsScreen', () => {
     })
   })
 
+  describe('System Resources', () => {
+    const diagnosticsWithSystemResources = {
+      ...mockDiagnostics,
+      systemResources: {
+        memory: {
+          heapUsed: 50 * 1024 * 1024, // 50 MB
+          heapTotal: 100 * 1024 * 1024, // 100 MB
+          rss: 150 * 1024 * 1024, // 150 MB
+          external: 5 * 1024 * 1024, // 5 MB
+        },
+        nodeVersion: 'v20.10.0',
+        disk: {
+          free: 10 * 1024 * 1024 * 1024, // 10 GB
+          total: 100 * 1024 * 1024 * 1024, // 100 GB
+        },
+      },
+    }
+
+    beforeEach(() => {
+      apiService.getDiagnostics.mockResolvedValue(
+        diagnosticsWithSystemResources
+      )
+    })
+
+    it('should render system resources section', async () => {
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/system resources/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should display memory usage (heap used/total)', async () => {
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/heap memory/i)).toBeInTheDocument()
+        expect(screen.getByText(/50.*MB.*\/.*100.*MB/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should display Node.js version', async () => {
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/node\.js/i)).toBeInTheDocument()
+        expect(screen.getByText(/v20\.10\.0/)).toBeInTheDocument()
+      })
+    })
+
+    it('should display disk space remaining', async () => {
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/disk space/i)).toBeInTheDocument()
+        expect(screen.getByText(/10.*GB.*free/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should refresh values on diagnostics reload', async () => {
+      const user = userEvent.setup()
+      apiService.flushBuffer.mockResolvedValueOnce({
+        success: true,
+        flushedCount: 25,
+        message: 'Buffer flushed successfully',
+      })
+
+      const updatedDiagnostics = {
+        ...diagnosticsWithSystemResources,
+        systemResources: {
+          ...diagnosticsWithSystemResources.systemResources,
+          memory: {
+            ...diagnosticsWithSystemResources.systemResources.memory,
+            heapUsed: 60 * 1024 * 1024, // Changed to 60 MB
+          },
+        },
+      }
+
+      // First call returns original, second returns updated
+      apiService.getDiagnostics
+        .mockResolvedValueOnce(diagnosticsWithSystemResources)
+        .mockResolvedValueOnce(updatedDiagnostics)
+
+      render(<DiagnosticsScreen />)
+
+      // Wait for initial render
+      await waitFor(() => {
+        expect(screen.getByText(/50.*MB.*\/.*100.*MB/i)).toBeInTheDocument()
+      })
+
+      // Trigger flush which causes refresh
+      const flushButton = screen.getByRole('button', { name: /flush buffer/i })
+      await user.click(flushButton)
+
+      const confirmButton = screen.getByRole('button', { name: /confirm/i })
+      await user.click(confirmButton)
+
+      // Wait for updated values
+      await waitFor(() => {
+        expect(screen.getByText(/60.*MB.*\/.*100.*MB/i)).toBeInTheDocument()
+      })
+    })
+  })
+
   describe('Flush Button', () => {
     it('should render flush button', async () => {
       render(<DiagnosticsScreen />)

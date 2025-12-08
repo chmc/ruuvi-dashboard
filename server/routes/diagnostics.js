@@ -4,6 +4,7 @@
  * Provides endpoints for system diagnostics and manual buffer flush.
  */
 const express = require('express')
+const fs = require('fs')
 const historyDb = require('../services/history/historyDb')
 const historyBuffer = require('../services/history/historyBuffer')
 const flushScheduler = require('../services/history/flushScheduler')
@@ -142,6 +143,54 @@ const getSensorHealth = (macs) => {
 }
 
 /**
+ * Get disk space information for the root filesystem
+ * @returns {{free: number, total: number}}
+ */
+const getDiskSpace = () => {
+  try {
+    // Use statfs (async version) synchronously is not available
+    // Use fs.statfsSync which is available in Node.js 18.15.0+
+    if (typeof fs.statfsSync === 'function') {
+      const stats = fs.statfsSync('/')
+      return {
+        free: stats.bfree * stats.bsize,
+        total: stats.blocks * stats.bsize,
+      }
+    }
+    // Fallback for older Node.js versions
+    return {
+      free: 0,
+      total: 0,
+    }
+  } catch {
+    return {
+      free: 0,
+      total: 0,
+    }
+  }
+}
+
+/**
+ * Get system resource information
+ * @returns {{memory: {heapUsed: number, heapTotal: number, rss: number, external: number}, nodeVersion: string, disk: {free: number, total: number}}}
+ */
+const getSystemResources = () => {
+  const memoryUsage = process.memoryUsage()
+  const diskSpace = getDiskSpace()
+
+  return {
+    memory: {
+      heapUsed: memoryUsage.heapUsed,
+      heapTotal: memoryUsage.heapTotal,
+      rss: memoryUsage.rss,
+      external: memoryUsage.external,
+    },
+    nodeVersion: process.version,
+    disk: diskSpace,
+  }
+}
+
+/**
  * Get battery levels for all configured sensors
  * Checks both database and in-memory buffer for the most recent data
  * @param {string[]} macs - MAC addresses to check
@@ -205,7 +254,8 @@ const getBatteryLevels = (macs) => {
  *   sensorHealth: Array<{mac, lastSeen, rssi, status}>,
  *   dbSize: number,
  *   oldestRecord: number | null,
- *   uptime: number
+ *   uptime: number,
+ *   systemResources: {memory: {heapUsed, heapTotal, rss, external}, nodeVersion, disk: {free, total}}
  * }
  */
 router.get('/diagnostics', (req, res) => {
@@ -221,6 +271,7 @@ router.get('/diagnostics', (req, res) => {
       dbSize: getDbSize(),
       oldestRecord: getOldestRecord(),
       uptime: Date.now() - serverStartTime,
+      systemResources: getSystemResources(),
     }
 
     return res.json(diagnostics)

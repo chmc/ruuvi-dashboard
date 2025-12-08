@@ -378,6 +378,70 @@ describe('Diagnostics API Endpoint', () => {
     })
   })
 
+  describe('System Resources', () => {
+    it('should include memory usage (heap used/total)', async () => {
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.systemResources).toBeDefined()
+      expect(response.body.systemResources.memory).toBeDefined()
+      expect(response.body.systemResources.memory.heapUsed).toEqual(
+        expect.any(Number)
+      )
+      expect(response.body.systemResources.memory.heapTotal).toEqual(
+        expect.any(Number)
+      )
+      expect(response.body.systemResources.memory.heapUsed).toBeGreaterThan(0)
+      expect(response.body.systemResources.memory.heapTotal).toBeGreaterThan(0)
+    })
+
+    it('should include Node.js version', async () => {
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.systemResources).toBeDefined()
+      expect(response.body.systemResources.nodeVersion).toBeDefined()
+      expect(response.body.systemResources.nodeVersion).toMatch(
+        /^v?\d+\.\d+\.\d+/
+      )
+    })
+
+    it('should include disk space remaining', async () => {
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.systemResources).toBeDefined()
+      expect(response.body.systemResources.disk).toBeDefined()
+      expect(response.body.systemResources.disk.free).toEqual(
+        expect.any(Number)
+      )
+      expect(response.body.systemResources.disk.total).toEqual(
+        expect.any(Number)
+      )
+      expect(response.body.systemResources.disk.free).toBeGreaterThanOrEqual(0)
+      expect(response.body.systemResources.disk.total).toBeGreaterThan(0)
+    })
+
+    it('should include RSS memory', async () => {
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.systemResources.memory.rss).toEqual(
+        expect.any(Number)
+      )
+      expect(response.body.systemResources.memory.rss).toBeGreaterThan(0)
+    })
+
+    it('should include external memory', async () => {
+      const response = await request(app).get('/api/diagnostics')
+
+      expect(response.status).toBe(200)
+      expect(response.body.systemResources.memory.external).toEqual(
+        expect.any(Number)
+      )
+    })
+  })
+
   describe('POST /api/diagnostics/flush', () => {
     it('should trigger immediate flush', async () => {
       flushScheduler.forceFlush.mockReturnValue({ flushedCount: 25 })
