@@ -10,9 +10,80 @@ Key points:
 - Sunrise / sunset
 - Energy prices today and tomorrow
 - Beautiful layout
-- No database requirement
+- **History tracking** with SQLite database
+- **Trend indicators** on dashboard cards
+- **Diagnostics screen** for system monitoring
 
 ![Ruuvi dashboard UI](assets/ruuvi-dashboard.png)
+
+## Features
+
+### History Tracking
+
+The dashboard stores sensor readings in a SQLite database, allowing you to view historical data:
+
+- **Time ranges**: 1 hour, 6 hours, 24 hours, 7 days, 30 days, or all data
+- **Interactive charts**: View temperature, humidity, and pressure over time
+- **Sparkline previews**: Quick visual overview for each sensor
+- **Multi-metric display**: Compare multiple metrics simultaneously
+
+Access the History screen via the floating navigation button (Speed Dial) in the bottom-right corner.
+
+### Trend Indicators
+
+Dashboard cards display trend arrows showing whether readings are rising, falling, or stable:
+
+- ↑ Rising (green)
+- ↗ Rising slightly
+- → Stable (gray)
+- ↘ Falling slightly
+- ↓ Falling (red)
+
+Trends are calculated by comparing current readings to values from 30 minutes ago.
+
+### Diagnostics Screen
+
+Monitor system health and manage data storage:
+
+- **Buffer Status**: View buffered readings count and last flush time
+- **Battery Levels**: Monitor RuuviTag battery voltages with color-coded indicators
+- **System Info**: Database size, oldest record, server uptime
+- **Manual Flush**: Force buffer flush to database on demand
+
+### Data Retention Policy
+
+To optimize storage (especially on SD cards), older data is automatically downsampled:
+
+| Age | Resolution |
+|-----|------------|
+| < 24 hours | 1-minute intervals (raw data) |
+| 24h - 7 days | 5-minute averages |
+| > 7 days | Hourly averages |
+
+Aggregation preserves average temperature, humidity, pressure, and minimum battery voltage.
+
+### SD Card Protection (Advanced)
+
+For Raspberry Pi deployments, sensor readings are buffered in memory and flushed to SQLite every 15 minutes by default. This reduces SD card writes and extends card lifespan.
+
+**Optional tmpfs buffer**: For additional protection, you can enable RAM-based buffer persistence that survives service restarts (but not reboots):
+
+1. Create a tmpfs mount point:
+   ```bash
+   sudo mkdir -p /var/ruuvi-buffer
+   sudo mount -t tmpfs -o size=10M tmpfs /var/ruuvi-buffer
+   ```
+
+2. Add to `/etc/fstab` for persistence across reboots:
+   ```
+   tmpfs /var/ruuvi-buffer tmpfs size=10M,mode=755 0 0
+   ```
+
+3. Enable in your `.env` file:
+   ```bash
+   RUUVI_USE_TMPFS_BUFFER=true
+   RUUVI_TMPFS_PATH=/var/ruuvi-buffer
+   ```
 
 Inspired of this article
 https://teuvovaisanen.fi/2019/09/09/ruuvitag-raspberry-pi-ja-telegram-bot/
@@ -30,29 +101,29 @@ Note to my self: Ruuvi
 
 # Roadmap
 
-#### Codebase
+#### Completed
 
-- Add tests to code `(in progress)`
-- System wide JSDoc typing `(in progress)`
-- Refactor code `(in progress)`
+- ✅ Outdoor temperature trend indicators
+- ✅ Ruuvi battery level indicator (Diagnostics screen)
+- ✅ System monitor (Diagnostics screen)
+- ✅ Historical data storage and visualization
+- ✅ Data retention with automatic aggregation
+- ✅ Systemd service with graceful shutdown
+
+#### In Progress
+
+- Add tests to code
+- System wide JSDoc typing
+- Refactor code
+
+#### Future
+
 - Apply web socket instead of API polling
-
-#### UX
-
-- Refine and polish overall UI, add more icons etc
+- Refine and polish overall UI
 - Visualize current hour energy price
 - Today hourly weather forecast
-- Outdoor temperature trend, rise/lower/stay same
-- System monitor: Raspberry pi temp (safe under +70c), memory %, cpu %
-- Integrate with Philips Hue
-- Ruuvi battery level indicator
-- Mobile friendly UI, now it works best on pad size
-
-#### System
-
 - PWA support
-- Automated log rotation for systemd journal
-- Remote deployment improvements
+- Mobile friendly UI
 
 # Quick Start for Raspberry Pi
 
