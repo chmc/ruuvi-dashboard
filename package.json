@@ -79,6 +79,7 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
+      "@abandonware/bluetooth-hci-socket",
       "@abandonware/noble",
       "better-sqlite3",
       "esbuild"

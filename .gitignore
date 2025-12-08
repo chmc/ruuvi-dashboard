@@ -454,3 +454,6 @@ coordination/
 
 # Temporary prompt / log files
 hive-mind-prompt-*.txt
+
+# Local Node.js version tracking (used by deploy script for native module rebuilds)
+.node-version-installed

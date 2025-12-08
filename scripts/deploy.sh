@@ -76,6 +76,19 @@ fi
 
 print_success "Using Node.js $(node -v)"
 
+# Track current Node.js version for native module rebuild detection
+NODE_VERSION_FILE=".node-version-installed"
+CURRENT_NODE_VERSION=$(node -v)
+REBUILD_NATIVE_MODULES=false
+
+if [[ -f "$NODE_VERSION_FILE" ]]; then
+    PREVIOUS_NODE_VERSION=$(cat "$NODE_VERSION_FILE")
+    if [[ "$PREVIOUS_NODE_VERSION" != "$CURRENT_NODE_VERSION" ]]; then
+        print_warning "Node.js version changed: $PREVIOUS_NODE_VERSION -> $CURRENT_NODE_VERSION"
+        REBUILD_NATIVE_MODULES=true
+    fi
+fi
+
 # Step 1: Pull latest code
 print_step "Pulling latest code from git..."
 git pull origin main
@@ -85,6 +98,27 @@ print_success "Code updated"
 print_step "Installing dependencies..."
 pnpm install
 print_success "Dependencies installed"
+
+# Step 2b: Rebuild native modules if Node.js version changed
+if [[ "$REBUILD_NATIVE_MODULES" == "true" ]]; then
+    print_step "Rebuilding native modules for new Node.js version..."
+
+    # Force rebuild by removing and reinstalling native module packages
+    rm -rf node_modules/.pnpm/@abandonware+bluetooth-hci-socket* 2>/dev/null || true
+    rm -rf node_modules/.pnpm/better-sqlite3* 2>/dev/null || true
+    pnpm install
+
+    print_success "Native modules rebuilt"
+
+    # Re-grant BLE permissions to Node.js after rebuild
+    print_step "Re-granting BLE permissions to Node.js..."
+    NODE_PATH=$(which node)
+    sudo setcap cap_net_raw+eip "$NODE_PATH" 2>/dev/null || print_warning "Could not set BLE capabilities"
+    print_success "BLE permissions granted"
+fi
+
+# Save current Node.js version for future comparison
+echo "$CURRENT_NODE_VERSION" > "$NODE_VERSION_FILE"
 
 # Step 3: Build frontend for production
 print_step "Building React frontend..."
@@ -146,6 +180,12 @@ if systemctl is-enabled ruuvi-dashboard &>/dev/null; then
         sudo systemctl daemon-reload
         print_success "Daemon reloaded"
     fi
+
+    # Ensure BLE permissions are set on Node.js binary
+    # This is needed after Node.js updates or reinstalls
+    print_step "Ensuring BLE permissions for Node.js..."
+    sudo setcap cap_net_raw+eip "$NODE_PATH" 2>/dev/null || print_warning "Could not set BLE capabilities"
+    print_success "BLE permissions verified"
 
     # Restart service (graceful - SIGTERM allows data flush)
     print_step "Restarting service..."
