@@ -22,7 +22,7 @@ jest.mock('../services/api', () => ({
  */
 const waitForLoadingComplete = async () => {
   await waitFor(() => {
-    expect(screen.queryByTestId('loading-indicator')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('loading-overlay')).not.toBeInTheDocument()
   })
 }
 
@@ -243,14 +243,14 @@ describe('HistoryScreen', () => {
 
       render(<HistoryScreen />)
 
-      expect(screen.getByTestId('loading-indicator')).toBeInTheDocument()
+      expect(screen.getByTestId('loading-overlay')).toBeInTheDocument()
     })
 
     it('should hide loading state after data loads', async () => {
       render(<HistoryScreen />)
       await waitForLoadingComplete()
 
-      expect(screen.queryByTestId('loading-indicator')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('loading-overlay')).not.toBeInTheDocument()
     })
   })
 
@@ -261,7 +261,7 @@ describe('HistoryScreen', () => {
       render(<HistoryScreen />)
 
       await waitFor(() => {
-        expect(screen.getByTestId('error-message')).toBeInTheDocument()
+        expect(screen.getByTestId('error-alert')).toBeInTheDocument()
       })
     })
 

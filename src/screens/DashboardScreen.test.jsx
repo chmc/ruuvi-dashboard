@@ -74,6 +74,26 @@ jest.mock('../services/api', () => ({
   fetchTrends: jest.fn(),
 }))
 
+// Mock LoadingOverlay component
+jest.mock(
+  '../components/LoadingOverlay',
+  () =>
+    function MockLoadingOverlay({ loading }) {
+      return loading ? (
+        <div data-testid="loading-overlay">Loading...</div>
+      ) : null
+    }
+)
+
+// Mock ErrorAlert component
+jest.mock(
+  '../components/ErrorAlert',
+  () =>
+    function MockErrorAlert({ error }) {
+      return error ? <div data-testid="error-alert">{error}</div> : null
+    }
+)
+
 describe('DashboardScreen', () => {
   beforeEach(() => {
     jest.useFakeTimers()
@@ -282,6 +302,20 @@ describe('DashboardScreen', () => {
     consoleSpy.mockRestore()
   })
 
+  it('should display error alert when ruuvi data fetch fails', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {})
+    apiService.fetchRuuviData.mockRejectedValue(new Error('Network error'))
+
+    await act(async () => {
+      render(<DashboardScreen />)
+    })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('error-alert')).toBeInTheDocument()
+      expect(screen.getByText('Failed to load sensor data')).toBeInTheDocument()
+    })
+  })
+
   it('should handle weather data fetch error gracefully', async () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
     apiService.fetchWeatherData.mockRejectedValue(new Error('API error'))
@@ -407,5 +441,46 @@ describe('DashboardScreen', () => {
     })
 
     consoleSpy.mockRestore()
+  })
+
+  it('should show loading overlay during initial data fetch', async () => {
+    // Keep promises pending to verify loading state
+    let resolveRuuvi
+    apiService.fetchRuuviData.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveRuuvi = resolve
+        })
+    )
+
+    await act(async () => {
+      render(<DashboardScreen />)
+    })
+
+    // Should show loading overlay
+    expect(screen.getByTestId('loading-overlay')).toBeInTheDocument()
+
+    // Resolve all promises
+    await act(async () => {
+      resolveRuuvi({
+        mac1: { temperature: 22.5, humidity: 45, pressure: 1013 },
+        mac2: { temperature: 15.0, humidity: 60, pressure: 1010 },
+      })
+    })
+
+    // After data loads, loading overlay should be hidden
+    await waitFor(() => {
+      expect(screen.queryByTestId('loading-overlay')).not.toBeInTheDocument()
+    })
+  })
+
+  it('should hide loading overlay after data fetch completes', async () => {
+    await act(async () => {
+      render(<DashboardScreen />)
+    })
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('loading-overlay')).not.toBeInTheDocument()
+    })
   })
 })

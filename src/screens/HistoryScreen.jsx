@@ -6,15 +6,14 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
 import FormGroup from '@mui/material/FormGroup'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import Checkbox from '@mui/material/Checkbox'
-import CircularProgress from '@mui/material/CircularProgress'
-import Alert from '@mui/material/Alert'
 import configs from '../configs'
 import apiService from '../services/api'
 import SensorHistoryRow from '../components/SensorHistoryRow'
 import DetailChart from '../components/DetailChart'
+import LoadingOverlay from '../components/LoadingOverlay'
+import ErrorAlert from '../components/ErrorAlert'
 import { METRICS } from '../constants/metrics'
 import { TIME_RANGES, DEFAULT_TIME_RANGE } from '../constants/timeRanges'
-import { SENSOR_COLORS } from '../constants/colors'
 
 /**
  * History screen - displays historical sensor data with charts
@@ -178,23 +177,10 @@ const HistoryScreen = () => {
       </Box>
 
       {/* Loading State */}
-      {loading && (
-        <Box
-          data-testid="loading-indicator"
-          display="flex"
-          justifyContent="center"
-          py={4}
-        >
-          <CircularProgress />
-        </Box>
-      )}
+      <LoadingOverlay loading={loading} />
 
       {/* Error State */}
-      {error && (
-        <Alert data-testid="error-message" severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+      <ErrorAlert error={error} />
 
       {/* Sensor List - grows to fill available space */}
       {!loading && !error && (

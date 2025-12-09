@@ -102,44 +102,48 @@
 
 ---
 
-### 5. Standardize Loading States
+### 5. Standardize Loading States [COMPLETED]
 
 **Problem:** Inconsistent loading UI across screens
 
 **Tasks:**
-- [ ] Create `src/components/LoadingOverlay.jsx` component
-- [ ] Add tests for LoadingOverlay
-- [ ] Apply to `DashboardScreen.jsx` (currently has none)
-- [ ] Apply to `HistoryScreen.jsx` (replace inline CircularProgress)
-- [ ] Apply to `DiagnosticsScreen.jsx` (replace inline CircularProgress)
-- [ ] Update screen tests
+- [x] Create `src/components/LoadingOverlay.jsx` component
+- [x] Add tests for LoadingOverlay
+- [x] Apply to `DashboardScreen.jsx` (currently has none)
+- [x] Apply to `HistoryScreen.jsx` (replace inline CircularProgress)
+- [x] Apply to `DiagnosticsScreen.jsx` (replace inline CircularProgress)
+- [x] Update screen tests
 
-**Files to modify:**
+**Files modified:**
 - `src/components/LoadingOverlay.jsx` (new)
 - `src/components/LoadingOverlay.test.jsx` (new)
 - `src/screens/DashboardScreen.jsx`
+- `src/screens/DashboardScreen.test.jsx`
 - `src/screens/HistoryScreen.jsx`
+- `src/screens/HistoryScreen.test.jsx`
 - `src/screens/DiagnosticsScreen.jsx`
 
 ---
 
-### 6. Standardize Error States
+### 6. Standardize Error States [COMPLETED]
 
 **Problem:** Inconsistent error handling across screens
 
 **Tasks:**
-- [ ] Create `src/components/ErrorAlert.jsx` component
-- [ ] Add tests for ErrorAlert
-- [ ] Apply to `DashboardScreen.jsx`
-- [ ] Apply to `HistoryScreen.jsx` (replace inline Alert)
-- [ ] Apply to `DiagnosticsScreen.jsx`
-- [ ] Update screen tests
+- [x] Create `src/components/ErrorAlert.jsx` component
+- [x] Add tests for ErrorAlert
+- [x] Apply to `DashboardScreen.jsx`
+- [x] Apply to `HistoryScreen.jsx` (replace inline Alert)
+- [x] Apply to `DiagnosticsScreen.jsx`
+- [x] Update screen tests
 
-**Files to modify:**
+**Files modified:**
 - `src/components/ErrorAlert.jsx` (new)
 - `src/components/ErrorAlert.test.jsx` (new)
 - `src/screens/DashboardScreen.jsx`
+- `src/screens/DashboardScreen.test.jsx`
 - `src/screens/HistoryScreen.jsx`
+- `src/screens/HistoryScreen.test.jsx`
 - `src/screens/DiagnosticsScreen.jsx`
 
 ---

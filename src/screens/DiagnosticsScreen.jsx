@@ -11,10 +11,11 @@ import DialogContent from '@mui/material/DialogContent'
 import DialogContentText from '@mui/material/DialogContentText'
 import DialogActions from '@mui/material/DialogActions'
 import CircularProgress from '@mui/material/CircularProgress'
-import Alert from '@mui/material/Alert'
 import BatteryIndicator from '../components/BatteryIndicator'
 import SensorHealthIndicator from '../components/SensorHealthIndicator'
 import ApiStatusIndicator from '../components/ApiStatusIndicator'
+import LoadingOverlay from '../components/LoadingOverlay'
+import ErrorAlert from '../components/ErrorAlert'
 import apiService from '../services/api'
 import configs from '../configs'
 import formatters from '../utils/formatters'
@@ -212,16 +213,8 @@ const DiagnosticsScreen = () => {
 
   if (loading) {
     return (
-      <Box
-        px={2}
-        pt={2}
-        pb={0}
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="400px"
-      >
-        <CircularProgress />
+      <Box px={2} pt={2} pb={0}>
+        <LoadingOverlay loading fullScreen />
       </Box>
     )
   }
@@ -232,9 +225,7 @@ const DiagnosticsScreen = () => {
         <Typography variant="h4" component="h1" gutterBottom>
           Diagnostics
         </Typography>
-        <Alert severity="error" sx={{ mt: 2 }}>
-          {error}
-        </Alert>
+        <ErrorAlert error={error} sx={{ mt: 2, mb: 0 }} />
       </Box>
     )
   }
@@ -248,11 +239,7 @@ const DiagnosticsScreen = () => {
         Diagnostics
       </Typography>
 
-      {error && (
-        <Alert severity="warning" sx={{ mt: 1, mb: 1 }}>
-          {error}
-        </Alert>
-      )}
+      <ErrorAlert error={error} severity="warning" sx={{ mt: 1, mb: 1 }} />
 
       <Grid container spacing={2} sx={{ mt: 1 }}>
         {/* ROW 1: Tall cards - Sensor Health, Battery Levels, Database Statistics, Data Quality */}
@@ -592,16 +579,12 @@ const DiagnosticsScreen = () => {
                 >
                   {isFlushing ? 'Flushing...' : 'Flush Buffer'}
                 </Button>
-                {flushSuccess && (
-                  <Alert severity="success" sx={{ mt: 1 }}>
-                    {flushSuccess}
-                  </Alert>
-                )}
-                {flushError && (
-                  <Alert severity="error" sx={{ mt: 1 }}>
-                    {flushError}
-                  </Alert>
-                )}
+                <ErrorAlert
+                  error={flushSuccess}
+                  severity="success"
+                  sx={{ mt: 1, mb: 0 }}
+                />
+                <ErrorAlert error={flushError} sx={{ mt: 1, mb: 0 }} />
               </Box>
             </CardContent>
           </Card>

@@ -7,6 +7,8 @@ import InOutCard from '../components/InOutCard'
 import WeatherForecastCard from '../components/WeatherForecastCard'
 import EnergyPricesCard from '../components/EnergyPricesCard'
 import CurrentEnergyPriceCard from '../components/CurrentEnergyPriceCard'
+import LoadingOverlay from '../components/LoadingOverlay'
+import ErrorAlert from '../components/ErrorAlert'
 import configs from '../configs'
 import apiService from '../services/api'
 
@@ -20,6 +22,8 @@ import apiService from '../services/api'
 const DashboardScreen = () => {
   const [ruuviDatas, setRuuviDatas] = useState(null)
   const [trends, setTrends] = useState(null)
+  const [initialLoading, setInitialLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   /** @type {[weatherForecast, setWeatherForecast]} */
   const [weatherForecast, setWeatherForecast] = useState(null)
@@ -34,19 +38,21 @@ const DashboardScreen = () => {
     const fetchRuuviData = async () => {
       try {
         setRuuviDatas(await apiService.fetchRuuviData())
-      } catch (error) {
+      } catch (err) {
+        setError('Failed to load sensor data')
         // eslint-disable-next-line no-console
-        console.error('fetchRuuviData ERROR: ', error)
+        console.error('fetchRuuviData ERROR: ', err)
       }
     }
 
     const fetchWeatherData = async () => {
       try {
-        const weatherForecast = await apiService.fetchWeatherData()
-        setWeatherForecast(weatherForecast)
-      } catch (error) {
+        const forecast = await apiService.fetchWeatherData()
+        setWeatherForecast(forecast)
+      } catch (err) {
+        setError('Failed to load weather data')
         // eslint-disable-next-line no-console
-        console.error('fetchWeatherData ERROR: ', error)
+        console.error('fetchWeatherData ERROR: ', err)
       }
     }
 
@@ -55,18 +61,20 @@ const DashboardScreen = () => {
         const json = await apiService.fetchEnergyPrices()
         setTodayEnergyPrices(json.todayEnergyPrices)
         setTomorrowEnergyPrices(json.tomorrowEnergyPrices)
-      } catch (error) {
+      } catch (err) {
+        setError('Failed to load energy prices')
         // eslint-disable-next-line no-console
-        console.error('fetchEnergyPrices ERROR: ', error)
+        console.error('fetchEnergyPrices ERROR: ', err)
       }
     }
 
     const fetchMinMaxTemperatures = async () => {
       try {
         setTodayMinMaxTemperature(await apiService.fetchMinMaxTemperatures())
-      } catch (error) {
+      } catch (err) {
+        setError('Failed to load temperature data')
         // eslint-disable-next-line no-console
-        console.error('fetchMinMaxTemperatures ERROR: ', error)
+        console.error('fetchMinMaxTemperatures ERROR: ', err)
       }
     }
 
@@ -79,22 +87,29 @@ const DashboardScreen = () => {
           {}
         )
         setTrends(trendsMap)
-      } catch (error) {
+      } catch (err) {
+        setError('Failed to load trend data')
         // eslint-disable-next-line no-console
-        console.error('fetchTrends ERROR: ', error)
+        console.error('fetchTrends ERROR: ', err)
       }
     }
 
+    // Initial data fetch
+    const loadInitialData = async () => {
+      try {
+        await Promise.all([
+          fetchWeatherData(),
+          fetchRuuviData(),
+          fetchEnergyPrices(),
+          fetchMinMaxTemperatures(),
+          fetchTrends(),
+        ])
+      } finally {
+        setInitialLoading(false)
+      }
+    }
     // eslint-disable-next-line no-console
-    fetchWeatherData().catch(console.error)
-    // eslint-disable-next-line no-console
-    fetchRuuviData().catch(console.error)
-    // eslint-disable-next-line no-console
-    fetchEnergyPrices().catch(console.error)
-    // eslint-disable-next-line no-console
-    fetchMinMaxTemperatures().catch(console.error)
-    // eslint-disable-next-line no-console
-    fetchTrends().catch(console.error)
+    loadInitialData().catch(console.error)
 
     const ruuviIntervalId = setInterval(() => {
       // Every 10sec
@@ -124,8 +139,17 @@ const DashboardScreen = () => {
     }
   }, [])
 
+  if (initialLoading) {
+    return (
+      <Box px={1.5} pt={1.5} pb={0}>
+        <LoadingOverlay loading fullScreen />
+      </Box>
+    )
+  }
+
   return (
     <Box px={1.5} pt={1.5} pb={0}>
+      <ErrorAlert error={error} />
       <Grid container spacing={1.5}>
         <InOutCard
           ruuviDatas={ruuviDatas}
