@@ -1,8 +1,16 @@
 const fs = require('fs')
 const path = require('path')
 
-// Mock fs module
-jest.mock('fs')
+// Mock fs module with promises
+jest.mock('fs', () => ({
+  existsSync: jest.fn(),
+  readFileSync: jest.fn(),
+  writeFileSync: jest.fn(),
+  promises: {
+    readFile: jest.fn(),
+    writeFile: jest.fn(),
+  },
+}))
 
 // Mock logger module
 jest.mock('./utils/logger', () => ({
@@ -86,17 +94,44 @@ describe('storage', () => {
       expect(result).toEqual({})
     })
 
-    it('should call readFile when file exists', async () => {
+    it('should return parsed data when file exists', async () => {
+      const mockData = { test: 'data', value: 123 }
       fs.existsSync.mockReturnValue(true)
-      fs.readFile.mockImplementation((path, callback) => {
-        callback(null, JSON.stringify({ test: 'data' }))
-      })
+      fs.promises.readFile.mockResolvedValue(JSON.stringify(mockData))
 
-      // Note: This function has a bug - it returns {} before callback completes
-      // Testing the actual behavior
       const result = await storage.loadOrDefault()
 
-      expect(fs.readFile).toHaveBeenCalled()
+      expect(result).toEqual(mockData)
+    })
+
+    it('should parse ISO date strings as Date objects', async () => {
+      const dateStr = '2023-10-24T12:00:00.000Z'
+      const mockData = { updatedAt: dateStr }
+      fs.existsSync.mockReturnValue(true)
+      fs.promises.readFile.mockResolvedValue(JSON.stringify(mockData))
+
+      const result = await storage.loadOrDefault()
+
+      expect(result.updatedAt).toBeInstanceOf(Date)
+      expect(result.updatedAt.toISOString()).toBe(dateStr)
+    })
+
+    it('should return empty object on read error', async () => {
+      fs.existsSync.mockReturnValue(true)
+      fs.promises.readFile.mockRejectedValue(new Error('Read failed'))
+
+      const result = await storage.loadOrDefault()
+
+      expect(result).toEqual({})
+    })
+
+    it('should return empty object on JSON parse error', async () => {
+      fs.existsSync.mockReturnValue(true)
+      fs.promises.readFile.mockResolvedValue('invalid json {{{')
+
+      const result = await storage.loadOrDefault()
+
+      expect(result).toEqual({})
     })
   })
 
@@ -132,31 +167,41 @@ describe('storage', () => {
   describe('save', () => {
     it('should write JSON to file asynchronously', async () => {
       const data = { test: 'async value' }
-
-      fs.writeFile.mockImplementation((path, content, callback) => {
-        callback(null)
-      })
+      fs.promises.writeFile.mockResolvedValue(undefined)
 
       await storage.save(data)
 
-      expect(fs.writeFile).toHaveBeenCalledWith(
+      expect(fs.promises.writeFile).toHaveBeenCalledWith(
         mockStoragePath,
-        JSON.stringify(data),
-        expect.any(Function)
+        JSON.stringify(data)
       )
     })
 
-    it('should handle write errors', async () => {
+    it('should handle write errors gracefully', async () => {
       const data = { test: 'data' }
+      fs.promises.writeFile.mockRejectedValue(new Error('Write failed'))
 
-      fs.writeFile.mockImplementation((path, content, callback) => {
-        callback(new Error('Write failed'))
-      })
+      // Should not throw
+      await expect(storage.save(data)).resolves.toBeUndefined()
+      expect(fs.promises.writeFile).toHaveBeenCalled()
+    })
+
+    it('should complete before returning', async () => {
+      const data = { test: 'data' }
+      let writeCompleted = false
+      fs.promises.writeFile.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            setTimeout(() => {
+              writeCompleted = true
+              resolve()
+            }, 10)
+          })
+      )
 
       await storage.save(data)
 
-      // Logger is mocked - error is logged internally
-      expect(fs.writeFile).toHaveBeenCalled()
+      expect(writeCompleted).toBe(true)
     })
   })
 

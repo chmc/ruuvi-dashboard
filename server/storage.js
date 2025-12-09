@@ -1,9 +1,8 @@
 const {
   existsSync,
-  readFile,
   readFileSync,
-  writeFile,
   writeFileSync,
+  promises: fsPromises,
 } = require('fs')
 const path = require('path')
 const { createLogger } = require('./utils/logger')
@@ -30,30 +29,22 @@ const jsonParseReviverFunc = (key, value) => {
 }
 
 /**
- * @returns {AppStorage}
+ * @returns {Promise<AppStorage>}
  */
 const loadOrDefault = async () => {
-  if (existsSync(appStorageFilePath)) {
-    await readFile(appStorageFilePath, (error, data) => {
-      if (error) {
-        log.error({ err: error }, 'Failed to read storage file')
-        return {}
-      }
-      log.debug('Storage loaded')
-      try {
-        return JSON.parse(data, jsonParseReviverFunc)
-      } catch (parseError) {
-        log.error(
-          { err: parseError },
-          'loadOrDefault() Parse loaded data failed'
-        )
-        return {}
-      }
-    })
+  if (!existsSync(appStorageFilePath)) {
+    log.debug('Storage file not found')
+    return {}
   }
 
-  log.debug('Storage file not found')
-  return {}
+  try {
+    const data = await fsPromises.readFile(appStorageFilePath, 'utf8')
+    log.debug('Storage loaded')
+    return JSON.parse(data, jsonParseReviverFunc)
+  } catch (error) {
+    log.error({ err: error }, 'loadOrDefault() failed')
+    return {}
+  }
 }
 
 /**
@@ -76,16 +67,16 @@ const loadOrDefaultSync = () => {
 
 /**
  * @param {AppStorage} data
+ * @returns {Promise<void>}
  */
 const save = async (data) => {
   const json = JSON.stringify(data)
-  await writeFile(appStorageFilePath, json, (err) => {
-    if (err) {
-      log.error({ err }, 'Error writing storage file')
-    } else {
-      log.debug('Storage saved')
-    }
-  })
+  try {
+    await fsPromises.writeFile(appStorageFilePath, json)
+    log.debug('Storage saved')
+  } catch (err) {
+    log.error({ err }, 'Error writing storage file')
+  }
 }
 
 /**

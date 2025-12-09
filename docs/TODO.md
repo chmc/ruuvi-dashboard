@@ -245,16 +245,18 @@
 
 ## Low Priority
 
-### 11. Fix Async Bug in storage.js
+### 11. Fix Async Bug in storage.js [COMPLETED]
 
 **Problem:** `loadOrDefault()` uses callback-style but doesn't await properly
 
 **Tasks:**
-- [ ] Add failing test for `loadOrDefault()` async behavior
-- [ ] Fix using `fs.promises.readFile`
-- [ ] Verify test passes
+- [x] Add failing test for `loadOrDefault()` async behavior
+- [x] Add failing test for `save()` async behavior
+- [x] Fix `loadOrDefault()` using `fs.promises.readFile`
+- [x] Fix `save()` using `fs.promises.writeFile`
+- [x] Verify tests pass
 
-**Files to modify:**
+**Files modified:**
 - `server/storage.js`
 - `server/storage.test.js`
 
