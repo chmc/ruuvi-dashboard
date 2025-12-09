@@ -325,17 +325,24 @@
 
 ---
 
-### 14. Add CORS Configuration
+### 14. Add CORS Configuration [COMPLETED]
 
 **Problem:** No explicit CORS configuration
 
 **Tasks:**
-- [ ] Add `cors` dependency
-- [ ] Configure CORS in `server/index.js`
-- [ ] Add tests for CORS headers
-- [ ] Document allowed origins in `.env.template`
+- [x] Add `cors` dependency
+- [x] Configure CORS in `server/index.js`
+- [x] Add tests for CORS headers
+- [x] Document allowed origins in `.env.template`
 
-**Files to modify:**
+**Files modified:**
 - `package.json`
 - `server/index.js`
+- `server/middleware/cors.js` (new)
+- `server/middleware/cors.test.js` (new)
 - `.env.template`
+
+**Configuration:**
+- By default, only same-origin requests are allowed (no CORS headers)
+- Set `CORS_ALLOWED_ORIGINS` env var with comma-separated origins to allow cross-origin requests
+- Example: `CORS_ALLOWED_ORIGINS=http://localhost:5173,http://192.168.1.100:3001`

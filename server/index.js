@@ -4,6 +4,7 @@ const NodeCache = require('node-cache')
 const path = require('path')
 const logger = require('./utils/logger')
 const { success, error } = require('./utils/apiResponse')
+const createCorsMiddleware = require('./middleware/cors')
 const temperatureService = require('./services/temperature')
 const energyPricesService = require('./services/energyPrices')
 const sensorService = require('./services/sensor')
@@ -43,6 +44,9 @@ const cacheKeys = {
   energyPrices: 'energyPrices',
   todayMinMax: 'todayMinMax',
 }
+
+// CORS middleware - configured via CORS_ALLOWED_ORIGINS env var
+app.use(createCorsMiddleware())
 
 app.use(express.json())
 
