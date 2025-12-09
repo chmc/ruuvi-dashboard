@@ -1,8 +1,8 @@
 /* eslint-disable no-use-before-define */
-/* eslint-disable no-console */
 const express = require('express')
 const NodeCache = require('node-cache')
 const path = require('path')
+const logger = require('./utils/logger')
 const temperatureService = require('./services/temperature')
 const energyPricesService = require('./services/energyPrices')
 const sensorService = require('./services/sensor')
@@ -55,7 +55,7 @@ if (process.env.NODE_ENV === 'production') {
  * Called after database and services are initialized
  */
 const startServer = () => {
-  app.listen(port, () => console.log(`Listening on port ${port}`))
+  app.listen(port, () => logger.info({ port }, 'Server listening'))
 }
 
 app.get('/api/ruuvi', (req, res) => {
@@ -64,7 +64,7 @@ app.get('/api/ruuvi', (req, res) => {
 
 // Keep POST endpoint for backward compatibility (e.g., external data sources)
 app.post('/api/ruuvi', (req, res) => {
-  console.log(new Date().toLocaleString(), 'POST /api/ruuvi received')
+  logger.info('POST /api/ruuvi received')
   try {
     const sensorDataCollection = sensorService.getSensorData(
       req.body,
@@ -76,7 +76,7 @@ app.post('/api/ruuvi', (req, res) => {
       .status(200)
       .json({ message: 'Data received and processed successfully' })
   } catch (error) {
-    console.error('POST /api/ruuvi, error: ', error)
+    logger.error({ err: error }, 'POST /api/ruuvi failed')
     res
       .status(500)
       .json({ error: 'An error occurred while processing the data' })
@@ -84,12 +84,12 @@ app.post('/api/ruuvi', (req, res) => {
 })
 
 app.get('/api/energyprices', async (req, res) => {
-  console.log(new Date().toLocaleString(), 'Energy prices called')
+  logger.debug('Energy prices called')
   /** @type {EnergyPrices=} */
   let cachedEnergyPrices = cache.get(cacheKeys.energyPrices)
 
   if (!cachedEnergyPrices) {
-    console.log('Not in cache, try load store')
+    logger.debug('Energy prices not in cache, loading from store')
     const appStorage = await storage.loadOrDefaultSync()
     cachedEnergyPrices = {
       updatedAt: appStorage.todayEnergyPrices?.updatedAt,
@@ -171,10 +171,7 @@ const addToHistoryBuffer = (mac, sensorData) => {
  */
 const createFlushCallback = () => () => {
   const result = historyBuffer.flush(historyDb)
-  console.log(
-    new Date().toLocaleString(),
-    `Buffer flushed: ${result.flushedCount} readings saved`
-  )
+  logger.debug({ flushedCount: result.flushedCount }, 'Buffer flushed')
   return result
 }
 
@@ -182,24 +179,17 @@ const createFlushCallback = () => () => {
  * Initialize history services (database, scheduler, shutdown handler)
  */
 const initializeHistoryServices = () => {
-  console.log(new Date().toLocaleString(), 'Initializing history services...')
+  logger.info('Initializing history services')
 
   // Open database
   historyDb.open()
-  console.log(
-    new Date().toLocaleString(),
-    'History database opened:',
-    historyDb.getDbPath()
-  )
+  logger.info({ dbPath: historyDb.getDbPath() }, 'History database opened')
 
   // Check if seeding is needed
   const macs = getConfigMacIds() || []
   const outdoorMac = process.env.VITE_MAIN_OUTDOOR_RUUVITAG_MAC?.toLowerCase()
   if (historySeeder.seedIfNeeded(historyDb, macs, outdoorMac)) {
-    console.log(
-      new Date().toLocaleString(),
-      'History database seeded with 90 days of data'
-    )
+    logger.info('History database seeded with 90 days of data')
   }
 
   // Create flush callback
@@ -208,18 +198,15 @@ const initializeHistoryServices = () => {
   // Start flush scheduler
   const flushIntervalMs = flushScheduler.getDefaultIntervalMs()
   flushScheduler.start(flushIntervalMs, flushCallback)
-  console.log(
-    new Date().toLocaleString(),
-    `Flush scheduler started (interval: ${flushIntervalMs / 1000}s)`
+  logger.info(
+    { intervalSeconds: flushIntervalMs / 1000 },
+    'Flush scheduler started'
   )
 
   // Register shutdown handler with flush callback
   // Scanner stop will be registered separately when scanner is created
   shutdownHandler.register(flushCallback)
-  console.log(
-    new Date().toLocaleString(),
-    'Graceful shutdown handler registered'
-  )
+  logger.info('Graceful shutdown handler registered')
 }
 
 /**
@@ -237,8 +224,8 @@ const isJestTest = process.env.NODE_ENV === 'test'
 
 if (process.env.TEST || process.env.SIMULATE) {
   // Run in simulation/test mode
-  console.log('Run in SIMULATION MODE')
-  console.log('Using simulated sensor data')
+  logger.info('Running in SIMULATION MODE')
+  logger.info('Using simulated sensor data')
 
   // Initialize history services (skip only during Jest tests)
   if (!isJestTest) {
@@ -265,11 +252,11 @@ if (process.env.TEST || process.env.SIMULATE) {
 } else {
   // Run with real RuuviTag sensors using Node.js BLE
   const macs = getConfigMacIds()
-  console.log('Starting RuuviTag scanner with MAC addresses:', macs)
+  logger.info({ macs }, 'Starting RuuviTag scanner')
 
   if (!macs || macs.length === 0) {
-    console.warn(
-      'WARNING: No MAC addresses configured. Set VITE_RUUVITAG_MACS environment variable.'
+    logger.warn(
+      'No MAC addresses configured. Set VITE_RUUVITAG_MACS environment variable.'
     )
   }
 
@@ -287,10 +274,7 @@ if (process.env.TEST || process.env.SIMULATE) {
   // Register scanner stop for graceful shutdown
   shutdownHandler.registerScannerStop(() => {
     if (scannerInstance) {
-      console.log(
-        new Date().toLocaleString(),
-        'Stopping RuuviTag BLE scanner...'
-      )
+      logger.info('Stopping RuuviTag BLE scanner')
       scannerInstance.stop()
     }
   })
@@ -307,11 +291,13 @@ if (process.env.TEST || process.env.SIMULATE) {
 
   // Handle individual sensor data (for logging and history)
   scannerInstance.on('data', ({ mac, sensorData }) => {
-    console.log(
-      new Date().toLocaleString(),
-      `Sensor ${mac}: ${sensorData.temperature.toFixed(
-        1
-      )}°C, ${sensorData.humidity.toFixed(1)}%`
+    logger.debug(
+      {
+        mac,
+        temperature: sensorData.temperature,
+        humidity: sensorData.humidity,
+      },
+      'Sensor reading'
     )
 
     // Add reading to history buffer
@@ -320,16 +306,13 @@ if (process.env.TEST || process.env.SIMULATE) {
 
   // Handle errors
   scannerInstance.on('error', (error) => {
-    console.error(new Date().toLocaleString(), 'RuuviTag scanner error:', error)
+    logger.error({ err: error }, 'RuuviTag scanner error')
   })
 
   // Start scanning with a delay to allow BLE adapter to initialize
-  console.log(
-    new Date().toLocaleString(),
-    'Wait 3sec before starting RuuviTag scanner'
-  )
+  logger.info('Waiting 3 seconds before starting RuuviTag scanner')
   setTimeout(() => {
-    console.log(new Date().toLocaleString(), 'Starting RuuviTag BLE scanner')
+    logger.info('Starting RuuviTag BLE scanner')
     scannerInstance.start()
   }, 3000)
 }

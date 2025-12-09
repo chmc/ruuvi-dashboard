@@ -12,6 +12,9 @@
 
 const fs = require('fs')
 const path = require('path')
+const { createLogger } = require('../../utils/logger')
+
+const log = createLogger('historyBuffer')
 
 /**
  * @typedef {Object} BufferedReading
@@ -64,7 +67,7 @@ const persistToTmpfs = () => {
     fs.writeFileSync(filePath, JSON.stringify(buffer), 'utf8')
   } catch (err) {
     // Log error but don't throw - tmpfs persistence is optional
-    console.error(`Failed to persist buffer to tmpfs: ${err.message}`)
+    log.error({ err, filePath }, 'Failed to persist buffer to tmpfs')
   }
 }
 
@@ -88,7 +91,7 @@ const loadFromTmpfs = () => {
     }
   } catch (err) {
     // Log error but don't throw - corrupted file should not crash the service
-    console.error(`Failed to load buffer from tmpfs: ${err.message}`)
+    log.error({ err, filePath }, 'Failed to load buffer from tmpfs')
   }
 
   return []
@@ -108,13 +111,14 @@ const configure = (options) => {
     try {
       const stats = fs.statSync(tmpfsPath)
       if (!stats.isDirectory()) {
-        console.error(`tmpfs path is not a directory: ${tmpfsPath}`)
+        log.error({ tmpfsPath }, 'tmpfs path is not a directory')
         config = { useTmpfs: false, tmpfsPath: null }
         return
       }
     } catch (err) {
-      console.error(
-        `tmpfs path does not exist or is not accessible: ${tmpfsPath}`
+      log.error(
+        { err, tmpfsPath },
+        'tmpfs path does not exist or is not accessible'
       )
       config = { useTmpfs: false, tmpfsPath: null }
       return

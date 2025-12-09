@@ -1,11 +1,15 @@
+const { createLogger } = require('../utils/logger')
+
+const log = createLogger('energyPricesApi')
+
 const getEnergyPricesFromApi = async () => {
   try {
     const response = await fetch(`https://api.spot-hinta.fi/TodayAndDayForward`)
-    console.log('api called')
+    log.debug('Energy prices API called')
     const textData = await response.text()
     return textData
   } catch (error) {
-    console.error('getEnergyPricesFromApi: ', error)
+    log.error({ err: error }, 'getEnergyPricesFromApi failed')
     return undefined
   }
 }

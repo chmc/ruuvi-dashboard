@@ -4,7 +4,10 @@
  * Provides endpoints for fetching sensor trend data for dashboard arrows.
  */
 const express = require('express')
+const { createLogger } = require('../utils/logger')
 const historyDb = require('../services/history/historyDb')
+
+const log = createLogger('routes:trends')
 
 const router = express.Router()
 
@@ -140,8 +143,7 @@ router.get('/trends', (req, res) => {
 
     return res.json(trends)
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Error fetching trends:', error)
+    log.error({ err: error }, 'Error fetching trends')
     return res.status(500).json({
       error: 'Failed to fetch trends data',
     })

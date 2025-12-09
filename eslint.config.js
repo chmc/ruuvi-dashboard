@@ -148,4 +148,13 @@ export default [
       'import/no-extraneous-dependencies': 'off',
     },
   },
+
+  // Server files - enforce no-console (use structured logger instead)
+  {
+    files: ['server/**/*.js'],
+    ignores: ['server/**/*.test.js'],
+    rules: {
+      'no-console': 'error',
+    },
+  },
 ]

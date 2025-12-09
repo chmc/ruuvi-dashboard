@@ -5,9 +5,12 @@
  */
 const express = require('express')
 const fs = require('fs')
+const { createLogger } = require('../utils/logger')
 const historyDb = require('../services/history/historyDb')
 const historyBuffer = require('../services/history/historyBuffer')
 const flushScheduler = require('../services/history/flushScheduler')
+
+const log = createLogger('routes:diagnostics')
 
 const router = express.Router()
 
@@ -422,8 +425,7 @@ router.get('/diagnostics', (req, res) => {
 
     return res.json(diagnostics)
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Error fetching diagnostics:', error)
+    log.error({ err: error }, 'Error fetching diagnostics')
     return res.status(500).json({
       error: 'Failed to fetch diagnostics data',
     })
@@ -448,8 +450,7 @@ router.post('/diagnostics/flush', (req, res) => {
       message: 'Buffer flushed successfully',
     })
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Error flushing buffer:', error)
+    log.error({ err: error }, 'Error flushing buffer')
     return res.status(500).json({
       error: 'Failed to flush buffer',
     })

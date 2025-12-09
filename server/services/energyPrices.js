@@ -1,9 +1,11 @@
 /* eslint-disable no-use-before-define */
-/* eslint-disable no-console */
+const { createLogger } = require('../utils/logger')
 const energypricesFromApi = require('./energyPricesFromApi')
 const storage = require('../storage')
 const dateUtils = require('../utils/date')
 const externalApiStatus = require('./externalApiStatus')
+
+const log = createLogger('energyPrices')
 
 /**
  * @param   {EnergyPrices} energyPrices
@@ -13,23 +15,32 @@ const getEnergyPrices = async (energyPrices) => {
   try {
     const { currentDate, currentDateObject, tomorrowDate, tomorrowDateObject } =
       getTodayAndTomorrowDates()
-    console.log('Updated at ', energyPrices?.todayEnergyPrices?.updatedAt)
+    log.debug(
+      { updatedAt: energyPrices?.todayEnergyPrices?.updatedAt },
+      'Checking energy prices'
+    )
 
     if (allowUpdateEnergyPrices(energyPrices, currentDateObject)) {
-      console.log('Get new energy prices')
+      log.info('Fetching new energy prices from API')
       const dataText = await energypricesFromApi.getEnergyPricesFromApi()
-      console.log('energy prices text: ', dataText)
+      log.debug(
+        { responseLength: dataText?.length },
+        'Energy prices API response received'
+      )
       const allEnergyPrices = JSON.parse(dataText).map((daily) => ({
         date: new Date(daily.DateTime),
         price: Math.round(daily.PriceWithTax * 10000) / 100,
         hour: new Date(daily.DateTime).getHours(),
       }))
 
-      console.log('Total energy prices from API:', allEnergyPrices.length)
-      console.log('First price:', allEnergyPrices[0])
-      console.log('Last price:', allEnergyPrices[allEnergyPrices.length - 1])
-      console.log('Current date for filtering:', currentDateObject)
-      console.log('Tomorrow date for filtering:', tomorrowDateObject)
+      log.debug(
+        {
+          totalPrices: allEnergyPrices.length,
+          firstPrice: allEnergyPrices[0],
+          lastPrice: allEnergyPrices[allEnergyPrices.length - 1],
+        },
+        'Energy prices parsed'
+      )
 
       const todayEnergyPrices = allEnergyPrices.filter((energyPrice) =>
         dateUtils.isSameDate(energyPrice.date, currentDateObject)
@@ -39,10 +50,12 @@ const getEnergyPrices = async (energyPrices) => {
         dateUtils.isSameDate(energyPrice.date, tomorrowDateObject)
       )
 
-      console.log('Today energy prices filtered:', todayEnergyPrices.length)
-      console.log(
-        'Tomorrow energy prices filtered:',
-        tomorrowEnergyPrices.length
+      log.debug(
+        {
+          todayCount: todayEnergyPrices.length,
+          tomorrowCount: tomorrowEnergyPrices.length,
+        },
+        'Energy prices filtered'
       )
 
       const appStorage = await storage.loadOrDefault()
@@ -74,7 +87,7 @@ const getEnergyPrices = async (energyPrices) => {
       }
     }
 
-    console.log('Use energy prices from cache')
+    log.debug('Using energy prices from cache')
 
     // Record success since we have valid cached data (API worked previously)
     externalApiStatus.recordSuccess('energyPrices')
@@ -85,7 +98,7 @@ const getEnergyPrices = async (energyPrices) => {
       tomorrowEnergyPrices: energyPrices.tomorrowEnergyPrices,
     }
   } catch (error) {
-    console.error('getEnergyPrices: ', error)
+    log.error({ err: error }, 'getEnergyPrices failed')
     // Record API error
     externalApiStatus.recordError(
       'energyPrices',
@@ -115,7 +128,7 @@ const allowUpdateEnergyPrices = (energyPrices, currentDateObject) => {
   try {
     const updatedAt = getUpdatedAtOrMinDate(energyPrices)
     const hoursDifference = calculateHoursDifferenceInDates(updatedAt)
-    console.log('Last energy prices updated: ', hoursDifference)
+    log.debug({ hoursDifference }, 'Time since last energy prices update')
 
     if (
       isEnergyPricesObjectOrtodayMissing(energyPrices) ||
@@ -130,7 +143,7 @@ const allowUpdateEnergyPrices = (energyPrices, currentDateObject) => {
     }
     return false
   } catch (error) {
-    console.error('allowUpdateEnergyPrices:', error)
+    log.error({ err: error }, 'allowUpdateEnergyPrices failed')
     return false
   }
 }

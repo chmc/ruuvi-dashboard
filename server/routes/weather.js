@@ -7,7 +7,10 @@
 const express = require('express')
 const NodeCache = require('node-cache')
 const fetch = require('node-fetch')
+const { createLogger } = require('../utils/logger')
 const externalApiStatus = require('../services/externalApiStatus')
+
+const log = createLogger('routes:weather')
 
 const router = express.Router()
 
@@ -148,8 +151,7 @@ router.get('/weather', async (req, res) => {
     // Record error
     externalApiStatus.recordError('openWeatherMap', error.message)
 
-    // eslint-disable-next-line no-console
-    console.error('Error fetching weather data:', error)
+    log.error({ err: error }, 'Error fetching weather data')
 
     return res.status(502).json({
       error: 'Failed to fetch weather data',

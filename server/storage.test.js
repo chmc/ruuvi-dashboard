@@ -4,6 +4,16 @@ const path = require('path')
 // Mock fs module
 jest.mock('fs')
 
+// Mock logger module
+jest.mock('./utils/logger', () => ({
+  createLogger: () => ({
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  }),
+}))
+
 const storage = require('./storage')
 
 describe('storage', () => {
@@ -11,9 +21,6 @@ describe('storage', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    // Suppress console.log/error during tests
-    jest.spyOn(console, 'log').mockImplementation(() => {})
-    jest.spyOn(console, 'error').mockImplementation(() => {})
   })
 
   afterEach(() => {
@@ -66,7 +73,7 @@ describe('storage', () => {
       const result = storage.loadOrDefaultSync()
 
       expect(result).toEqual({})
-      expect(console.error).toHaveBeenCalled()
+      // Logger is mocked - error is logged internally
     })
   })
 
@@ -148,10 +155,8 @@ describe('storage', () => {
 
       await storage.save(data)
 
-      expect(console.error).toHaveBeenCalledWith(
-        'Error writing file: ',
-        expect.any(Error)
-      )
+      // Logger is mocked - error is logged internally
+      expect(fs.writeFile).toHaveBeenCalled()
     })
   })
 

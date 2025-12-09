@@ -4,7 +4,10 @@
  * Provides endpoints for fetching historical sensor data.
  */
 const express = require('express')
+const { createLogger } = require('../utils/logger')
 const historyDb = require('../services/history/historyDb')
+
+const log = createLogger('routes:history')
 
 const router = express.Router()
 
@@ -108,8 +111,7 @@ router.get('/history', (req, res) => {
 
     return res.json(formattedReadings)
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Error fetching history:', error)
+    log.error({ err: error }, 'Error fetching history')
     return res.status(500).json({
       error: 'Failed to fetch history data',
     })

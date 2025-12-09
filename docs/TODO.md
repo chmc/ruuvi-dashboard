@@ -207,27 +207,38 @@
 
 ---
 
-### 10. Replace Console.log with Structured Logging (Backend)
+### 10. Replace Console.log with Structured Logging (Backend) [COMPLETED]
 
 **Problem:** 95 console statements in production code
 
 **Tasks:**
-- [ ] Add `pino` logger dependency
-- [ ] Create `server/utils/logger.js` with configured logger
-- [ ] Add tests for logger configuration
-- [ ] Replace console.log in `server/index.js`
-- [ ] Replace console.log in `server/storage.js`
-- [ ] Replace console.log in `server/services/*.js`
-- [ ] Replace console.log in `server/routes/*.js`
-- [ ] Update ESLint rule `no-console` to `error` for server files
+- [x] Add `pino` logger dependency
+- [x] Create `server/utils/logger.js` with configured logger
+- [x] Add tests for logger configuration
+- [x] Replace console.log in `server/index.js`
+- [x] Replace console.log in `server/storage.js`
+- [x] Replace console.log in `server/services/*.js`
+- [x] Replace console.log in `server/routes/*.js`
+- [x] Update ESLint rule `no-console` to `error` for server files
 
-**Files to modify:**
+**Files modified:**
 - `package.json` (add pino)
 - `server/utils/logger.js` (new)
+- `server/utils/logger.test.js` (new)
 - `server/index.js`
 - `server/storage.js`
-- `server/services/*.js` (multiple)
-- `server/routes/*.js` (multiple)
+- `server/storage.test.js`
+- `server/services/energyPrices.js`
+- `server/services/energyPricesFromApi.js`
+- `server/services/temperature.js`
+- `server/services/ble/bleScanner.js`
+- `server/services/history/historyBuffer.js`
+- `server/services/history/shutdownHandler.js`
+- `server/services/history/shutdownHandler.test.js`
+- `server/routes/history.js`
+- `server/routes/weather.js`
+- `server/routes/trends.js`
+- `server/routes/diagnostics.js`
 - `eslint.config.js`
 
 ---

@@ -1,6 +1,8 @@
 /* eslint-disable no-use-before-define */
-/* eslint-disable no-console */
+const { createLogger } = require('../utils/logger')
 const dateUtils = require('../utils/date')
+
+const log = createLogger('temperature')
 
 /**
  * Normalize MAC address to lowercase for consistent lookups
@@ -18,7 +20,7 @@ const getTodayMinMaxTemperature = (
   todayMinMaxTemperature
 ) => {
   try {
-    console.log('getTodayMinMaxTemperature start')
+    log.debug('getTodayMinMaxTemperature start')
     // Normalize MAC to lowercase for consistent lookups
     const mainOutdoorRuuviTagMac = normalizeMac(
       process.env.VITE_MAIN_OUTDOOR_RUUVITAG_MAC
@@ -36,11 +38,12 @@ const getTodayMinMaxTemperature = (
 
     const { temperature } = sensorDataCollection[mainOutdoorRuuviTagMac]
 
-    console.log(
-      'getTodayMinMaxTemperature, sensorData temperature: ',
-      temperature,
-      'todayMinMaxTemperature: ',
-      todayMinMaxTemperature
+    log.debug(
+      {
+        temperature,
+        currentMinMax: todayMinMaxTemperature,
+      },
+      'Processing temperature reading'
     )
 
     const minMaxObj = getNewObjectIfTodayMinMaxIsMissing(
@@ -55,23 +58,15 @@ const getTodayMinMaxTemperature = (
       temperature
     )
 
-    console.log(
-      'getTodayMinMaxTemperature return min: ',
-      minTemperature,
-      'max: ',
-      maxTemperature
+    log.debug(
+      { minTemperature, maxTemperature },
+      'Updated min/max temperatures'
     )
 
     const ret = { ...minMax, minTemperature, maxTemperature }
-    console.log(
-      'getTodayMinMaxTemperature original cache: ',
-      todayMinMaxTemperature,
-      'return object: ',
-      ret
-    )
     return ret
   } catch (error) {
-    console.error('getTodayMinMaxTemperature failed: ', error)
+    log.error({ err: error }, 'getTodayMinMaxTemperature failed')
     return todayMinMaxTemperature
   }
 }
@@ -81,10 +76,7 @@ const getTodayMinMaxTemperature = (
  */
 const isSensorDataMissing = (sensorDataCollection) => {
   if (!sensorDataCollection) {
-    console.log(
-      'getTodayMinMaxTemperature() sensorDataCollection not available, it is:',
-      sensorDataCollection
-    )
+    log.debug('sensorDataCollection not available')
     return true
   }
   return false
@@ -96,10 +88,7 @@ const isSensorDataMissing = (sensorDataCollection) => {
  */
 const isSensorDataMissingForMac = (sensorDataCollection, sensorMac) => {
   if (!sensorDataCollection[sensorMac]) {
-    console.log(
-      `getTodayMinMaxTemperature() sensorDataCollection for mac "${sensorMac}" is missing. Sensor data is:`,
-      sensorDataCollection
-    )
+    log.debug({ mac: sensorMac }, 'Sensor data missing for MAC')
     return true
   }
   return false

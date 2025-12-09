@@ -6,6 +6,9 @@
  */
 
 const EventEmitter = require('events')
+const { createLogger } = require('../../utils/logger')
+
+const log = createLogger('bleScanner')
 
 // Ruuvi manufacturer ID (little-endian: 0x0499)
 const RUUVI_MANUFACTURER_ID = 0x0499
@@ -88,15 +91,15 @@ const createScanner = () => {
    * @param {string} state
    */
   const handleStateChange = (state) => {
-    console.log(`BLE state changed: ${state}`)
+    log.info({ state }, 'BLE state changed')
     if (state === 'poweredOn' && !scanning) {
       // Start scanning for all devices, allow duplicates for continuous updates
-      console.log('BLE powered on - starting scan...')
+      log.info('BLE powered on - starting scan')
       noble.startScanning([], true)
       scanning = true
       emitter.emit('scanStart')
     } else if (state !== 'poweredOn' && scanning) {
-      console.log(`BLE not powered on (${state}) - stopping scan`)
+      log.warn({ state }, 'BLE not powered on - stopping scan')
       scanning = false
       emitter.emit('scanStop', { reason: 'stateChange', state })
     }
@@ -113,18 +116,18 @@ const createScanner = () => {
         noble = require('@abandonware/noble')
       }
 
-      console.log(`BLE initial state: ${noble.state}`)
+      log.info({ state: noble.state }, 'BLE initial state')
       noble.on('stateChange', handleStateChange)
       noble.on('discover', handleDiscover)
 
       // If already powered on, start scanning immediately
       if (noble.state === 'poweredOn') {
-        console.log('BLE already powered on - starting scan immediately')
+        log.info('BLE already powered on - starting scan immediately')
         noble.startScanning([], true)
         scanning = true
         emitter.emit('scanStart')
       } else {
-        console.log(`Waiting for BLE to power on (current: ${noble.state})...`)
+        log.info({ state: noble.state }, 'Waiting for BLE to power on')
       }
     },
 

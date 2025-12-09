@@ -6,11 +6,13 @@ const {
   writeFileSync,
 } = require('fs')
 const path = require('path')
+const { createLogger } = require('./utils/logger')
+
+const log = createLogger('storage')
 
 const APP_STORAGE_FILE_NAME = 'appStorage.json'
-// const appStorageFilePath = `./${APP_STORAGE_FILE_NAME}`
 const appStorageFilePath = path.resolve(__dirname, APP_STORAGE_FILE_NAME)
-console.log(appStorageFilePath)
+log.debug({ path: appStorageFilePath }, 'Storage file path')
 
 /**
  * @param {string} key
@@ -34,25 +36,23 @@ const loadOrDefault = async () => {
   if (existsSync(appStorageFilePath)) {
     await readFile(appStorageFilePath, (error, data) => {
       if (error) {
-        // eslint-disable-next-line no-console
-        console.error(error)
+        log.error({ err: error }, 'Failed to read storage file')
         return {}
       }
-      console.log('loaded')
+      log.debug('Storage loaded')
       try {
         return JSON.parse(data, jsonParseReviverFunc)
-      } catch (error) {
-        console.error(
-          new Date().toLocaleDateString(),
-          'loadOrDefault() Parse loaded data failed: ',
-          error
+      } catch (parseError) {
+        log.error(
+          { err: parseError },
+          'loadOrDefault() Parse loaded data failed'
         )
         return {}
       }
     })
   }
 
-  console.log('file not found')
+  log.debug('Storage file not found')
   return {}
 }
 
@@ -62,15 +62,11 @@ const loadOrDefault = async () => {
 const loadOrDefaultSync = () => {
   if (existsSync(appStorageFilePath)) {
     const data = readFileSync(appStorageFilePath)
-    console.log('loaded')
+    log.debug('Storage loaded')
     try {
       return JSON.parse(data, jsonParseReviverFunc)
     } catch (error) {
-      console.error(
-        new Date().toLocaleDateString(),
-        'loadOrDefaultSync() Parse loaded data failed: ',
-        error
-      )
+      log.error({ err: error }, 'loadOrDefaultSync() Parse loaded data failed')
       return {}
     }
   }
@@ -83,12 +79,11 @@ const loadOrDefaultSync = () => {
  */
 const save = async (data) => {
   const json = JSON.stringify(data)
-  // console.log('save: ', json)
   await writeFile(appStorageFilePath, json, (err) => {
     if (err) {
-      console.error('Error writing file: ', err)
+      log.error({ err }, 'Error writing storage file')
     } else {
-      console.log('Saved')
+      log.debug('Storage saved')
     }
   })
 }
@@ -99,7 +94,7 @@ const save = async (data) => {
 const saveSync = (data) => {
   const json = JSON.stringify(data)
   writeFileSync(appStorageFilePath, json)
-  console.log('saved')
+  log.debug('Storage saved')
 }
 
 module.exports = {

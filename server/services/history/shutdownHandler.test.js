@@ -8,12 +8,25 @@
  * - Logs shutdown message
  */
 
+// Create mock logger functions that we can spy on
+const mockLogInfo = jest.fn()
+const mockLogError = jest.fn()
+
+// Mock logger module before importing shutdownHandler
+jest.mock('../../utils/logger', () => ({
+  createLogger: () => ({
+    info: mockLogInfo,
+    error: mockLogError,
+    debug: jest.fn(),
+    warn: jest.fn(),
+  }),
+}))
+
 const shutdownHandler = require('./shutdownHandler')
 
 describe('shutdownHandler', () => {
   let originalListeners
   let mockFlush
-  let consoleLogSpy
 
   beforeEach(() => {
     // Store original process event listeners
@@ -29,8 +42,9 @@ describe('shutdownHandler', () => {
     // Create mock flush callback
     mockFlush = jest.fn().mockResolvedValue({ flushedCount: 5 })
 
-    // Spy on console.log
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation()
+    // Clear mock logger calls
+    mockLogInfo.mockClear()
+    mockLogError.mockClear()
 
     // Reset handler state
     shutdownHandler.reset()
@@ -49,9 +63,6 @@ describe('shutdownHandler', () => {
     originalListeners.SIGINT.forEach((listener) => {
       process.on('SIGINT', listener)
     })
-
-    // Restore console.log
-    consoleLogSpy.mockRestore()
   })
 
   describe('register', () => {
@@ -114,8 +125,9 @@ describe('shutdownHandler', () => {
 
       await shutdownHandler.triggerShutdown()
 
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Graceful shutdown')
+      expect(mockLogInfo).toHaveBeenCalledWith(
+        expect.objectContaining({ signal: 'manual' }),
+        'Graceful shutdown initiated'
       )
     })
 
@@ -124,8 +136,9 @@ describe('shutdownHandler', () => {
 
       await shutdownHandler.triggerShutdown()
 
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('flushed')
+      expect(mockLogInfo).toHaveBeenCalledWith(
+        expect.objectContaining({ flushedCount: 5 }),
+        'Buffer flushed'
       )
     })
 
@@ -149,20 +162,17 @@ describe('shutdownHandler', () => {
 
     it('should handle flush errors gracefully', async () => {
       const errorFlush = jest.fn().mockRejectedValue(new Error('Flush failed'))
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
 
       shutdownHandler.register(errorFlush)
 
       await shutdownHandler.triggerShutdown()
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('error'),
-        expect.any(Error)
+      expect(mockLogError).toHaveBeenCalledWith(
+        expect.objectContaining({ err: expect.any(Error) }),
+        'Shutdown error'
       )
       // Should still exit even on error
       expect(mockExit).toHaveBeenCalledWith(1)
-
-      consoleErrorSpy.mockRestore()
     })
 
     it('should prevent multiple shutdown calls', async () => {
@@ -187,8 +197,8 @@ describe('shutdownHandler', () => {
 
       expect(mockScannerStop).toHaveBeenCalledTimes(1)
       expect(mockFlush).toHaveBeenCalledTimes(1)
-      // Verify order: scanner stop should be called first (check console.log order)
-      const logCalls = consoleLogSpy.mock.calls.map((call) => call[0])
+      // Verify order: scanner stop should be called first (check log order)
+      const logCalls = mockLogInfo.mock.calls.map((call) => call[1] || call[0])
       const scannerStopIndex = logCalls.findIndex((msg) =>
         String(msg).includes('Stopping BLE scanner')
       )

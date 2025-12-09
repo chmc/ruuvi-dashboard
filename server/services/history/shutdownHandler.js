@@ -7,7 +7,9 @@
  * Ensures all buffered sensor readings are persisted before shutdown.
  */
 
-/* eslint-disable no-console */
+const { createLogger } = require('../../utils/logger')
+
+const log = createLogger('shutdown')
 
 /** @type {(() => any) | null} */
 let flushCallback = null
@@ -36,33 +38,33 @@ const triggerShutdown = async (signal = 'manual') => {
   }
   isShuttingDown = true
 
-  console.log(`\nGraceful shutdown initiated (${signal})...`)
+  log.info({ signal }, 'Graceful shutdown initiated')
 
   try {
     // Stop scanner first to prevent new readings
     if (scannerStopCallback) {
-      console.log('Stopping BLE scanner...')
+      log.info('Stopping BLE scanner')
       scannerStopCallback()
     }
 
     // Flush buffer to database
     if (flushCallback) {
-      console.log('Flushing buffer to database...')
+      log.info('Flushing buffer to database')
 
       // Handle both sync and async callbacks
       const result = await Promise.resolve(flushCallback())
 
       if (result && typeof result.flushedCount === 'number') {
-        console.log(`Buffer flushed: ${result.flushedCount} readings saved`)
+        log.info({ flushedCount: result.flushedCount }, 'Buffer flushed')
       } else {
-        console.log('Buffer flushed successfully')
+        log.info('Buffer flushed successfully')
       }
     }
 
-    console.log('Shutdown complete')
+    log.info('Shutdown complete')
     process.exit(0)
   } catch (error) {
-    console.error('Shutdown error:', error)
+    log.error({ err: error }, 'Shutdown error')
     process.exit(1)
   }
 }
