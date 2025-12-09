@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import Grid from '@mui/material/Grid'
 import Box from '@mui/material/Box'
 import { getSunrise, getSunset } from 'sunrise-sunset-js'
@@ -12,6 +12,7 @@ import ErrorAlert from '../components/ErrorAlert'
 import usePollingData from '../hooks/usePollingData'
 import configs from '../configs'
 import apiService from '../services/api'
+import errorLogService from '../services/errorLog'
 
 /** @type {number} Polling interval for sensor data (10 seconds) */
 const SENSOR_POLL_INTERVAL = 10000
@@ -19,6 +20,8 @@ const SENSOR_POLL_INTERVAL = 10000
 const TRENDS_POLL_INTERVAL = 5 * 60 * 1000
 /** @type {number} Polling interval for weather/energy (30 minutes) */
 const SLOW_POLL_INTERVAL = 30 * 60 * 1000
+/** @type {number} Auto-dismiss error messages after 10 seconds */
+const ERROR_AUTO_DISMISS_MS = 10000
 
 /**
  * Transform trends array to object keyed by MAC address
@@ -34,13 +37,19 @@ const DashboardScreen = () => {
   const sunrise = getSunrise(60.1703524, 24.9589753)
   const sunset = getSunset(60.1703524, 24.9589753)
 
+  const dismissError = useCallback(() => {
+    setError(null)
+  }, [])
+
   // Sensor data - polls every 10 seconds
   const { data: ruuviDatas, loading: ruuviLoading } = usePollingData(
     apiService.fetchRuuviData,
     {
       interval: SENSOR_POLL_INTERVAL,
       onError: (err) => {
-        setError('Failed to load sensor data')
+        const message = 'Failed to load sensor data'
+        setError(message)
+        errorLogService.addError(message, { source: 'sensor' })
         // eslint-disable-next-line no-console
         console.error('fetchRuuviData ERROR: ', err)
       },
@@ -53,7 +62,9 @@ const DashboardScreen = () => {
     {
       interval: SENSOR_POLL_INTERVAL,
       onError: (err) => {
-        setError('Failed to load temperature data')
+        const message = 'Failed to load temperature data'
+        setError(message)
+        errorLogService.addError(message, { source: 'temperature' })
         // eslint-disable-next-line no-console
         console.error('fetchMinMaxTemperatures ERROR: ', err)
       },
@@ -67,7 +78,9 @@ const DashboardScreen = () => {
       interval: TRENDS_POLL_INTERVAL,
       transform: transformTrends,
       onError: (err) => {
-        setError('Failed to load trend data')
+        const message = 'Failed to load trend data'
+        setError(message)
+        errorLogService.addError(message, { source: 'trends' })
         // eslint-disable-next-line no-console
         console.error('fetchTrends ERROR: ', err)
       },
@@ -80,7 +93,9 @@ const DashboardScreen = () => {
     {
       interval: SLOW_POLL_INTERVAL,
       onError: (err) => {
-        setError('Failed to load weather data')
+        const message = 'Failed to load weather data'
+        setError(message)
+        errorLogService.addError(message, { source: 'weather' })
         // eslint-disable-next-line no-console
         console.error('fetchWeatherData ERROR: ', err)
       },
@@ -93,7 +108,9 @@ const DashboardScreen = () => {
     {
       interval: SLOW_POLL_INTERVAL,
       onError: (err) => {
-        setError('Failed to load energy prices')
+        const message = 'Failed to load energy prices'
+        setError(message)
+        errorLogService.addError(message, { source: 'energy' })
         // eslint-disable-next-line no-console
         console.error('fetchEnergyPrices ERROR: ', err)
       },
@@ -116,7 +133,11 @@ const DashboardScreen = () => {
 
   return (
     <Box px={1.5} pt={1.5} pb={0}>
-      <ErrorAlert error={error} />
+      <ErrorAlert
+        error={error}
+        onDismiss={dismissError}
+        autoDismissMs={ERROR_AUTO_DISMISS_MS}
+      />
       <Grid container spacing={1.5}>
         <InOutCard
           ruuviDatas={ruuviDatas}

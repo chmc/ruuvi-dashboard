@@ -11,12 +11,14 @@ import DialogContent from '@mui/material/DialogContent'
 import DialogContentText from '@mui/material/DialogContentText'
 import DialogActions from '@mui/material/DialogActions'
 import CircularProgress from '@mui/material/CircularProgress'
+import Chip from '@mui/material/Chip'
 import BatteryIndicator from '../components/BatteryIndicator'
 import SensorHealthIndicator from '../components/SensorHealthIndicator'
 import ApiStatusIndicator from '../components/ApiStatusIndicator'
 import LoadingOverlay from '../components/LoadingOverlay'
 import ErrorAlert from '../components/ErrorAlert'
 import usePollingData from '../hooks/usePollingData'
+import useErrorLog from '../hooks/useErrorLog'
 import apiService from '../services/api'
 import configs from '../configs'
 import formatters from '../utils/formatters'
@@ -157,6 +159,8 @@ const DiagnosticsScreen = () => {
   const [isFlushing, setIsFlushing] = useState(false)
   const [flushSuccess, setFlushSuccess] = useState(null)
   const [flushError, setFlushError] = useState(null)
+
+  const { errors: errorLog, clearErrors } = useErrorLog()
 
   const macs = configs.macIds || []
 
@@ -671,6 +675,79 @@ const DiagnosticsScreen = () => {
                 ) : (
                   <Typography variant="body2" color="text.secondary">
                     No gap data
+                  </Typography>
+                )}
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Error Log Section - full width */}
+        <Grid size={{ xs: 12 }}>
+          <Card>
+            <CardContent>
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                mb={1}
+              >
+                <Typography variant="h6" component="h2">
+                  Error Log
+                </Typography>
+                {errorLog.length > 0 && (
+                  <Button variant="outlined" size="small" onClick={clearErrors}>
+                    Clear Errors
+                  </Button>
+                )}
+              </Box>
+              <Box display="flex" flexDirection="column" gap={1}>
+                {errorLog.length > 0 ? (
+                  [...errorLog].reverse().map((entry) => (
+                    <Box
+                      key={entry.id}
+                      sx={{
+                        p: 1,
+                        bgcolor: 'error.light',
+                        borderRadius: 1,
+                        opacity: 0.9,
+                      }}
+                    >
+                      <Box
+                        display="flex"
+                        justifyContent="space-between"
+                        alignItems="flex-start"
+                        gap={1}
+                      >
+                        <Typography
+                          variant="body2"
+                          sx={{ color: 'error.contrastText' }}
+                        >
+                          {entry.message}
+                        </Typography>
+                        {entry.source && (
+                          <Chip
+                            label={entry.source}
+                            size="small"
+                            sx={{
+                              bgcolor: 'error.dark',
+                              color: 'error.contrastText',
+                              fontSize: '0.7rem',
+                            }}
+                          />
+                        )}
+                      </Box>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: 'error.contrastText', opacity: 0.8 }}
+                      >
+                        {formatters.toLocalDateTime(entry.timestamp)}
+                      </Typography>
+                    </Box>
+                  ))
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No errors logged
                   </Typography>
                 )}
               </Box>

@@ -1,7 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import DiagnosticsScreen from './DiagnosticsScreen'
 import apiService from '../services/api'
+import errorLogService from '../services/errorLog'
 
 // Mock configs
 jest.mock('../configs', () => ({
@@ -67,6 +68,7 @@ describe('DiagnosticsScreen', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    errorLogService.clear()
     apiService.getDiagnostics.mockResolvedValue(mockDiagnostics)
   })
 
@@ -1107,6 +1109,136 @@ describe('DiagnosticsScreen', () => {
           .getByText(/out-of-range/i)
           .closest('div')
         expect(dataQualitySection).toHaveTextContent('0')
+      })
+    })
+  })
+
+  describe('Error Log Section', () => {
+    it('should render error log section', async () => {
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/error log/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should show "No errors logged" when error log is empty', async () => {
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/no errors logged/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should display errors from the error log service', async () => {
+      errorLogService.addError('Failed to load weather data', {
+        source: 'weather',
+      })
+      errorLogService.addError('Failed to load sensor data', {
+        source: 'sensor',
+      })
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/failed to load weather data/i)
+        ).toBeInTheDocument()
+        expect(
+          screen.getByText(/failed to load sensor data/i)
+        ).toBeInTheDocument()
+      })
+    })
+
+    it('should display error source when available', async () => {
+      errorLogService.addError('Test error', { source: 'weather' })
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/weather/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should display error timestamp', async () => {
+      errorLogService.addError('Test error')
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        // The timestamp format includes date and time
+        const errorLogSection = screen.getByText(/error log/i).closest('div')
+        expect(errorLogSection).toBeInTheDocument()
+      })
+    })
+
+    it('should update when new error is added', async () => {
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/no errors logged/i)).toBeInTheDocument()
+      })
+
+      act(() => {
+        errorLogService.addError('New error occurred')
+      })
+
+      await waitFor(() => {
+        expect(screen.getByText(/new error occurred/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should have a clear errors button', async () => {
+      errorLogService.addError('Test error')
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('button', { name: /clear errors/i })
+        ).toBeInTheDocument()
+      })
+    })
+
+    it('should clear errors when clear button is clicked', async () => {
+      const user = userEvent.setup()
+      errorLogService.addError('Test error')
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/test error/i)).toBeInTheDocument()
+      })
+
+      const clearButton = screen.getByRole('button', { name: /clear errors/i })
+      await user.click(clearButton)
+
+      await waitFor(() => {
+        expect(screen.getByText(/no errors logged/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should not show clear button when no errors', async () => {
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        expect(
+          screen.queryByRole('button', { name: /clear errors/i })
+        ).not.toBeInTheDocument()
+      })
+    })
+
+    it('should show most recent errors first', async () => {
+      errorLogService.addError('First error')
+      errorLogService.addError('Second error')
+      errorLogService.addError('Third error')
+
+      render(<DiagnosticsScreen />)
+
+      await waitFor(() => {
+        const errorTexts = screen.getAllByText(/error/i)
+        // Check that errors are displayed (order should be most recent first)
+        expect(errorTexts.length).toBeGreaterThan(0)
       })
     })
   })

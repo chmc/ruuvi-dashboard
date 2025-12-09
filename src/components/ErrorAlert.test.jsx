@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, act } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import ErrorAlert from './ErrorAlert'
 
 describe('ErrorAlert', () => {
@@ -94,6 +95,140 @@ describe('ErrorAlert', () => {
       const alert = screen.getByRole('alert')
       // Custom mb: 4 should override default
       expect(alert).toHaveStyle({ marginBottom: '32px' })
+    })
+  })
+
+  describe('onDismiss callback', () => {
+    it('should show close button when onDismiss is provided', () => {
+      const handleDismiss = jest.fn()
+      render(<ErrorAlert error="Test error" onDismiss={handleDismiss} />)
+
+      expect(screen.getByRole('button', { name: /close/i })).toBeInTheDocument()
+    })
+
+    it('should not show close button when onDismiss is not provided', () => {
+      render(<ErrorAlert error="Test error" />)
+
+      expect(
+        screen.queryByRole('button', { name: /close/i })
+      ).not.toBeInTheDocument()
+    })
+
+    it('should call onDismiss when close button is clicked', async () => {
+      const user = userEvent.setup()
+      const handleDismiss = jest.fn()
+      render(<ErrorAlert error="Test error" onDismiss={handleDismiss} />)
+
+      await user.click(screen.getByRole('button', { name: /close/i }))
+
+      expect(handleDismiss).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('auto-dismiss', () => {
+    beforeEach(() => {
+      jest.useFakeTimers()
+    })
+
+    afterEach(() => {
+      jest.useRealTimers()
+    })
+
+    it('should auto-dismiss after specified duration', () => {
+      const handleDismiss = jest.fn()
+      render(
+        <ErrorAlert
+          error="Test error"
+          onDismiss={handleDismiss}
+          autoDismissMs={5000}
+        />
+      )
+
+      expect(handleDismiss).not.toHaveBeenCalled()
+
+      act(() => {
+        jest.advanceTimersByTime(5000)
+      })
+
+      expect(handleDismiss).toHaveBeenCalledTimes(1)
+    })
+
+    it('should not auto-dismiss when autoDismissMs is not set', () => {
+      const handleDismiss = jest.fn()
+      render(<ErrorAlert error="Test error" onDismiss={handleDismiss} />)
+
+      act(() => {
+        jest.advanceTimersByTime(10000)
+      })
+
+      expect(handleDismiss).not.toHaveBeenCalled()
+    })
+
+    it('should not auto-dismiss when onDismiss is not provided', () => {
+      // Just ensure no errors occur
+      render(<ErrorAlert error="Test error" autoDismissMs={5000} />)
+
+      act(() => {
+        jest.advanceTimersByTime(5000)
+      })
+
+      // Alert should still be visible
+      expect(screen.getByRole('alert')).toBeInTheDocument()
+    })
+
+    it('should clear timer when component unmounts', () => {
+      const handleDismiss = jest.fn()
+      const { unmount } = render(
+        <ErrorAlert
+          error="Test error"
+          onDismiss={handleDismiss}
+          autoDismissMs={5000}
+        />
+      )
+
+      unmount()
+
+      act(() => {
+        jest.advanceTimersByTime(5000)
+      })
+
+      expect(handleDismiss).not.toHaveBeenCalled()
+    })
+
+    it('should reset timer when error message changes', () => {
+      const handleDismiss = jest.fn()
+      const { rerender } = render(
+        <ErrorAlert
+          error="Error 1"
+          onDismiss={handleDismiss}
+          autoDismissMs={5000}
+        />
+      )
+
+      act(() => {
+        jest.advanceTimersByTime(3000)
+      })
+
+      rerender(
+        <ErrorAlert
+          error="Error 2"
+          onDismiss={handleDismiss}
+          autoDismissMs={5000}
+        />
+      )
+
+      act(() => {
+        jest.advanceTimersByTime(3000)
+      })
+
+      // Should not have dismissed yet (timer reset)
+      expect(handleDismiss).not.toHaveBeenCalled()
+
+      act(() => {
+        jest.advanceTimersByTime(2000)
+      })
+
+      expect(handleDismiss).toHaveBeenCalledTimes(1)
     })
   })
 })
