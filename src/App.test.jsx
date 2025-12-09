@@ -36,43 +36,57 @@ jest.mock(
 )
 
 describe('App', () => {
-  it('should render Dashboard at root route', () => {
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <App />
-      </MemoryRouter>
-    )
+  describe('routing', () => {
+    it('should render Dashboard at root route', () => {
+      render(
+        <MemoryRouter initialEntries={['/']}>
+          <App />
+        </MemoryRouter>
+      )
 
-    expect(screen.getByTestId('dashboard-screen')).toBeInTheDocument()
+      expect(screen.getByTestId('dashboard-screen')).toBeInTheDocument()
+    })
+
+    it('should render History screen at /history route', () => {
+      render(
+        <MemoryRouter initialEntries={['/history']}>
+          <App />
+        </MemoryRouter>
+      )
+
+      expect(screen.getByTestId('history-screen')).toBeInTheDocument()
+    })
+
+    it('should render Diagnostics screen at /diagnostics route', () => {
+      render(
+        <MemoryRouter initialEntries={['/diagnostics']}>
+          <App />
+        </MemoryRouter>
+      )
+
+      expect(screen.getByTestId('diagnostics-screen')).toBeInTheDocument()
+    })
+
+    it('should redirect unknown routes to Dashboard', () => {
+      render(
+        <MemoryRouter initialEntries={['/unknown-route']}>
+          <App />
+        </MemoryRouter>
+      )
+
+      expect(screen.getByTestId('dashboard-screen')).toBeInTheDocument()
+    })
   })
 
-  it('should render History screen at /history route', () => {
-    render(
-      <MemoryRouter initialEntries={['/history']}>
-        <App />
-      </MemoryRouter>
-    )
+  describe('layout', () => {
+    it('should render NavigationFab alongside routes', () => {
+      render(
+        <MemoryRouter initialEntries={['/']}>
+          <App />
+        </MemoryRouter>
+      )
 
-    expect(screen.getByTestId('history-screen')).toBeInTheDocument()
-  })
-
-  it('should render Diagnostics screen at /diagnostics route', () => {
-    render(
-      <MemoryRouter initialEntries={['/diagnostics']}>
-        <App />
-      </MemoryRouter>
-    )
-
-    expect(screen.getByTestId('diagnostics-screen')).toBeInTheDocument()
-  })
-
-  it('should redirect unknown routes to Dashboard', () => {
-    render(
-      <MemoryRouter initialEntries={['/unknown-route']}>
-        <App />
-      </MemoryRouter>
-    )
-
-    expect(screen.getByTestId('dashboard-screen')).toBeInTheDocument()
+      expect(screen.getByTestId('navigation-fab')).toBeInTheDocument()
+    })
   })
 })

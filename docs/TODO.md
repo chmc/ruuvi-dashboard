@@ -150,22 +150,23 @@
 
 ## Medium Priority
 
-### 7. Add React Error Boundary
+### 7. Add React Error Boundary [COMPLETED]
 
 **Problem:** Component crash takes down entire app
 
 **Tasks:**
-- [ ] Create `src/components/ErrorBoundary.jsx` class component
-- [ ] Create `src/components/ErrorFallback.jsx` fallback UI
-- [ ] Add tests for ErrorBoundary
-- [ ] Wrap routes in `App.jsx` with ErrorBoundary
-- [ ] Update App tests
+- [x] Create `src/components/ErrorBoundary.jsx` class component
+- [x] Create `src/components/ErrorFallback.jsx` fallback UI
+- [x] Add tests for ErrorBoundary
+- [x] Wrap routes in `App.jsx` with ErrorBoundary
+- [x] Update App tests
 
-**Files to modify:**
+**Files modified:**
 - `src/components/ErrorBoundary.jsx` (new)
 - `src/components/ErrorFallback.jsx` (new)
 - `src/components/ErrorBoundary.test.jsx` (new)
 - `src/App.jsx`
+- `src/App.test.jsx`
 
 ---
 
