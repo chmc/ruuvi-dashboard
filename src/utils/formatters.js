@@ -27,17 +27,46 @@ const toPressureUI = (pressure) =>
   pressure ? Math.round(pressure.toFixed(0)).toString() : '-'
 
 /**
+ * @typedef {Object} PressureWeatherData
+ * @property {string} word - Finnish weather word
+ * @property {string} icon - Text icon character
+ * @property {string} iconName - Icon identifier for MUI icon mapping
+ */
+
+/** @type {PressureWeatherData} */
+const WEATHER_STORM = { word: 'Myrsky', icon: '▼', iconName: 'thunderstorm' }
+/** @type {PressureWeatherData} */
+const WEATHER_RAIN = { word: 'Sade', icon: '↓', iconName: 'rain' }
+/** @type {PressureWeatherData} */
+const WEATHER_CLOUD = { word: 'Pilvi', icon: '○', iconName: 'cloud' }
+/** @type {PressureWeatherData} */
+const WEATHER_FAIR = { word: 'Pouta', icon: '↑', iconName: 'partlyCloudy' }
+/** @type {PressureWeatherData} */
+const WEATHER_SUNNY = { word: 'Aurinko', icon: '★', iconName: 'sunny' }
+
+/**
+ * Get structured pressure weather data
+ * @param {number=} pressure in hPa
+ * @returns {PressureWeatherData | null}
+ */
+const getPressureWeatherData = (pressure) => {
+  if (!pressure) return null
+  if (pressure < 990) return WEATHER_STORM
+  if (pressure < 1005) return WEATHER_RAIN
+  if (pressure < 1015) return WEATHER_CLOUD
+  if (pressure < 1025) return WEATHER_FAIR
+  return WEATHER_SUNNY
+}
+
+/**
  * Convert pressure to Finnish weather word with icon
  * @param {number=} pressure in hPa
  * @returns {string}
  */
 const toPressureWeather = (pressure) => {
-  if (!pressure) return '-'
-  if (pressure < 990) return '▼ Myrsky'
-  if (pressure < 1005) return '↓ Sade'
-  if (pressure < 1015) return '○ Pilvi'
-  if (pressure < 1025) return '↑ Pouta'
-  return '★ Aurinko'
+  const data = getPressureWeatherData(pressure)
+  if (!data) return '-'
+  return `${data.icon} ${data.word}`
 }
 
 /**
@@ -130,6 +159,7 @@ const uiFormatter = {
   toHumidityUI,
   toPressureUI,
   toPressureWeather,
+  getPressureWeatherData,
   toDayOfWeekUI,
   toWindUI,
   toShortTimeUI,

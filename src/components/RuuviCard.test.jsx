@@ -5,6 +5,22 @@ import RuuviCard from './RuuviCard'
 jest.mock('../utils/formatters', () => ({
   toTemperatureUI: jest.fn((temp) => (temp ? temp.toFixed(1) : '-')),
   toHumidityUI: jest.fn((hum) => (hum ? Math.round(hum).toString() : '-')),
+  getPressureWeatherData: jest.fn((pressure) => {
+    if (!pressure) return null
+    if (pressure < 990) {
+      return { word: 'Myrsky', icon: '▼', iconName: 'thunderstorm' }
+    }
+    if (pressure < 1005) {
+      return { word: 'Sade', icon: '↓', iconName: 'rain' }
+    }
+    if (pressure < 1015) {
+      return { word: 'Pilvi', icon: '○', iconName: 'cloud' }
+    }
+    if (pressure < 1025) {
+      return { word: 'Pouta', icon: '↑', iconName: 'partlyCloudy' }
+    }
+    return { word: 'Aurinko', icon: '★', iconName: 'sunny' }
+  }),
 }))
 
 describe('RuuviCard', () => {

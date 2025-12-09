@@ -90,6 +90,79 @@ describe('uiFormatter', () => {
     })
   })
 
+  describe('getPressureWeatherData', () => {
+    it('should return storm data for pressure below 990', () => {
+      expect(uiFormatter.getPressureWeatherData(985)).toEqual({
+        word: 'Myrsky',
+        icon: '▼',
+        iconName: 'thunderstorm',
+      })
+      expect(uiFormatter.getPressureWeatherData(989)).toEqual({
+        word: 'Myrsky',
+        icon: '▼',
+        iconName: 'thunderstorm',
+      })
+    })
+
+    it('should return rain data for pressure 990-1004', () => {
+      expect(uiFormatter.getPressureWeatherData(990)).toEqual({
+        word: 'Sade',
+        icon: '↓',
+        iconName: 'rain',
+      })
+      expect(uiFormatter.getPressureWeatherData(1004)).toEqual({
+        word: 'Sade',
+        icon: '↓',
+        iconName: 'rain',
+      })
+    })
+
+    it('should return cloudy data for pressure 1005-1014', () => {
+      expect(uiFormatter.getPressureWeatherData(1005)).toEqual({
+        word: 'Pilvi',
+        icon: '○',
+        iconName: 'cloud',
+      })
+      expect(uiFormatter.getPressureWeatherData(1014)).toEqual({
+        word: 'Pilvi',
+        icon: '○',
+        iconName: 'cloud',
+      })
+    })
+
+    it('should return fair data for pressure 1015-1024', () => {
+      expect(uiFormatter.getPressureWeatherData(1015)).toEqual({
+        word: 'Pouta',
+        icon: '↑',
+        iconName: 'partlyCloudy',
+      })
+      expect(uiFormatter.getPressureWeatherData(1024)).toEqual({
+        word: 'Pouta',
+        icon: '↑',
+        iconName: 'partlyCloudy',
+      })
+    })
+
+    it('should return sunny data for pressure 1025 and above', () => {
+      expect(uiFormatter.getPressureWeatherData(1025)).toEqual({
+        word: 'Aurinko',
+        icon: '★',
+        iconName: 'sunny',
+      })
+      expect(uiFormatter.getPressureWeatherData(1040)).toEqual({
+        word: 'Aurinko',
+        icon: '★',
+        iconName: 'sunny',
+      })
+    })
+
+    it('should return null for undefined/null/zero pressure', () => {
+      expect(uiFormatter.getPressureWeatherData(undefined)).toBeNull()
+      expect(uiFormatter.getPressureWeatherData(null)).toBeNull()
+      expect(uiFormatter.getPressureWeatherData(0)).toBeNull()
+    })
+  })
+
   describe('toDayOfWeekUI', () => {
     it('should return Finnish day abbreviations', () => {
       expect(uiFormatter.toDayOfWeekUI('2023-10-22')).toBe('Su') // Sunday

@@ -170,17 +170,17 @@
 
 ---
 
-### 8. Consolidate Pressure-to-Weather Logic
+### 8. Consolidate Pressure-to-Weather Logic [COMPLETED]
 
 **Problem:** Same logic in RuuviCard.jsx and formatters.js
 
 **Tasks:**
-- [ ] Update `src/utils/formatters.js` to return structured pressure data
-- [ ] Add/update tests for pressure formatter
-- [ ] Refactor `src/components/RuuviCard.jsx` to use formatter + add icons
-- [ ] Update RuuviCard tests
+- [x] Update `src/utils/formatters.js` to return structured pressure data
+- [x] Add/update tests for pressure formatter
+- [x] Refactor `src/components/RuuviCard.jsx` to use formatter + add icons
+- [x] Update RuuviCard tests
 
-**Files to modify:**
+**Files modified:**
 - `src/utils/formatters.js`
 - `src/utils/formatters.test.js`
 - `src/components/RuuviCard.jsx`

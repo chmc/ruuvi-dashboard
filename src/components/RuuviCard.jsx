@@ -12,40 +12,15 @@ import uiFormatter from '../utils/formatters'
 import TrendIndicator from './TrendIndicator'
 
 /**
- * Get pressure weather icon and word
- * @param {number=} pressure
- * @returns {{ icon: JSX.Element, word: string }}
+ * Map iconName from formatter to MUI icon component
+ * @type {Record<string, JSX.Element>}
  */
-const getPressureWeather = (pressure) => {
-  if (!pressure) return { icon: null, word: '-' }
-  if (pressure < 990) {
-    return {
-      icon: <Thunderstorm fontSize="small" color="primary" />,
-      word: 'Myrsky',
-    }
-  }
-  if (pressure < 1005) {
-    return {
-      icon: <Grain fontSize="small" color="primary" />,
-      word: 'Sade',
-    }
-  }
-  if (pressure < 1015) {
-    return {
-      icon: <Cloud fontSize="small" color="primary" />,
-      word: 'Pilvi',
-    }
-  }
-  if (pressure < 1025) {
-    return {
-      icon: <FilterDrama fontSize="small" color="primary" />,
-      word: 'Pouta',
-    }
-  }
-  return {
-    icon: <WbSunny fontSize="small" color="primary" />,
-    word: 'Aurinko',
-  }
+const WEATHER_ICONS = {
+  thunderstorm: <Thunderstorm fontSize="small" color="primary" />,
+  rain: <Grain fontSize="small" color="primary" />,
+  cloud: <Cloud fontSize="small" color="primary" />,
+  partlyCloudy: <FilterDrama fontSize="small" color="primary" />,
+  sunny: <WbSunny fontSize="small" color="primary" />,
 }
 
 /**
@@ -70,7 +45,9 @@ const getPressureWeather = (pressure) => {
  * @param {SensorTrend} [props.trend] - Trend data for this sensor
  */
 const RuuviCard = ({ ruuvi, ruuviData, trend }) => {
-  const weather = getPressureWeather(ruuviData?.pressure)
+  const weatherData = uiFormatter.getPressureWeatherData(ruuviData?.pressure)
+  const weatherIcon = weatherData ? WEATHER_ICONS[weatherData.iconName] : null
+  const weatherWord = weatherData ? weatherData.word : '-'
 
   return (
     <Grid size={2}>
@@ -101,9 +78,9 @@ const RuuviCard = ({ ruuvi, ruuviData, trend }) => {
             </Box>
           </Typography>
           <Box display="flex" alignItems="center" mt={0.5}>
-            {weather.icon}
+            {weatherIcon}
             <Typography variant="body2" color="text.secondary" ml={0.5}>
-              {weather.word}
+              {weatherWord}
             </Typography>
           </Box>
         </CardContent>
