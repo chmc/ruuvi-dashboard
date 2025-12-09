@@ -1,5 +1,17 @@
 import { render, screen } from '@testing-library/react'
+import { ThemeProvider, createTheme } from '@mui/material/styles'
 import Sparkline from './Sparkline'
+import { ChartConfigProvider } from '../contexts/ChartConfigContext'
+
+// Wrapper component to provide required context
+const theme = createTheme({ palette: { mode: 'dark' } })
+
+const renderWithProviders = (ui) =>
+  render(
+    <ThemeProvider theme={theme}>
+      <ChartConfigProvider>{ui}</ChartConfigProvider>
+    </ThemeProvider>
+  )
 
 // Mock recharts components since they don't render properly in jsdom
 jest.mock('recharts', () => ({
@@ -34,19 +46,19 @@ describe('Sparkline', () => {
 
   describe('rendering', () => {
     it('renders SVG chart container', () => {
-      render(<Sparkline data={mockData} />)
+      renderWithProviders(<Sparkline data={mockData} />)
 
       expect(screen.getByTestId('line-chart')).toBeInTheDocument()
     })
 
     it('renders within ResponsiveContainer', () => {
-      render(<Sparkline data={mockData} />)
+      renderWithProviders(<Sparkline data={mockData} />)
 
       expect(screen.getByTestId('responsive-container')).toBeInTheDocument()
     })
 
     it('renders Line component with data', () => {
-      render(<Sparkline data={mockData} />)
+      renderWithProviders(<Sparkline data={mockData} />)
 
       const line = screen.getByTestId('sparkline-line')
       expect(line).toBeInTheDocument()
@@ -54,7 +66,7 @@ describe('Sparkline', () => {
     })
 
     it('passes data points to LineChart', () => {
-      render(<Sparkline data={mockData} />)
+      renderWithProviders(<Sparkline data={mockData} />)
 
       const chart = screen.getByTestId('line-chart')
       expect(chart).toHaveAttribute('data-points', '5')
@@ -63,19 +75,19 @@ describe('Sparkline', () => {
 
   describe('current value display', () => {
     it('shows current value when showValue is true', () => {
-      render(<Sparkline data={mockData} showValue />)
+      renderWithProviders(<Sparkline data={mockData} showValue />)
 
       expect(screen.getByText('23')).toBeInTheDocument()
     })
 
     it('formats value with unit when provided', () => {
-      render(<Sparkline data={mockData} showValue unit="°C" />)
+      renderWithProviders(<Sparkline data={mockData} showValue unit="°C" />)
 
       expect(screen.getByText('23°C')).toBeInTheDocument()
     })
 
     it('does not show value when showValue is false', () => {
-      render(<Sparkline data={mockData} showValue={false} />)
+      renderWithProviders(<Sparkline data={mockData} showValue={false} />)
 
       expect(screen.queryByText('23')).not.toBeInTheDocument()
     })
@@ -85,7 +97,9 @@ describe('Sparkline', () => {
         { timestamp: 1000, value: 20.123 },
         { timestamp: 2000, value: 21.456 },
       ]
-      render(<Sparkline data={dataWithDecimals} showValue decimals={1} />)
+      renderWithProviders(
+        <Sparkline data={dataWithDecimals} showValue decimals={1} />
+      )
 
       expect(screen.getByText('21.5')).toBeInTheDocument()
     })
@@ -93,28 +107,28 @@ describe('Sparkline', () => {
 
   describe('empty data handling', () => {
     it('handles empty data array gracefully', () => {
-      render(<Sparkline data={[]} />)
+      renderWithProviders(<Sparkline data={[]} />)
 
       const chart = screen.getByTestId('line-chart')
       expect(chart).toHaveAttribute('data-points', '0')
     })
 
     it('handles undefined data gracefully', () => {
-      render(<Sparkline data={undefined} />)
+      renderWithProviders(<Sparkline data={undefined} />)
 
       const chart = screen.getByTestId('line-chart')
       expect(chart).toHaveAttribute('data-points', '0')
     })
 
     it('handles null data gracefully', () => {
-      render(<Sparkline data={null} />)
+      renderWithProviders(<Sparkline data={null} />)
 
       const chart = screen.getByTestId('line-chart')
       expect(chart).toHaveAttribute('data-points', '0')
     })
 
     it('does not show value when data is empty', () => {
-      render(<Sparkline data={[]} showValue />)
+      renderWithProviders(<Sparkline data={[]} showValue />)
 
       // Should not crash and should not show any value
       expect(screen.queryByText(/°C/)).not.toBeInTheDocument()
@@ -123,21 +137,21 @@ describe('Sparkline', () => {
 
   describe('customization', () => {
     it('applies custom color to line', () => {
-      render(<Sparkline data={mockData} color="#ff0000" />)
+      renderWithProviders(<Sparkline data={mockData} color="#ff0000" />)
 
       const line = screen.getByTestId('sparkline-line')
       expect(line).toHaveAttribute('data-stroke', '#ff0000')
     })
 
     it('uses default color when not specified', () => {
-      render(<Sparkline data={mockData} />)
+      renderWithProviders(<Sparkline data={mockData} />)
 
       const line = screen.getByTestId('sparkline-line')
       expect(line).toHaveAttribute('data-stroke', '#1976d2')
     })
 
     it('applies custom width and height', () => {
-      const { container } = render(
+      const { container } = renderWithProviders(
         <Sparkline data={mockData} width={100} height={30} />
       )
 

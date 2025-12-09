@@ -17,6 +17,7 @@ import {
   formatTooltipValue,
   formatYAxisValue,
 } from '../utils/chartFormatters'
+import { useChartConfig } from '../contexts/ChartConfigContext'
 
 /**
  * @typedef {Object} HistoryDataPoint
@@ -96,6 +97,8 @@ const DetailChart = ({
   timeRange = '24h',
   height = DEFAULT_HEIGHT,
 }) => {
+  const chartConfig = useChartConfig()
+
   // Determine if we're in multi-sensor mode
   const isMultiSensorMode = multiSensorData && sensorConfigs?.length > 0
 
@@ -164,11 +167,11 @@ const DetailChart = ({
       })
       return payload
     }
-    // For single sensor, show metric names
+    // For single sensor, show metric names with theme-aware colors
     return selectedMetricsArray.map((metric) => ({
       value: metric.label,
       type: 'line',
-      color: metric.color,
+      color: chartConfig.metrics[metric.key] || metric.color,
     }))
   }
 
@@ -197,48 +200,58 @@ const DetailChart = ({
             }}
           >
             <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="rgba(255,255,255,0.1)"
+              strokeDasharray={chartConfig.grid.strokeDasharray}
+              stroke={chartConfig.grid.color}
             />
             <XAxis
               dataKey="timestamp"
               tickFormatter={(ts) => formatXAxisTime(ts, timeRange)}
-              stroke="rgba(255,255,255,0.5)"
-              tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }}
+              stroke={chartConfig.axis.color}
+              tick={{
+                fill: chartConfig.axis.tickColor,
+                fontSize: chartConfig.axis.tickFontSize,
+              }}
             />
 
             {/* Render Y-axis for each selected metric */}
-            {selectedMetricsArray.map((metric, index) => (
-              <YAxis
-                key={metric.key}
-                yAxisId={metric.key}
-                orientation={getYAxisOrientation(index)}
-                domain={['auto', 'auto']}
-                tickFormatter={formatYAxisValue}
-                stroke={metric.color}
-                tick={{ fill: metric.color, fontSize: 12 }}
-                width={45}
-                label={
-                  selectedMetricsArray.length > 1
-                    ? {
-                        value: metric.unit,
-                        angle: index === 0 ? -90 : 90,
-                        position: index === 0 ? 'insideLeft' : 'insideRight',
-                        fill: metric.color,
-                        fontSize: 11,
-                      }
-                    : undefined
-                }
-              />
-            ))}
+            {selectedMetricsArray.map((metric, index) => {
+              const metricColor =
+                chartConfig.metrics[metric.key] || metric.color
+              return (
+                <YAxis
+                  key={metric.key}
+                  yAxisId={metric.key}
+                  orientation={getYAxisOrientation(index)}
+                  domain={['auto', 'auto']}
+                  tickFormatter={formatYAxisValue}
+                  stroke={metricColor}
+                  tick={{
+                    fill: metricColor,
+                    fontSize: chartConfig.axis.tickFontSize,
+                  }}
+                  width={45}
+                  label={
+                    selectedMetricsArray.length > 1
+                      ? {
+                          value: metric.unit,
+                          angle: index === 0 ? -90 : 90,
+                          position: index === 0 ? 'insideLeft' : 'insideRight',
+                          fill: metricColor,
+                          fontSize: 11,
+                        }
+                      : undefined
+                  }
+                />
+              )
+            })}
 
             <Tooltip
               formatter={tooltipFormatter}
               labelFormatter={formatTooltipLabel}
               contentStyle={{
-                backgroundColor: 'rgba(30, 30, 30, 0.95)',
-                border: '1px solid rgba(255,255,255,0.2)',
-                borderRadius: 4,
+                backgroundColor: chartConfig.tooltip.backgroundColor,
+                border: `1px solid ${chartConfig.tooltip.borderColor}`,
+                borderRadius: chartConfig.tooltip.borderRadius,
               }}
             />
 
@@ -277,7 +290,7 @@ const DetailChart = ({
                     key={metric.key}
                     type="monotone"
                     dataKey={metric.key}
-                    stroke={metric.color}
+                    stroke={chartConfig.metrics[metric.key] || metric.color}
                     strokeWidth={2}
                     dot={false}
                     name={metric.label}

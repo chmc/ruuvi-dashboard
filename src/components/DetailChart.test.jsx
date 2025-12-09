@@ -1,5 +1,17 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
+import { ThemeProvider, createTheme } from '@mui/material/styles'
 import DetailChart from './DetailChart'
+import { ChartConfigProvider } from '../contexts/ChartConfigContext'
+
+// Wrapper component to provide required context
+const theme = createTheme({ palette: { mode: 'dark' } })
+
+const renderWithProviders = (ui) =>
+  render(
+    <ThemeProvider theme={theme}>
+      <ChartConfigProvider>{ui}</ChartConfigProvider>
+    </ThemeProvider>
+  )
 
 // Mock recharts components since they don't render properly in jsdom
 jest.mock('recharts', () => ({
@@ -93,13 +105,13 @@ describe('DetailChart', () => {
 
   describe('chart rendering with temperature data', () => {
     it('should render chart container', () => {
-      render(<DetailChart {...defaultProps} />)
+      renderWithProviders(<DetailChart {...defaultProps} />)
 
       expect(screen.getByTestId('responsive-container')).toBeInTheDocument()
     })
 
     it('should render LineChart with data', () => {
-      render(<DetailChart {...defaultProps} />)
+      renderWithProviders(<DetailChart {...defaultProps} />)
 
       const chart = screen.getByTestId('line-chart')
       expect(chart).toBeInTheDocument()
@@ -107,13 +119,13 @@ describe('DetailChart', () => {
     })
 
     it('should render temperature line by default', () => {
-      render(<DetailChart {...defaultProps} />)
+      renderWithProviders(<DetailChart {...defaultProps} />)
 
       expect(screen.getByTestId('chart-line-temperature')).toBeInTheDocument()
     })
 
     it('should display sensor name in title', () => {
-      render(<DetailChart {...defaultProps} />)
+      renderWithProviders(<DetailChart {...defaultProps} />)
 
       expect(screen.getByText('Living Room')).toBeInTheDocument()
     })
@@ -121,20 +133,20 @@ describe('DetailChart', () => {
 
   describe('time axis (X)', () => {
     it('should render X axis', () => {
-      render(<DetailChart {...defaultProps} />)
+      renderWithProviders(<DetailChart {...defaultProps} />)
 
       expect(screen.getByTestId('x-axis')).toBeInTheDocument()
     })
 
     it('should use timestamp as X axis data key', () => {
-      render(<DetailChart {...defaultProps} />)
+      renderWithProviders(<DetailChart {...defaultProps} />)
 
       const xAxis = screen.getByTestId('x-axis')
       expect(xAxis).toHaveAttribute('data-key', 'timestamp')
     })
 
     it('should have time formatter for X axis', () => {
-      render(<DetailChart {...defaultProps} />)
+      renderWithProviders(<DetailChart {...defaultProps} />)
 
       const xAxis = screen.getByTestId('x-axis')
       expect(xAxis).toHaveAttribute('data-has-formatter', 'true')
@@ -143,13 +155,13 @@ describe('DetailChart', () => {
 
   describe('value axis (Y)', () => {
     it('should render Y axis for temperature by default', () => {
-      render(<DetailChart {...defaultProps} />)
+      renderWithProviders(<DetailChart {...defaultProps} />)
 
       expect(screen.getByTestId('y-axis-temperature')).toBeInTheDocument()
     })
 
     it('should have value formatter for Y axis', () => {
-      render(<DetailChart {...defaultProps} />)
+      renderWithProviders(<DetailChart {...defaultProps} />)
 
       const yAxis = screen.getByTestId('y-axis-temperature')
       expect(yAxis).toHaveAttribute('data-has-formatter', 'true')
@@ -158,20 +170,20 @@ describe('DetailChart', () => {
 
   describe('tooltip', () => {
     it('should render tooltip component', () => {
-      render(<DetailChart {...defaultProps} />)
+      renderWithProviders(<DetailChart {...defaultProps} />)
 
       expect(screen.getByTestId('chart-tooltip')).toBeInTheDocument()
     })
 
     it('should have value formatter for tooltip', () => {
-      render(<DetailChart {...defaultProps} />)
+      renderWithProviders(<DetailChart {...defaultProps} />)
 
       const tooltip = screen.getByTestId('chart-tooltip')
       expect(tooltip).toHaveAttribute('data-has-formatter', 'true')
     })
 
     it('should have label formatter for tooltip timestamp', () => {
-      render(<DetailChart {...defaultProps} />)
+      renderWithProviders(<DetailChart {...defaultProps} />)
 
       const tooltip = screen.getByTestId('chart-tooltip')
       expect(tooltip).toHaveAttribute('data-has-label-formatter', 'true')
@@ -180,13 +192,15 @@ describe('DetailChart', () => {
 
   describe('metric selection via props', () => {
     it('should render temperature line by default', () => {
-      render(<DetailChart {...defaultProps} />)
+      renderWithProviders(<DetailChart {...defaultProps} />)
 
       expect(screen.getByTestId('chart-line-temperature')).toBeInTheDocument()
     })
 
     it('should render line for specified metric in props', () => {
-      render(<DetailChart {...defaultProps} selectedMetrics={['humidity']} />)
+      renderWithProviders(
+        <DetailChart {...defaultProps} selectedMetrics={['humidity']} />
+      )
 
       expect(screen.getByTestId('chart-line-humidity')).toBeInTheDocument()
       expect(
@@ -195,7 +209,7 @@ describe('DetailChart', () => {
     })
 
     it('should render lines for all metrics when multiple specified', () => {
-      render(
+      renderWithProviders(
         <DetailChart
           {...defaultProps}
           selectedMetrics={['temperature', 'humidity']}
@@ -207,7 +221,7 @@ describe('DetailChart', () => {
     })
 
     it('should render three lines when all metrics specified', () => {
-      render(
+      renderWithProviders(
         <DetailChart
           {...defaultProps}
           selectedMetrics={['temperature', 'humidity', 'pressure']}
@@ -220,7 +234,7 @@ describe('DetailChart', () => {
     })
 
     it('should render multiple Y-axes for different metric types', () => {
-      render(
+      renderWithProviders(
         <DetailChart
           {...defaultProps}
           selectedMetrics={['temperature', 'humidity']}
@@ -232,7 +246,7 @@ describe('DetailChart', () => {
     })
 
     it('should place secondary Y-axis on right side', () => {
-      render(
+      renderWithProviders(
         <DetailChart
           {...defaultProps}
           selectedMetrics={['temperature', 'humidity']}
@@ -266,7 +280,7 @@ describe('DetailChart', () => {
           pressure: 1014,
         },
       ]
-      render(
+      renderWithProviders(
         <DetailChart {...defaultProps} data={shortRangeData} timeRange="1h" />
       )
 
@@ -281,7 +295,7 @@ describe('DetailChart', () => {
         humidity: 40 + Math.random() * 20,
         pressure: 1010 + Math.random() * 10,
       }))
-      render(
+      renderWithProviders(
         <DetailChart {...defaultProps} data={longRangeData} timeRange="30d" />
       )
 
@@ -290,14 +304,14 @@ describe('DetailChart', () => {
     })
 
     it('should handle empty data gracefully', () => {
-      render(<DetailChart {...defaultProps} data={[]} />)
+      renderWithProviders(<DetailChart {...defaultProps} data={[]} />)
 
       const chart = screen.getByTestId('line-chart')
       expect(chart).toHaveAttribute('data-points', '0')
     })
 
     it('should handle null data gracefully', () => {
-      render(<DetailChart {...defaultProps} data={null} />)
+      renderWithProviders(<DetailChart {...defaultProps} data={null} />)
 
       const chart = screen.getByTestId('line-chart')
       expect(chart).toHaveAttribute('data-points', '0')
@@ -306,13 +320,13 @@ describe('DetailChart', () => {
 
   describe('responsive sizing', () => {
     it('should use ResponsiveContainer for chart', () => {
-      render(<DetailChart {...defaultProps} />)
+      renderWithProviders(<DetailChart {...defaultProps} />)
 
       expect(screen.getByTestId('responsive-container')).toBeInTheDocument()
     })
 
     it('should apply custom height when provided', () => {
-      const { container } = render(
+      const { container } = renderWithProviders(
         <DetailChart {...defaultProps} height={300} />
       )
 
@@ -323,7 +337,9 @@ describe('DetailChart', () => {
     })
 
     it('should use default height when not provided', () => {
-      const { container } = render(<DetailChart {...defaultProps} />)
+      const { container } = renderWithProviders(
+        <DetailChart {...defaultProps} />
+      )
 
       const chartWrapper = container.querySelector(
         '[data-testid="detail-chart-wrapper"]'
@@ -334,7 +350,7 @@ describe('DetailChart', () => {
 
   describe('grid lines', () => {
     it('should render cartesian grid', () => {
-      render(<DetailChart {...defaultProps} />)
+      renderWithProviders(<DetailChart {...defaultProps} />)
 
       expect(screen.getByTestId('cartesian-grid')).toBeInTheDocument()
     })
@@ -378,7 +394,7 @@ describe('DetailChart', () => {
     ]
 
     it('should render multiple lines when given multi-sensor data', () => {
-      render(
+      renderWithProviders(
         <DetailChart
           multiSensorData={multiSensorData}
           sensorConfigs={sensorConfigs}
@@ -394,7 +410,7 @@ describe('DetailChart', () => {
     })
 
     it('should render legend when multiple sensors are displayed', () => {
-      render(
+      renderWithProviders(
         <DetailChart
           multiSensorData={multiSensorData}
           sensorConfigs={sensorConfigs}
@@ -405,7 +421,7 @@ describe('DetailChart', () => {
     })
 
     it('should show sensor names in legend', () => {
-      render(
+      renderWithProviders(
         <DetailChart
           multiSensorData={multiSensorData}
           sensorConfigs={sensorConfigs}
@@ -418,7 +434,7 @@ describe('DetailChart', () => {
     })
 
     it('should use sensor-specific colors for each line', () => {
-      render(
+      renderWithProviders(
         <DetailChart
           multiSensorData={multiSensorData}
           sensorConfigs={sensorConfigs}
@@ -433,7 +449,7 @@ describe('DetailChart', () => {
     })
 
     it('should show humidity lines for all sensors when humidity is selected', () => {
-      render(
+      renderWithProviders(
         <DetailChart
           multiSensorData={multiSensorData}
           sensorConfigs={sensorConfigs}
@@ -450,7 +466,7 @@ describe('DetailChart', () => {
     })
 
     it('should merge data points by timestamp for aligned display', () => {
-      render(
+      renderWithProviders(
         <DetailChart
           multiSensorData={multiSensorData}
           sensorConfigs={sensorConfigs}
@@ -463,7 +479,7 @@ describe('DetailChart', () => {
     })
 
     it('should display title indicating comparison mode', () => {
-      render(
+      renderWithProviders(
         <DetailChart
           multiSensorData={multiSensorData}
           sensorConfigs={sensorConfigs}
@@ -474,7 +490,7 @@ describe('DetailChart', () => {
     })
 
     it('should fall back to single sensor mode when only data prop is provided', () => {
-      render(<DetailChart {...defaultProps} />)
+      renderWithProviders(<DetailChart {...defaultProps} />)
 
       // Should still work with original single-sensor API
       expect(screen.getByTestId('chart-line-temperature')).toBeInTheDocument()

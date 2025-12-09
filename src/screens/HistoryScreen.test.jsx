@@ -1,6 +1,18 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { ThemeProvider, createTheme } from '@mui/material/styles'
 import HistoryScreen from './HistoryScreen'
 import apiService from '../services/api'
+import { ChartConfigProvider } from '../contexts/ChartConfigContext'
+
+// Wrapper component to provide required context
+const theme = createTheme({ palette: { mode: 'dark' } })
+
+const renderWithProviders = (ui) =>
+  render(
+    <ThemeProvider theme={theme}>
+      <ChartConfigProvider>{ui}</ChartConfigProvider>
+    </ThemeProvider>
+  )
 
 // Mock configs
 jest.mock('../configs', () => ({
@@ -80,7 +92,7 @@ describe('HistoryScreen', () => {
 
   describe('Layout', () => {
     it('should render with title', async () => {
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
       await waitForLoadingComplete()
 
       expect(
@@ -89,7 +101,7 @@ describe('HistoryScreen', () => {
     })
 
     it('should use full viewport height for the container', async () => {
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
       await waitForLoadingComplete()
 
       const container = screen.getByTestId('history-screen-container')
@@ -97,7 +109,7 @@ describe('HistoryScreen', () => {
     })
 
     it('should have sensor rows container that grows to fill space', async () => {
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
       await waitForLoadingComplete()
 
       const sensorContainer = screen.getByTestId('sensor-rows-container')
@@ -105,7 +117,7 @@ describe('HistoryScreen', () => {
     })
 
     it('should render time range buttons', async () => {
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
       await waitForLoadingComplete()
 
       expect(screen.getByRole('button', { name: '1h' })).toBeInTheDocument()
@@ -117,7 +129,7 @@ describe('HistoryScreen', () => {
     })
 
     it('should have 24h selected by default', async () => {
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
       await waitForLoadingComplete()
 
       const button24h = screen.getByRole('button', { name: '24h' })
@@ -127,7 +139,7 @@ describe('HistoryScreen', () => {
 
   describe('Time Range Selection', () => {
     it('should update selection when clicking a time range button', async () => {
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
       await waitForLoadingComplete()
 
       const button7d = screen.getByRole('button', { name: '7d' })
@@ -143,7 +155,7 @@ describe('HistoryScreen', () => {
     })
 
     it('should allow selecting different time ranges', async () => {
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
       await waitForLoadingComplete()
 
       // Click through all time ranges
@@ -165,7 +177,7 @@ describe('HistoryScreen', () => {
 
   describe('Sensor List', () => {
     it('should render sensor list for each configured sensor', async () => {
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
       await waitForLoadingComplete()
 
       expect(screen.getByText('Living Room')).toBeInTheDocument()
@@ -176,14 +188,14 @@ describe('HistoryScreen', () => {
 
   describe('API Integration', () => {
     it('should call history API on screen mount', async () => {
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
       await waitForLoadingComplete()
 
       expect(apiService.fetchHistory).toHaveBeenCalled()
     })
 
     it('should call API for all configured sensors', async () => {
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
       await waitForLoadingComplete()
 
       expect(apiService.fetchHistory).toHaveBeenCalledWith(
@@ -201,7 +213,7 @@ describe('HistoryScreen', () => {
     })
 
     it('should call API with correct range parameter', async () => {
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
       await waitForLoadingComplete()
 
       // Clear mocks and change range
@@ -219,7 +231,7 @@ describe('HistoryScreen', () => {
     })
 
     it('should update data when time range changes', async () => {
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
       await waitForLoadingComplete()
 
       const initialCallCount = apiService.fetchHistory.mock.calls.length
@@ -241,13 +253,13 @@ describe('HistoryScreen', () => {
       // Create a promise that doesn't resolve immediately
       apiService.fetchHistory.mockImplementation(() => new Promise(() => {}))
 
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
 
       expect(screen.getByTestId('loading-overlay')).toBeInTheDocument()
     })
 
     it('should hide loading state after data loads', async () => {
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
       await waitForLoadingComplete()
 
       expect(screen.queryByTestId('loading-overlay')).not.toBeInTheDocument()
@@ -258,7 +270,7 @@ describe('HistoryScreen', () => {
     it('should display error state on API failure', async () => {
       apiService.fetchHistory.mockRejectedValue(new Error('Network error'))
 
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
 
       await waitFor(() => {
         expect(screen.getByTestId('error-alert')).toBeInTheDocument()
@@ -268,7 +280,7 @@ describe('HistoryScreen', () => {
     it('should show error message text', async () => {
       apiService.fetchHistory.mockRejectedValue(new Error('Network error'))
 
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
 
       await waitFor(() => {
         expect(screen.getByText(/failed to load/i)).toBeInTheDocument()
@@ -278,7 +290,7 @@ describe('HistoryScreen', () => {
 
   describe('Detail Chart', () => {
     it('should show detail chart when sensor is selected', async () => {
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
       await waitForLoadingComplete()
 
       // Click on a sensor row
@@ -293,7 +305,7 @@ describe('HistoryScreen', () => {
 
   describe('Metric Selection', () => {
     it('should render metric checkboxes', async () => {
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
       await waitForLoadingComplete()
 
       expect(screen.getByLabelText(/temperature/i)).toBeInTheDocument()
@@ -302,7 +314,7 @@ describe('HistoryScreen', () => {
     })
 
     it('should have temperature selected by default', async () => {
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
       await waitForLoadingComplete()
 
       const tempCheckbox = screen.getByLabelText(/temperature/i)
@@ -310,7 +322,7 @@ describe('HistoryScreen', () => {
     })
 
     it('should allow selecting multiple metrics', async () => {
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
       await waitForLoadingComplete()
 
       const tempCheckbox = screen.getByLabelText(/temperature/i)
@@ -328,7 +340,7 @@ describe('HistoryScreen', () => {
     })
 
     it('should allow deselecting a metric when multiple are selected', async () => {
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
       await waitForLoadingComplete()
 
       const tempCheckbox = screen.getByLabelText(/temperature/i)
@@ -345,7 +357,7 @@ describe('HistoryScreen', () => {
     })
 
     it('should not allow deselecting the last metric', async () => {
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
       await waitForLoadingComplete()
 
       const tempCheckbox = screen.getByLabelText(/temperature/i)
@@ -360,7 +372,7 @@ describe('HistoryScreen', () => {
 
   describe('Sensor Selection', () => {
     it('should show chart when sensor row is clicked', async () => {
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
       await waitForLoadingComplete()
 
       // Click on a sensor row
@@ -373,7 +385,7 @@ describe('HistoryScreen', () => {
     })
 
     it('should hide chart when same sensor row is clicked again', async () => {
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
       await waitForLoadingComplete()
 
       const sensorRow = screen.getByRole('button', {
@@ -392,7 +404,7 @@ describe('HistoryScreen', () => {
     })
 
     it('should hide chart when no sensor is selected', async () => {
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
       await waitForLoadingComplete()
 
       // Initially no sensor selected, no chart
@@ -402,7 +414,7 @@ describe('HistoryScreen', () => {
     })
 
     it('should show sensor name as chart title when selected', async () => {
-      render(<HistoryScreen />)
+      renderWithProviders(<HistoryScreen />)
       await waitForLoadingComplete()
 
       const sensorRow = screen.getByRole('button', {

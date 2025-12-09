@@ -8,8 +8,9 @@ import {
   XAxis,
   ReferenceLine,
 } from 'recharts'
-import { METRICS_BY_KEY, getMetricColor } from '../constants/metrics'
+import { METRICS_BY_KEY } from '../constants/metrics'
 import { formatXAxisTime, getXAxisTickCount } from '../utils/chartFormatters'
+import { useChartConfig } from '../contexts/ChartConfigContext'
 
 /**
  * @typedef {Object} DataPoint
@@ -81,6 +82,12 @@ const Sparkline = ({
   timeRange = '24h',
   showAxes = true,
 }) => {
+  const chartConfig = useChartConfig()
+
+  // Helper to get metric color from context or fallback
+  const getMetricColor = (metricKey) =>
+    chartConfig.metrics[metricKey] || METRICS_BY_KEY[metricKey]?.color || '#888'
+
   // Determine if we're in multi-metric mode
   const isMultiMetricMode = historyData && selectedMetrics.length > 0
 
@@ -193,7 +200,7 @@ const Sparkline = ({
                 domain={[yMin, yMax]}
                 ticks={yTicks}
                 tickFormatter={formatYAxis}
-                tick={{ fontSize: 10, fill: '#888' }}
+                tick={{ fontSize: 10, fill: chartConfig.axis.tickColor }}
                 axisLine={false}
                 tickLine={false}
                 width={30}
@@ -236,7 +243,7 @@ const Sparkline = ({
                 type="number"
                 domain={['dataMin', 'dataMax']}
                 tickFormatter={(ts) => formatXAxisTime(ts, timeRange)}
-                tick={{ fontSize: 10, fill: '#888' }}
+                tick={{ fontSize: 10, fill: chartConfig.axis.tickColor }}
                 axisLine={false}
                 tickLine={false}
                 ticks={getXTicks()}
@@ -246,7 +253,11 @@ const Sparkline = ({
             )}
             {/* Reference line at middle value - only for legacy mode */}
             {showAxes && !isMultiMetricMode && normalizedData.length > 0 && (
-              <ReferenceLine y={yMid} stroke="#444" strokeDasharray="3 3" />
+              <ReferenceLine
+                y={yMid}
+                stroke={chartConfig.referenceLine.color}
+                strokeDasharray={chartConfig.referenceLine.strokeDasharray}
+              />
             )}
             {/* Reference lines for multi-metric mode - one per metric */}
             {showAxes &&
@@ -264,7 +275,7 @@ const Sparkline = ({
                     y={metricMid}
                     yAxisId={metricKey}
                     stroke={getMetricColor(metricKey)}
-                    strokeDasharray="3 3"
+                    strokeDasharray={chartConfig.referenceLine.strokeDasharray}
                     strokeOpacity={0.3}
                   />
                 )

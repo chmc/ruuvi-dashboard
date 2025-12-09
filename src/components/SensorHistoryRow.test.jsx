@@ -1,5 +1,17 @@
 import { render, screen, fireEvent } from '@testing-library/react'
+import { ThemeProvider, createTheme } from '@mui/material/styles'
 import SensorHistoryRow from './SensorHistoryRow'
+import { ChartConfigProvider } from '../contexts/ChartConfigContext'
+
+// Wrapper component to provide required context
+const theme = createTheme({ palette: { mode: 'dark' } })
+
+const renderWithProviders = (ui) =>
+  render(
+    <ThemeProvider theme={theme}>
+      <ChartConfigProvider>{ui}</ChartConfigProvider>
+    </ThemeProvider>
+  )
 
 // Mock recharts components since they don't render properly in jsdom
 jest.mock('recharts', () => ({
@@ -47,13 +59,13 @@ describe('SensorHistoryRow', () => {
 
   describe('sensor name display', () => {
     it('should display sensor name', () => {
-      render(<SensorHistoryRow {...defaultProps} />)
+      renderWithProviders(<SensorHistoryRow {...defaultProps} />)
 
       expect(screen.getByText('Living Room')).toBeInTheDocument()
     })
 
     it('should display different sensor names', () => {
-      render(<SensorHistoryRow {...defaultProps} name="Outdoor" />)
+      renderWithProviders(<SensorHistoryRow {...defaultProps} name="Outdoor" />)
 
       expect(screen.getByText('Outdoor')).toBeInTheDocument()
     })
@@ -61,27 +73,29 @@ describe('SensorHistoryRow', () => {
 
   describe('sparkline display', () => {
     it('should render sparkline component', () => {
-      render(<SensorHistoryRow {...defaultProps} />)
+      renderWithProviders(<SensorHistoryRow {...defaultProps} />)
 
       expect(screen.getByTestId('line-chart')).toBeInTheDocument()
     })
 
     it('should pass data to sparkline', () => {
-      render(<SensorHistoryRow {...defaultProps} />)
+      renderWithProviders(<SensorHistoryRow {...defaultProps} />)
 
       const chart = screen.getByTestId('line-chart')
       expect(chart).toHaveAttribute('data-points', '5')
     })
 
     it('should handle empty data array', () => {
-      render(<SensorHistoryRow {...defaultProps} historyData={[]} />)
+      renderWithProviders(
+        <SensorHistoryRow {...defaultProps} historyData={[]} />
+      )
 
       const chart = screen.getByTestId('line-chart')
       expect(chart).toHaveAttribute('data-points', '0')
     })
 
     it('should render line for selected metric', () => {
-      render(<SensorHistoryRow {...defaultProps} />)
+      renderWithProviders(<SensorHistoryRow {...defaultProps} />)
 
       expect(
         screen.getByTestId('sparkline-line-temperature')
@@ -89,7 +103,7 @@ describe('SensorHistoryRow', () => {
     })
 
     it('should render multiple lines when multiple metrics selected', () => {
-      render(
+      renderWithProviders(
         <SensorHistoryRow
           {...defaultProps}
           selectedMetrics={['temperature', 'humidity']}
@@ -105,13 +119,13 @@ describe('SensorHistoryRow', () => {
 
   describe('current value display', () => {
     it('should display current value with unit for single metric', () => {
-      render(<SensorHistoryRow {...defaultProps} />)
+      renderWithProviders(<SensorHistoryRow {...defaultProps} />)
 
       expect(screen.getByText('23°C')).toBeInTheDocument()
     })
 
     it('should display multiple values on separate lines when multiple metrics selected', () => {
-      render(
+      renderWithProviders(
         <SensorHistoryRow
           {...defaultProps}
           selectedMetrics={['temperature', 'humidity']}
@@ -124,7 +138,7 @@ describe('SensorHistoryRow', () => {
     })
 
     it('should display all three values on separate lines when all metrics selected', () => {
-      render(
+      renderWithProviders(
         <SensorHistoryRow
           {...defaultProps}
           selectedMetrics={['temperature', 'humidity', 'pressure']}
@@ -138,13 +152,17 @@ describe('SensorHistoryRow', () => {
     })
 
     it('should display dash when historyData is empty', () => {
-      render(<SensorHistoryRow {...defaultProps} historyData={[]} />)
+      renderWithProviders(
+        <SensorHistoryRow {...defaultProps} historyData={[]} />
+      )
 
       expect(screen.getByText('-')).toBeInTheDocument()
     })
 
     it('should display dash when historyData is null', () => {
-      render(<SensorHistoryRow {...defaultProps} historyData={null} />)
+      renderWithProviders(
+        <SensorHistoryRow {...defaultProps} historyData={null} />
+      )
 
       expect(screen.getByText('-')).toBeInTheDocument()
     })
@@ -153,7 +171,9 @@ describe('SensorHistoryRow', () => {
   describe('click selection', () => {
     it('should call onSelect when row is clicked', () => {
       const onSelect = jest.fn()
-      render(<SensorHistoryRow {...defaultProps} onSelect={onSelect} />)
+      renderWithProviders(
+        <SensorHistoryRow {...defaultProps} onSelect={onSelect} />
+      )
 
       const row = screen.getByRole('button')
       fireEvent.click(row)
@@ -163,7 +183,9 @@ describe('SensorHistoryRow', () => {
 
     it('should pass mac address to onSelect callback', () => {
       const onSelect = jest.fn()
-      render(<SensorHistoryRow {...defaultProps} onSelect={onSelect} />)
+      renderWithProviders(
+        <SensorHistoryRow {...defaultProps} onSelect={onSelect} />
+      )
 
       const row = screen.getByRole('button')
       fireEvent.click(row)
@@ -172,7 +194,9 @@ describe('SensorHistoryRow', () => {
     })
 
     it('should not crash when onSelect is not provided', () => {
-      render(<SensorHistoryRow {...defaultProps} onSelect={undefined} />)
+      renderWithProviders(
+        <SensorHistoryRow {...defaultProps} onSelect={undefined} />
+      )
 
       const row = screen.getByRole('button')
       expect(() => fireEvent.click(row)).not.toThrow()
@@ -181,21 +205,23 @@ describe('SensorHistoryRow', () => {
 
   describe('selected state', () => {
     it('should have visual indicator when selected', () => {
-      render(<SensorHistoryRow {...defaultProps} selected />)
+      renderWithProviders(<SensorHistoryRow {...defaultProps} selected />)
 
       const row = screen.getByRole('button')
       expect(row).toHaveAttribute('data-selected', 'true')
     })
 
     it('should not have selected indicator when not selected', () => {
-      render(<SensorHistoryRow {...defaultProps} selected={false} />)
+      renderWithProviders(
+        <SensorHistoryRow {...defaultProps} selected={false} />
+      )
 
       const row = screen.getByRole('button')
       expect(row).toHaveAttribute('data-selected', 'false')
     })
 
     it('should apply selected styling', () => {
-      const { container } = render(
+      const { container } = renderWithProviders(
         <SensorHistoryRow {...defaultProps} selected />
       )
 
@@ -207,13 +233,13 @@ describe('SensorHistoryRow', () => {
 
   describe('accessibility', () => {
     it('should have button role for clickable row', () => {
-      render(<SensorHistoryRow {...defaultProps} />)
+      renderWithProviders(<SensorHistoryRow {...defaultProps} />)
 
       expect(screen.getByRole('button')).toBeInTheDocument()
     })
 
     it('should have accessible name from sensor name', () => {
-      render(<SensorHistoryRow {...defaultProps} />)
+      renderWithProviders(<SensorHistoryRow {...defaultProps} />)
 
       const row = screen.getByRole('button')
       expect(row).toHaveAccessibleName(/Living Room/i)

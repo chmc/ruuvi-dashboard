@@ -262,23 +262,29 @@
 
 ---
 
-### 12. Create ChartConfigContext
+### 12. Create ChartConfigContext [COMPLETED]
 
 **Problem:** Chart colors hardcoded, not theme-aware
 
 **Tasks:**
-- [ ] Create `src/contexts/ChartConfigContext.jsx`
-- [ ] Add tests for context
-- [ ] Provide context in `App.jsx`
-- [ ] Update chart components to consume context
-- [ ] Update tests
+- [x] Create `src/contexts/ChartConfigContext.jsx`
+- [x] Add tests for context
+- [x] Provide context in `App.jsx`
+- [x] Update chart components to consume context
+- [x] Update tests
 
-**Files to modify:**
+**Files modified:**
 - `src/contexts/ChartConfigContext.jsx` (new)
+- `src/contexts/ChartConfigContext.test.jsx` (new)
 - `src/App.jsx`
 - `src/components/DetailChart.jsx`
+- `src/components/DetailChart.test.jsx`
 - `src/components/Sparkline.jsx`
-- `src/components/EnergyPricesCard.jsx`
+- `src/components/Sparkline.test.jsx`
+- `src/components/SensorHistoryRow.test.jsx`
+- `src/screens/HistoryScreen.test.jsx`
+
+**Note:** EnergyPricesCard.jsx/VerticalBarChart.jsx already uses MUI theme for energy price colors via `theme.palette.energyPriceColors`, so no changes were needed there.
 
 ---
 
