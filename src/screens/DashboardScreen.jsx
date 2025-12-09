@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Grid from '@mui/material/Grid'
 import Box from '@mui/material/Box'
 import { getSunrise, getSunset } from 'sunrise-sunset-js'
@@ -9,135 +9,102 @@ import EnergyPricesCard from '../components/EnergyPricesCard'
 import CurrentEnergyPriceCard from '../components/CurrentEnergyPriceCard'
 import LoadingOverlay from '../components/LoadingOverlay'
 import ErrorAlert from '../components/ErrorAlert'
+import usePollingData from '../hooks/usePollingData'
 import configs from '../configs'
 import apiService from '../services/api'
 
+/** @type {number} Polling interval for sensor data (10 seconds) */
+const SENSOR_POLL_INTERVAL = 10000
+/** @type {number} Polling interval for trends (5 minutes) */
+const TRENDS_POLL_INTERVAL = 5 * 60 * 1000
+/** @type {number} Polling interval for weather/energy (30 minutes) */
+const SLOW_POLL_INTERVAL = 30 * 60 * 1000
+
 /**
- * @typedef {WeatherForecast | null} weatherForecast
- * @typedef {function(WeatherForecast): void} setWeatherForecast
- * @typedef {EnergyPrice[] | null} todayEnergyPrices
- * @typedef {function(energyPrice[]): void} setTodayEnergyPrices
+ * Transform trends array to object keyed by MAC address
+ * @param {Array<{mac: string}>} trendsData - Array of trend data
+ * @returns {Object.<string, Object>} Trends keyed by MAC
  */
+const transformTrends = (trendsData) =>
+  trendsData.reduce((acc, trend) => ({ ...acc, [trend.mac]: trend }), {})
 
 const DashboardScreen = () => {
-  const [ruuviDatas, setRuuviDatas] = useState(null)
-  const [trends, setTrends] = useState(null)
-  const [initialLoading, setInitialLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  /** @type {[weatherForecast, setWeatherForecast]} */
-  const [weatherForecast, setWeatherForecast] = useState(null)
-  /** @type {[todayEnergyPrices, setTodayEnergyPrices]} */
-  const [todayEnergyPrices, setTodayEnergyPrices] = useState(null)
-  const [tomorrowEnergyPrices, setTomorrowEnergyPrices] = useState(null)
-  const [todayMinMaxTemperature, setTodayMinMaxTemperature] = useState(null)
   const sunrise = getSunrise(60.1703524, 24.9589753)
   const sunset = getSunset(60.1703524, 24.9589753)
 
-  useEffect(() => {
-    const fetchRuuviData = async () => {
-      try {
-        setRuuviDatas(await apiService.fetchRuuviData())
-      } catch (err) {
+  // Sensor data - polls every 10 seconds
+  const { data: ruuviDatas, loading: ruuviLoading } = usePollingData(
+    apiService.fetchRuuviData,
+    {
+      interval: SENSOR_POLL_INTERVAL,
+      onError: (err) => {
         setError('Failed to load sensor data')
         // eslint-disable-next-line no-console
         console.error('fetchRuuviData ERROR: ', err)
-      }
+      },
     }
+  )
 
-    const fetchWeatherData = async () => {
-      try {
-        const forecast = await apiService.fetchWeatherData()
-        setWeatherForecast(forecast)
-      } catch (err) {
-        setError('Failed to load weather data')
-        // eslint-disable-next-line no-console
-        console.error('fetchWeatherData ERROR: ', err)
-      }
-    }
-
-    const fetchEnergyPrices = async () => {
-      try {
-        const json = await apiService.fetchEnergyPrices()
-        setTodayEnergyPrices(json.todayEnergyPrices)
-        setTomorrowEnergyPrices(json.tomorrowEnergyPrices)
-      } catch (err) {
-        setError('Failed to load energy prices')
-        // eslint-disable-next-line no-console
-        console.error('fetchEnergyPrices ERROR: ', err)
-      }
-    }
-
-    const fetchMinMaxTemperatures = async () => {
-      try {
-        setTodayMinMaxTemperature(await apiService.fetchMinMaxTemperatures())
-      } catch (err) {
+  // Min/Max temperatures - polls every 10 seconds
+  const { data: todayMinMaxTemperature } = usePollingData(
+    apiService.fetchMinMaxTemperatures,
+    {
+      interval: SENSOR_POLL_INTERVAL,
+      onError: (err) => {
         setError('Failed to load temperature data')
         // eslint-disable-next-line no-console
         console.error('fetchMinMaxTemperatures ERROR: ', err)
-      }
+      },
     }
+  )
 
-    const fetchTrends = async () => {
-      try {
-        const trendsData = await apiService.fetchTrends(configs.macIds)
-        // Convert array to object keyed by MAC for easier lookup
-        const trendsMap = trendsData.reduce(
-          (acc, trend) => ({ ...acc, [trend.mac]: trend }),
-          {}
-        )
-        setTrends(trendsMap)
-      } catch (err) {
+  // Trends - polls every 5 minutes
+  const { data: trends } = usePollingData(
+    () => apiService.fetchTrends(configs.macIds),
+    {
+      interval: TRENDS_POLL_INTERVAL,
+      transform: transformTrends,
+      onError: (err) => {
         setError('Failed to load trend data')
         // eslint-disable-next-line no-console
         console.error('fetchTrends ERROR: ', err)
-      }
-    }
-
-    // Initial data fetch
-    const loadInitialData = async () => {
-      try {
-        await Promise.all([
-          fetchWeatherData(),
-          fetchRuuviData(),
-          fetchEnergyPrices(),
-          fetchMinMaxTemperatures(),
-          fetchTrends(),
-        ])
-      } finally {
-        setInitialLoading(false)
-      }
-    }
-    // eslint-disable-next-line no-console
-    loadInitialData().catch(console.error)
-
-    const ruuviIntervalId = setInterval(() => {
-      // Every 10sec
-      fetchRuuviData()
-      fetchMinMaxTemperatures()
-    }, 10000)
-    const trendsIntervalId = setInterval(
-      () => {
-        // Every 5 minutes (trends don't change as frequently)
-        fetchTrends()
       },
-      5 * 60 * 1000
-    )
-    const energyPricesIntervalId = setInterval(
-      () => {
-        // Every 30mins
-        fetchEnergyPrices()
-        fetchWeatherData()
-      },
-      30 * 60 * 1000
-    )
-
-    return () => {
-      clearInterval(ruuviIntervalId)
-      clearInterval(energyPricesIntervalId)
-      clearInterval(trendsIntervalId)
     }
-  }, [])
+  )
+
+  // Weather forecast - polls every 30 minutes
+  const { data: weatherForecast } = usePollingData(
+    apiService.fetchWeatherData,
+    {
+      interval: SLOW_POLL_INTERVAL,
+      onError: (err) => {
+        setError('Failed to load weather data')
+        // eslint-disable-next-line no-console
+        console.error('fetchWeatherData ERROR: ', err)
+      },
+    }
+  )
+
+  // Energy prices - polls every 30 minutes
+  const { data: energyPricesData } = usePollingData(
+    apiService.fetchEnergyPrices,
+    {
+      interval: SLOW_POLL_INTERVAL,
+      onError: (err) => {
+        setError('Failed to load energy prices')
+        // eslint-disable-next-line no-console
+        console.error('fetchEnergyPrices ERROR: ', err)
+      },
+    }
+  )
+
+  const todayEnergyPrices = energyPricesData?.todayEnergyPrices ?? null
+  const tomorrowEnergyPrices = energyPricesData?.tomorrowEnergyPrices ?? null
+
+  // Consider initial loading complete when ruuvi data is loaded
+  const initialLoading = ruuviLoading
 
   if (initialLoading) {
     return (

@@ -188,18 +188,18 @@
 
 ---
 
-### 9. Create usePollingData Custom Hook
+### 9. Create usePollingData Custom Hook [COMPLETED]
 
 **Problem:** Polling logic duplicated across screens
 
 **Tasks:**
-- [ ] Create `src/hooks/usePollingData.js` custom hook
-- [ ] Add comprehensive tests for the hook
-- [ ] Refactor `DashboardScreen.jsx` to use hook
-- [ ] Refactor `DiagnosticsScreen.jsx` to use hook
-- [ ] Update screen tests
+- [x] Create `src/hooks/usePollingData.js` custom hook
+- [x] Add comprehensive tests for the hook
+- [x] Refactor `DashboardScreen.jsx` to use hook
+- [x] Refactor `DiagnosticsScreen.jsx` to use hook
+- [x] Update screen tests
 
-**Files to modify:**
+**Files modified:**
 - `src/hooks/usePollingData.js` (new)
 - `src/hooks/usePollingData.test.js` (new)
 - `src/screens/DashboardScreen.jsx`

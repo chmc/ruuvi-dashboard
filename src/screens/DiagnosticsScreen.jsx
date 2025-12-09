@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Card from '@mui/material/Card'
@@ -16,6 +16,7 @@ import SensorHealthIndicator from '../components/SensorHealthIndicator'
 import ApiStatusIndicator from '../components/ApiStatusIndicator'
 import LoadingOverlay from '../components/LoadingOverlay'
 import ErrorAlert from '../components/ErrorAlert'
+import usePollingData from '../hooks/usePollingData'
 import apiService from '../services/api'
 import configs from '../configs'
 import formatters from '../utils/formatters'
@@ -144,42 +145,29 @@ const formatUptime = (ms) => {
  */
 const formatNumber = (num) => num.toLocaleString()
 
+/** @type {number} Polling interval for diagnostics (30 seconds) */
+const DIAGNOSTICS_POLL_INTERVAL = 30000
+
 /**
  * Diagnostics screen - displays system status and buffer information
  * @returns {JSX.Element}
  */
 const DiagnosticsScreen = () => {
-  const [diagnostics, setDiagnostics] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
   const [flushDialogOpen, setFlushDialogOpen] = useState(false)
   const [isFlushing, setIsFlushing] = useState(false)
   const [flushSuccess, setFlushSuccess] = useState(null)
   const [flushError, setFlushError] = useState(null)
 
-  const fetchDiagnostics = async () => {
-    try {
-      setError(null)
-      const macs = configs.macIds || []
-      const data = await apiService.getDiagnostics(macs)
-      setDiagnostics(data)
-    } catch (err) {
-      setError(err.message || 'Failed to fetch diagnostics')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const macs = configs.macIds || []
 
-  useEffect(() => {
-    fetchDiagnostics()
-
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(() => {
-      fetchDiagnostics()
-    }, 30000)
-
-    return () => clearInterval(interval)
-  }, [])
+  const {
+    data: diagnostics,
+    loading,
+    error,
+    refetch,
+  } = usePollingData(() => apiService.getDiagnostics(macs), {
+    interval: DIAGNOSTICS_POLL_INTERVAL,
+  })
 
   const handleFlushClick = () => {
     setFlushDialogOpen(true)
@@ -198,9 +186,9 @@ const DiagnosticsScreen = () => {
       setFlushSuccess(result.message || 'Buffer flushed successfully')
       setFlushError(null)
       // Refresh diagnostics after flush
-      await fetchDiagnostics()
-    } catch (error) {
-      setFlushError(error.message || 'Failed to flush buffer')
+      await refetch()
+    } catch (err) {
+      setFlushError(err.message || 'Failed to flush buffer')
       setFlushSuccess(null)
     } finally {
       setIsFlushing(false)
