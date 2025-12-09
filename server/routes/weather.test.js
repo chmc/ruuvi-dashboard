@@ -93,6 +93,7 @@ describe('Weather API Endpoint', () => {
       const response = await request(app).get('/api/weather')
 
       expect(response.status).toBe(200)
+      expect(response.body.success).toBe(true)
       expect(fetch).toHaveBeenCalledWith(
         expect.stringContaining('api.openweathermap.org/data/2.5/forecast')
       )
@@ -110,8 +111,9 @@ describe('Weather API Endpoint', () => {
       const response = await request(app).get('/api/weather')
 
       expect(response.status).toBe(200)
-      expect(response.body).toHaveProperty('dailyForecast')
-      expect(response.body).toHaveProperty('hourlyForecast')
+      expect(response.body.success).toBe(true)
+      expect(response.body.data).toHaveProperty('dailyForecast')
+      expect(response.body.data).toHaveProperty('hourlyForecast')
     })
 
     it('should transform weather list items with correct properties', async () => {
@@ -123,8 +125,8 @@ describe('Weather API Endpoint', () => {
       const response = await request(app).get('/api/weather')
 
       expect(response.status).toBe(200)
-      expect(response.body.hourlyForecast.length).toBeGreaterThan(0)
-      const firstItem = response.body.hourlyForecast[0]
+      expect(response.body.data.hourlyForecast.length).toBeGreaterThan(0)
+      const firstItem = response.body.data.hourlyForecast[0]
       expect(firstItem).toHaveProperty('dateTimeUtcTxt')
       expect(firstItem).toHaveProperty('dateTxt')
       expect(firstItem).toHaveProperty('time')
@@ -143,7 +145,7 @@ describe('Weather API Endpoint', () => {
       const response = await request(app).get('/api/weather')
 
       expect(response.status).toBe(200)
-      const firstItem = response.body.hourlyForecast[0]
+      const firstItem = response.body.data.hourlyForecast[0]
       expect(firstItem.iconUrl).toMatch(
         /^https:\/\/openweathermap\.org\/img\/wn\/\w+@2x\.png$/
       )
@@ -158,7 +160,7 @@ describe('Weather API Endpoint', () => {
       const response = await request(app).get('/api/weather')
 
       expect(response.status).toBe(200)
-      expect(response.body.hourlyForecast.length).toBeLessThanOrEqual(4)
+      expect(response.body.data.hourlyForecast.length).toBeLessThanOrEqual(4)
     })
 
     it('should record success status when fetch succeeds', async () => {
@@ -180,6 +182,8 @@ describe('Weather API Endpoint', () => {
       const response = await request(app).get('/api/weather')
 
       expect(response.status).toBe(502)
+      expect(response.body.success).toBe(false)
+      expect(response.body.error.message).toBe('Failed to fetch weather data')
       expect(externalApiStatus.recordError).toHaveBeenCalledWith(
         'openWeatherMap',
         expect.stringContaining('Network error')
@@ -196,6 +200,8 @@ describe('Weather API Endpoint', () => {
       const response = await request(app).get('/api/weather')
 
       expect(response.status).toBe(502)
+      expect(response.body.success).toBe(false)
+      expect(response.body.error.message).toBe('Failed to fetch weather data')
       expect(externalApiStatus.recordError).toHaveBeenCalledWith(
         'openWeatherMap',
         expect.stringContaining('401')
@@ -208,8 +214,8 @@ describe('Weather API Endpoint', () => {
       const response = await request(app).get('/api/weather')
 
       expect(response.status).toBe(500)
-      expect(response.body).toHaveProperty('error')
-      expect(response.body.error).toContain('API key')
+      expect(response.body.success).toBe(false)
+      expect(response.body.error.message).toContain('API key')
     })
 
     it('should include coordinates in the API request', async () => {

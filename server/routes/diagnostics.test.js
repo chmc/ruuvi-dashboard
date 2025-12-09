@@ -74,11 +74,12 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body).toHaveProperty('bufferSize')
-      expect(response.body).toHaveProperty('lastFlushTime')
-      expect(response.body).toHaveProperty('batteries')
-      expect(response.body).toHaveProperty('dbSize')
-      expect(response.body).toHaveProperty('uptime')
+      expect(response.body.success).toBe(true)
+      expect(response.body.data).toHaveProperty('bufferSize')
+      expect(response.body.data).toHaveProperty('lastFlushTime')
+      expect(response.body.data).toHaveProperty('batteries')
+      expect(response.body.data).toHaveProperty('dbSize')
+      expect(response.body.data).toHaveProperty('uptime')
     })
 
     it('should include buffer size', async () => {
@@ -87,7 +88,7 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.bufferSize).toBe(150)
+      expect(response.body.data.bufferSize).toBe(150)
     })
 
     it('should include last flush time', async () => {
@@ -97,7 +98,7 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.lastFlushTime).toBe(flushTime)
+      expect(response.body.data.lastFlushTime).toBe(flushTime)
     })
 
     it('should include battery levels for all sensors', async () => {
@@ -117,13 +118,13 @@ describe('Diagnostics API Endpoint', () => {
         .query({ macs: 'aa:bb:cc:dd:ee:01,aa:bb:cc:dd:ee:02' })
 
       expect(response.status).toBe(200)
-      expect(response.body.batteries).toHaveLength(2)
-      expect(response.body.batteries[0]).toEqual({
+      expect(response.body.data.batteries).toHaveLength(2)
+      expect(response.body.data.batteries[0]).toEqual({
         mac: 'aa:bb:cc:dd:ee:01',
         voltage: 3.05,
         lastSeen: expect.any(Number),
       })
-      expect(response.body.batteries[1]).toEqual({
+      expect(response.body.data.batteries[1]).toEqual({
         mac: 'aa:bb:cc:dd:ee:02',
         voltage: 2.65,
         lastSeen: expect.any(Number),
@@ -159,14 +160,14 @@ describe('Diagnostics API Endpoint', () => {
         .query({ macs: 'aa:bb:cc:dd:ee:01,aa:bb:cc:dd:ee:02' })
 
       expect(response.status).toBe(200)
-      expect(response.body.batteries).toHaveLength(2)
+      expect(response.body.data.batteries).toHaveLength(2)
       // Should get the latest reading from buffer (2905, not 2900)
-      expect(response.body.batteries[0]).toEqual({
+      expect(response.body.data.batteries[0]).toEqual({
         mac: 'aa:bb:cc:dd:ee:01',
         voltage: 2905,
         lastSeen: bufferTimestamp,
       })
-      expect(response.body.batteries[1]).toEqual({
+      expect(response.body.data.batteries[1]).toEqual({
         mac: 'aa:bb:cc:dd:ee:02',
         voltage: 2750,
         lastSeen: bufferTimestamp,
@@ -198,7 +199,7 @@ describe('Diagnostics API Endpoint', () => {
 
       expect(response.status).toBe(200)
       // Should prefer the more recent buffer reading
-      expect(response.body.batteries[0]).toEqual({
+      expect(response.body.data.batteries[0]).toEqual({
         mac: 'aa:bb:cc:dd:ee:01',
         voltage: 2850,
         lastSeen: bufferTimestamp,
@@ -218,7 +219,7 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.dbSize).toBe(1000 * 4096) // 4MB
+      expect(response.body.data.dbSize).toBe(1000 * 4096) // 4MB
     })
 
     it('should include oldest record timestamp', async () => {
@@ -235,15 +236,15 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.oldestRecord).toBe(1600000000000)
+      expect(response.body.data.oldestRecord).toBe(1600000000000)
     })
 
     it('should include uptime', async () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(typeof response.body.uptime).toBe('number')
-      expect(response.body.uptime).toBeGreaterThanOrEqual(0)
+      expect(typeof response.body.data.uptime).toBe('number')
+      expect(response.body.data.uptime).toBeGreaterThanOrEqual(0)
     })
 
     it('should handle database not open gracefully', async () => {
@@ -253,8 +254,8 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.dbSize).toBe(0)
-      expect(response.body.oldestRecord).toBeNull()
+      expect(response.body.data.dbSize).toBe(0)
+      expect(response.body.data.oldestRecord).toBeNull()
     })
 
     it('should handle errors gracefully', async () => {
@@ -265,9 +266,8 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(500)
-      expect(response.body).toEqual({
-        error: 'Failed to fetch diagnostics data',
-      })
+      expect(response.body.success).toBe(false)
+      expect(response.body.error.message).toBe('Failed to fetch diagnostics data')
     })
   })
 
@@ -286,8 +286,8 @@ describe('Diagnostics API Endpoint', () => {
         .query({ macs: 'aa:bb:cc:dd:ee:01,aa:bb:cc:dd:ee:02' })
 
       expect(response.status).toBe(200)
-      expect(response.body.sensorHealth).toBeDefined()
-      expect(response.body.sensorHealth).toHaveLength(2)
+      expect(response.body.data.sensorHealth).toBeDefined()
+      expect(response.body.data.sensorHealth).toHaveLength(2)
     })
 
     it('should include last seen timestamp for each sensor', async () => {
@@ -303,7 +303,7 @@ describe('Diagnostics API Endpoint', () => {
         .query({ macs: 'aa:bb:cc:dd:ee:01' })
 
       expect(response.status).toBe(200)
-      expect(response.body.sensorHealth[0].lastSeen).toBe(now - 5000)
+      expect(response.body.data.sensorHealth[0].lastSeen).toBe(now - 5000)
     })
 
     it('should include RSSI (signal strength) for each sensor', async () => {
@@ -319,7 +319,7 @@ describe('Diagnostics API Endpoint', () => {
         .query({ macs: 'aa:bb:cc:dd:ee:01' })
 
       expect(response.status).toBe(200)
-      expect(response.body.sensorHealth[0].rssi).toBe(-65)
+      expect(response.body.data.sensorHealth[0].rssi).toBe(-65)
     })
 
     it('should detect stale sensors (>5 min since last reading)', async () => {
@@ -336,7 +336,7 @@ describe('Diagnostics API Endpoint', () => {
         .query({ macs: 'aa:bb:cc:dd:ee:01' })
 
       expect(response.status).toBe(200)
-      expect(response.body.sensorHealth[0].status).toBe('stale')
+      expect(response.body.data.sensorHealth[0].status).toBe('stale')
     })
 
     it('should mark sensor as online when recently seen', async () => {
@@ -352,7 +352,7 @@ describe('Diagnostics API Endpoint', () => {
         .query({ macs: 'aa:bb:cc:dd:ee:01' })
 
       expect(response.status).toBe(200)
-      expect(response.body.sensorHealth[0].status).toBe('online')
+      expect(response.body.data.sensorHealth[0].status).toBe('online')
     })
 
     it('should mark sensor as offline when never seen', async () => {
@@ -363,9 +363,9 @@ describe('Diagnostics API Endpoint', () => {
         .query({ macs: 'aa:bb:cc:dd:ee:01' })
 
       expect(response.status).toBe(200)
-      expect(response.body.sensorHealth[0].status).toBe('offline')
-      expect(response.body.sensorHealth[0].lastSeen).toBeNull()
-      expect(response.body.sensorHealth[0].rssi).toBeNull()
+      expect(response.body.data.sensorHealth[0].status).toBe('offline')
+      expect(response.body.data.sensorHealth[0].lastSeen).toBeNull()
+      expect(response.body.data.sensorHealth[0].rssi).toBeNull()
     })
 
     it('should handle missing scanner gracefully', async () => {
@@ -376,8 +376,8 @@ describe('Diagnostics API Endpoint', () => {
         .query({ macs: 'aa:bb:cc:dd:ee:01' })
 
       expect(response.status).toBe(200)
-      expect(response.body.sensorHealth).toBeDefined()
-      expect(response.body.sensorHealth[0].status).toBe('offline')
+      expect(response.body.data.sensorHealth).toBeDefined()
+      expect(response.body.data.sensorHealth[0].status).toBe('offline')
     })
 
     it('should include sensor health for all requested MACs', async () => {
@@ -394,11 +394,11 @@ describe('Diagnostics API Endpoint', () => {
         .query({ macs: 'aa:bb:cc:dd:ee:01,aa:bb:cc:dd:ee:02' })
 
       expect(response.status).toBe(200)
-      expect(response.body.sensorHealth).toHaveLength(2)
-      expect(response.body.sensorHealth[0].mac).toBe('aa:bb:cc:dd:ee:01')
-      expect(response.body.sensorHealth[0].status).toBe('online')
-      expect(response.body.sensorHealth[1].mac).toBe('aa:bb:cc:dd:ee:02')
-      expect(response.body.sensorHealth[1].status).toBe('offline')
+      expect(response.body.data.sensorHealth).toHaveLength(2)
+      expect(response.body.data.sensorHealth[0].mac).toBe('aa:bb:cc:dd:ee:01')
+      expect(response.body.data.sensorHealth[0].status).toBe('online')
+      expect(response.body.data.sensorHealth[1].mac).toBe('aa:bb:cc:dd:ee:02')
+      expect(response.body.data.sensorHealth[1].status).toBe('offline')
     })
   })
 
@@ -407,25 +407,25 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.systemResources).toBeDefined()
-      expect(response.body.systemResources.memory).toBeDefined()
-      expect(response.body.systemResources.memory.heapUsed).toEqual(
+      expect(response.body.data.systemResources).toBeDefined()
+      expect(response.body.data.systemResources.memory).toBeDefined()
+      expect(response.body.data.systemResources.memory.heapUsed).toEqual(
         expect.any(Number)
       )
-      expect(response.body.systemResources.memory.heapTotal).toEqual(
+      expect(response.body.data.systemResources.memory.heapTotal).toEqual(
         expect.any(Number)
       )
-      expect(response.body.systemResources.memory.heapUsed).toBeGreaterThan(0)
-      expect(response.body.systemResources.memory.heapTotal).toBeGreaterThan(0)
+      expect(response.body.data.systemResources.memory.heapUsed).toBeGreaterThan(0)
+      expect(response.body.data.systemResources.memory.heapTotal).toBeGreaterThan(0)
     })
 
     it('should include Node.js version', async () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.systemResources).toBeDefined()
-      expect(response.body.systemResources.nodeVersion).toBeDefined()
-      expect(response.body.systemResources.nodeVersion).toMatch(
+      expect(response.body.data.systemResources).toBeDefined()
+      expect(response.body.data.systemResources.nodeVersion).toBeDefined()
+      expect(response.body.data.systemResources.nodeVersion).toMatch(
         /^v?\d+\.\d+\.\d+/
       )
     })
@@ -434,33 +434,33 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.systemResources).toBeDefined()
-      expect(response.body.systemResources.disk).toBeDefined()
-      expect(response.body.systemResources.disk.free).toEqual(
+      expect(response.body.data.systemResources).toBeDefined()
+      expect(response.body.data.systemResources.disk).toBeDefined()
+      expect(response.body.data.systemResources.disk.free).toEqual(
         expect.any(Number)
       )
-      expect(response.body.systemResources.disk.total).toEqual(
+      expect(response.body.data.systemResources.disk.total).toEqual(
         expect.any(Number)
       )
-      expect(response.body.systemResources.disk.free).toBeGreaterThanOrEqual(0)
-      expect(response.body.systemResources.disk.total).toBeGreaterThan(0)
+      expect(response.body.data.systemResources.disk.free).toBeGreaterThanOrEqual(0)
+      expect(response.body.data.systemResources.disk.total).toBeGreaterThan(0)
     })
 
     it('should include RSS memory', async () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.systemResources.memory.rss).toEqual(
+      expect(response.body.data.systemResources.memory.rss).toEqual(
         expect.any(Number)
       )
-      expect(response.body.systemResources.memory.rss).toBeGreaterThan(0)
+      expect(response.body.data.systemResources.memory.rss).toBeGreaterThan(0)
     })
 
     it('should include external memory', async () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.systemResources.memory.external).toEqual(
+      expect(response.body.data.systemResources.memory.external).toEqual(
         expect.any(Number)
       )
     })
@@ -486,9 +486,9 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.externalApis).toBeDefined()
-      expect(response.body.externalApis.energyPrices.status).toBe('ok')
-      expect(response.body.externalApis.energyPrices.lastSuccess).toBe(
+      expect(response.body.data.externalApis).toBeDefined()
+      expect(response.body.data.externalApis.energyPrices.status).toBe('ok')
+      expect(response.body.data.externalApis.energyPrices.lastSuccess).toBe(
         1700000000000
       )
     })
@@ -512,9 +512,9 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.externalApis).toBeDefined()
-      expect(response.body.externalApis.openWeatherMap.status).toBe('ok')
-      expect(response.body.externalApis.openWeatherMap.lastSuccess).toBe(
+      expect(response.body.data.externalApis).toBeDefined()
+      expect(response.body.data.externalApis.openWeatherMap.status).toBe('ok')
+      expect(response.body.data.externalApis.openWeatherMap.lastSuccess).toBe(
         1700000000000
       )
     })
@@ -538,11 +538,11 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.externalApis.energyPrices.status).toBe('error')
-      expect(response.body.externalApis.energyPrices.errorMessage).toBe(
+      expect(response.body.data.externalApis.energyPrices.status).toBe('error')
+      expect(response.body.data.externalApis.energyPrices.errorMessage).toBe(
         'Network timeout'
       )
-      expect(response.body.externalApis.energyPrices.lastError).toBe(
+      expect(response.body.data.externalApis.energyPrices.lastError).toBe(
         1700000000000
       )
     })
@@ -567,10 +567,10 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.externalApis.energyPrices.lastSuccess).toBe(
+      expect(response.body.data.externalApis.energyPrices.lastSuccess).toBe(
         lastSuccessTime
       )
-      expect(response.body.externalApis.openWeatherMap.lastSuccess).toBe(
+      expect(response.body.data.externalApis.openWeatherMap.lastSuccess).toBe(
         lastSuccessTime
       )
     })
@@ -592,8 +592,8 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).post('/api/diagnostics/flush')
 
       expect(response.status).toBe(200)
-      expect(response.body).toEqual({
-        success: true,
+      expect(response.body.success).toBe(true)
+      expect(response.body.data).toEqual({
         flushedCount: 50,
         message: 'Buffer flushed successfully',
       })
@@ -605,8 +605,8 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).post('/api/diagnostics/flush')
 
       expect(response.status).toBe(200)
-      expect(response.body.flushedCount).toBe(0)
       expect(response.body.success).toBe(true)
+      expect(response.body.data.flushedCount).toBe(0)
     })
 
     it('should handle flush when scheduler not running', async () => {
@@ -615,8 +615,8 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).post('/api/diagnostics/flush')
 
       expect(response.status).toBe(200)
-      expect(response.body).toEqual({
-        success: true,
+      expect(response.body.success).toBe(true)
+      expect(response.body.data).toEqual({
         flushedCount: 0,
         message: 'Buffer flushed successfully',
       })
@@ -630,9 +630,8 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).post('/api/diagnostics/flush')
 
       expect(response.status).toBe(500)
-      expect(response.body).toEqual({
-        error: 'Failed to flush buffer',
-      })
+      expect(response.body.success).toBe(false)
+      expect(response.body.error.message).toBe('Failed to flush buffer')
     })
   })
 
@@ -643,7 +642,8 @@ describe('Diagnostics API Endpoint', () => {
         .send({ api: 'openWeatherMap', status: 'success' })
 
       expect(response.status).toBe(200)
-      expect(response.body).toEqual({ success: true })
+      expect(response.body.success).toBe(true)
+      expect(response.body.data).toEqual({ recorded: true })
       expect(externalApiStatus.recordSuccess).toHaveBeenCalledWith(
         'openWeatherMap'
       )
@@ -659,7 +659,8 @@ describe('Diagnostics API Endpoint', () => {
         })
 
       expect(response.status).toBe(200)
-      expect(response.body).toEqual({ success: true })
+      expect(response.body.success).toBe(true)
+      expect(response.body.data).toEqual({ recorded: true })
       expect(externalApiStatus.recordError).toHaveBeenCalledWith(
         'openWeatherMap',
         'Invalid API key'
@@ -672,7 +673,8 @@ describe('Diagnostics API Endpoint', () => {
         .send({ api: 'invalidApi', status: 'success' })
 
       expect(response.status).toBe(400)
-      expect(response.body).toEqual({ error: 'Invalid API name' })
+      expect(response.body.success).toBe(false)
+      expect(response.body.error.message).toBe('Invalid API name')
     })
 
     it('should reject invalid status', async () => {
@@ -681,7 +683,8 @@ describe('Diagnostics API Endpoint', () => {
         .send({ api: 'openWeatherMap', status: 'invalid' })
 
       expect(response.status).toBe(400)
-      expect(response.body).toEqual({ error: 'Invalid status' })
+      expect(response.body.success).toBe(false)
+      expect(response.body.error.message).toBe('Invalid status')
     })
 
     it('should require api parameter', async () => {
@@ -690,7 +693,8 @@ describe('Diagnostics API Endpoint', () => {
         .send({ status: 'success' })
 
       expect(response.status).toBe(400)
-      expect(response.body).toEqual({ error: 'Missing required field: api' })
+      expect(response.body.success).toBe(false)
+      expect(response.body.error.message).toBe('Missing required field: api')
     })
 
     it('should require status parameter', async () => {
@@ -699,7 +703,8 @@ describe('Diagnostics API Endpoint', () => {
         .send({ api: 'openWeatherMap' })
 
       expect(response.status).toBe(400)
-      expect(response.body).toEqual({ error: 'Missing required field: status' })
+      expect(response.body.success).toBe(false)
+      expect(response.body.error.message).toBe('Missing required field: status')
     })
   })
 
@@ -714,8 +719,8 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.flushHistory).toBeDefined()
-      expect(response.body.flushHistory).toHaveLength(2)
+      expect(response.body.data.flushHistory).toBeDefined()
+      expect(response.body.data.flushHistory).toHaveLength(2)
     })
 
     it('should return flush timestamps in history', async () => {
@@ -727,7 +732,7 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.flushHistory[0].timestamp).toBe(now - 60000)
+      expect(response.body.data.flushHistory[0].timestamp).toBe(now - 60000)
     })
 
     it('should return records flushed count for each flush', async () => {
@@ -740,8 +745,8 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.flushHistory[0].count).toBe(25)
-      expect(response.body.flushHistory[1].count).toBe(30)
+      expect(response.body.data.flushHistory[0].count).toBe(25)
+      expect(response.body.data.flushHistory[1].count).toBe(30)
     })
 
     it('should return flush duration for each flush', async () => {
@@ -753,7 +758,7 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.flushHistory[0].durationMs).toBe(55)
+      expect(response.body.data.flushHistory[0].durationMs).toBe(55)
     })
 
     it('should return empty array when no flushes have occurred', async () => {
@@ -762,7 +767,7 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.flushHistory).toEqual([])
+      expect(response.body.data.flushHistory).toEqual([])
     })
   })
 
@@ -788,8 +793,8 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.dbStats).toBeDefined()
-      expect(response.body.dbStats.totalRecords).toBe(12500)
+      expect(response.body.data.dbStats).toBeDefined()
+      expect(response.body.data.dbStats.totalRecords).toBe(12500)
     })
 
     it('should include records per sensor', async () => {
@@ -806,7 +811,7 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.dbStats.recordsByMac).toEqual([
+      expect(response.body.data.dbStats.recordsByMac).toEqual([
         { mac: 'aa:bb:cc:dd:ee:01', count: 10000 },
         { mac: 'aa:bb:cc:dd:ee:02', count: 5000 },
       ])
@@ -839,9 +844,9 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.dbStats.growthRatePerDay).toBeDefined()
+      expect(response.body.data.dbStats.growthRatePerDay).toBeDefined()
       // 10 MB over 10 days = ~1 MB/day = ~1048576 bytes/day
-      expect(response.body.dbStats.growthRatePerDay).toBeCloseTo(1048576, -4)
+      expect(response.body.data.dbStats.growthRatePerDay).toBeCloseTo(1048576, -4)
     })
 
     it('should return null growth rate when no data history', async () => {
@@ -855,7 +860,7 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.dbStats.growthRatePerDay).toBeNull()
+      expect(response.body.data.dbStats.growthRatePerDay).toBeNull()
     })
 
     it('should include last successful DB write timestamp', async () => {
@@ -870,7 +875,7 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.dbStats.lastWriteTime).toBe(lastWriteTime)
+      expect(response.body.data.dbStats.lastWriteTime).toBe(lastWriteTime)
     })
 
     it('should handle database not open for statistics', async () => {
@@ -882,7 +887,7 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.dbStats).toEqual({
+      expect(response.body.data.dbStats).toEqual({
         totalRecords: 0,
         recordsByMac: [],
         growthRatePerDay: null,
@@ -909,7 +914,7 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.dataQuality).toBeDefined()
+      expect(response.body.data.dataQuality).toBeDefined()
     })
 
     it('should include out-of-range readings count', async () => {
@@ -918,7 +923,7 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.dataQuality.outOfRangeCount).toBe(5)
+      expect(response.body.data.dataQuality.outOfRangeCount).toBe(5)
     })
 
     it('should include min/max values recorded today', async () => {
@@ -932,7 +937,7 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.dataQuality.todayMinMax).toEqual({
+      expect(response.body.data.dataQuality.todayMinMax).toEqual({
         minTemperature: 18.5,
         maxTemperature: 25.3,
         minHumidity: 30,
@@ -952,9 +957,9 @@ describe('Diagnostics API Endpoint', () => {
         .query({ macs: 'aa:bb:cc:dd:ee:01,aa:bb:cc:dd:ee:02' })
 
       expect(response.status).toBe(200)
-      expect(response.body.dataQuality.readingFrequency).toBeDefined()
-      expect(response.body.dataQuality.readingFrequency).toHaveLength(2)
-      expect(response.body.dataQuality.readingFrequency[0]).toEqual({
+      expect(response.body.data.dataQuality.readingFrequency).toBeDefined()
+      expect(response.body.data.dataQuality.readingFrequency).toHaveLength(2)
+      expect(response.body.data.dataQuality.readingFrequency[0]).toEqual({
         mac: 'aa:bb:cc:dd:ee:01',
         readingsPerHour: 60,
       })
@@ -980,12 +985,12 @@ describe('Diagnostics API Endpoint', () => {
         .query({ macs: 'aa:bb:cc:dd:ee:01,aa:bb:cc:dd:ee:02' })
 
       expect(response.status).toBe(200)
-      expect(response.body.dataQuality.dataGaps).toBeDefined()
+      expect(response.body.data.dataQuality.dataGaps).toBeDefined()
       expect(
-        response.body.dataQuality.dataGaps['aa:bb:cc:dd:ee:01']
+        response.body.data.dataQuality.dataGaps['aa:bb:cc:dd:ee:01']
       ).toHaveLength(1)
       expect(
-        response.body.dataQuality.dataGaps['aa:bb:cc:dd:ee:02']
+        response.body.data.dataQuality.dataGaps['aa:bb:cc:dd:ee:02']
       ).toHaveLength(0)
     })
 
@@ -993,8 +998,8 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.dataQuality.readingFrequency).toEqual([])
-      expect(response.body.dataQuality.dataGaps).toEqual({})
+      expect(response.body.data.dataQuality.readingFrequency).toEqual([])
+      expect(response.body.data.dataQuality.dataGaps).toEqual({})
     })
 
     it('should handle database errors gracefully', async () => {
@@ -1005,7 +1010,7 @@ describe('Diagnostics API Endpoint', () => {
       const response = await request(app).get('/api/diagnostics')
 
       expect(response.status).toBe(200)
-      expect(response.body.dataQuality).toEqual({
+      expect(response.body.data.dataQuality).toEqual({
         outOfRangeCount: 0,
         todayMinMax: {
           minTemperature: null,

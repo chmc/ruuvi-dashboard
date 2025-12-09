@@ -31,9 +31,8 @@ describe('History API Endpoint', () => {
       const response = await request(app).get('/api/ruuvi/history')
 
       expect(response.status).toBe(400)
-      expect(response.body).toEqual({
-        error: 'Missing required parameter: mac',
-      })
+      expect(response.body.success).toBe(false)
+      expect(response.body.error.message).toBe('Missing required parameter: mac')
     })
 
     it('should return readings for a valid mac', async () => {
@@ -65,7 +64,8 @@ describe('History API Endpoint', () => {
         .query({ mac: 'aa:bb:cc:dd:ee:ff' })
 
       expect(response.status).toBe(200)
-      expect(response.body).toEqual([
+      expect(response.body.success).toBe(true)
+      expect(response.body.data).toEqual([
         {
           timestamp: 1700000000000,
           temperature: 21.5,
@@ -195,9 +195,10 @@ describe('History API Endpoint', () => {
         .query({ mac: 'aa:bb:cc:dd:ee:ff' })
 
       expect(response.status).toBe(200)
+      expect(response.body.success).toBe(true)
       // Should be downsampled to ~500 points or less
-      expect(response.body.length).toBeLessThanOrEqual(500)
-      expect(response.body.length).toBeGreaterThan(0)
+      expect(response.body.data.length).toBeLessThanOrEqual(500)
+      expect(response.body.data.length).toBeGreaterThan(0)
     })
 
     it('should return empty array for non-existent mac', async () => {
@@ -208,7 +209,8 @@ describe('History API Endpoint', () => {
         .query({ mac: 'non:ex:is:te:nt:00' })
 
       expect(response.status).toBe(200)
-      expect(response.body).toEqual([])
+      expect(response.body.success).toBe(true)
+      expect(response.body.data).toEqual([])
     })
 
     it('should handle database errors gracefully', async () => {
@@ -221,9 +223,8 @@ describe('History API Endpoint', () => {
         .query({ mac: 'aa:bb:cc:dd:ee:ff' })
 
       expect(response.status).toBe(500)
-      expect(response.body).toEqual({
-        error: 'Failed to fetch history data',
-      })
+      expect(response.body.success).toBe(false)
+      expect(response.body.error.message).toBe('Failed to fetch history data')
     })
   })
 })

@@ -3,6 +3,7 @@ const express = require('express')
 const NodeCache = require('node-cache')
 const path = require('path')
 const logger = require('./utils/logger')
+const { success, error } = require('./utils/apiResponse')
 const temperatureService = require('./services/temperature')
 const energyPricesService = require('./services/energyPrices')
 const sensorService = require('./services/sensor')
@@ -59,7 +60,7 @@ const startServer = () => {
 }
 
 app.get('/api/ruuvi', (req, res) => {
-  res.send(cache.get(cacheKeys.ruuvi))
+  res.json(success(cache.get(cacheKeys.ruuvi) || null))
 })
 
 // Keep POST endpoint for backward compatibility (e.g., external data sources)
@@ -74,12 +75,12 @@ app.post('/api/ruuvi', (req, res) => {
     updateSensorCache(sensorDataCollection)
     res
       .status(200)
-      .json({ message: 'Data received and processed successfully' })
-  } catch (error) {
-    logger.error({ err: error }, 'POST /api/ruuvi failed')
+      .json(success({ message: 'Data received and processed successfully' }))
+  } catch (err) {
+    logger.error({ err }, 'POST /api/ruuvi failed')
     res
       .status(500)
-      .json({ error: 'An error occurred while processing the data' })
+      .json(error('An error occurred while processing the data', 'INTERNAL_ERROR'))
   }
 })
 
@@ -105,11 +106,11 @@ app.get('/api/energyprices', async (req, res) => {
     todayEnergyPrices: energyPrices.todayEnergyPrices?.data,
     tomorrowEnergyPrices: energyPrices.tomorrowEnergyPrices?.data,
   }
-  res.send(energyPricesForClient)
+  res.json(success(energyPricesForClient))
 })
 
 app.get('/api/todayminmaxtemperature', async (req, res) => {
-  res.json(cache.get(cacheKeys.todayMinMax) || null)
+  res.json(success(cache.get(cacheKeys.todayMinMax) || null))
 })
 
 // History API routes

@@ -1,6 +1,29 @@
+/**
+ * Unwrap API response envelope and return data
+ * @template T
+ * @param {Response} response - Fetch response object
+ * @returns {Promise<T>} - The unwrapped data
+ * @throws {Error} - If response indicates failure
+ */
+const unwrapResponse = async (response) => {
+  const json = await response.json()
+
+  // Handle new envelope format
+  if (typeof json === 'object' && json !== null && 'success' in json) {
+    if (!json.success) {
+      const errorMessage = json.error?.message || 'Request failed'
+      throw new Error(errorMessage)
+    }
+    return json.data
+  }
+
+  // Fallback for backward compatibility (shouldn't happen)
+  return json
+}
+
 const fetchRuuviData = async () => {
   const response = await fetch('/api/ruuvi')
-  return response.json()
+  return unwrapResponse(response)
 }
 
 /**
@@ -9,25 +32,17 @@ const fetchRuuviData = async () => {
  */
 const fetchWeatherData = async () => {
   const response = await fetch('/api/weather')
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
-    throw new Error(errorData.message || `HTTP ${response.status}`)
-  }
-
-  return response.json()
+  return unwrapResponse(response)
 }
 
 const fetchEnergyPrices = async () => {
   const response = await fetch('/api/energyprices')
-  const text = await response.text()
-  const json = JSON.parse(text)
-  return json
+  return unwrapResponse(response)
 }
 
 const fetchMinMaxTemperatures = async () => {
   const response = await fetch('/api/todayminmaxtemperature')
-  return response.json()
+  return unwrapResponse(response)
 }
 
 /**
@@ -38,7 +53,7 @@ const fetchMinMaxTemperatures = async () => {
 const fetchTrends = async (macs) => {
   const macsParam = macs.join(',')
   const response = await fetch(`/api/ruuvi/trends?macs=${macsParam}`)
-  return response.json()
+  return unwrapResponse(response)
 }
 
 /**
@@ -57,10 +72,7 @@ const fetchTrends = async (macs) => {
  */
 const fetchHistory = async (mac, range = '24h') => {
   const response = await fetch(`/api/ruuvi/history?mac=${mac}&range=${range}`)
-  if (!response.ok) {
-    throw new Error(`Failed to fetch history: ${response.status}`)
-  }
-  return response.json()
+  return unwrapResponse(response)
 }
 
 /**
@@ -85,15 +97,12 @@ const getDiagnostics = async (macs = []) => {
     ? `/api/diagnostics?macs=${macsParam}`
     : '/api/diagnostics'
   const response = await fetch(url)
-  if (!response.ok) {
-    throw new Error(`Failed to fetch diagnostics: ${response.status}`)
-  }
-  return response.json()
+  return unwrapResponse(response)
 }
 
 /**
  * Flush the buffer to database
- * @returns {Promise<{success: boolean, flushedCount: number, message: string}>}
+ * @returns {Promise<{flushedCount: number, message: string}>}
  */
 const flushBuffer = async () => {
   const response = await fetch('/api/diagnostics/flush', {
@@ -102,13 +111,7 @@ const flushBuffer = async () => {
       'Content-Type': 'application/json',
     },
   })
-  if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ error: 'Unknown error' }))
-    throw new Error(error.error || `Failed to flush buffer: ${response.status}`)
-  }
-  return response.json()
+  return unwrapResponse(response)
 }
 
 /**
@@ -116,21 +119,22 @@ const flushBuffer = async () => {
  * @param {'openWeatherMap'} api - API name
  * @param {'success' | 'error'} status - Status to report
  * @param {string} [errorMessage] - Error message (required if status is 'error')
- * @returns {Promise<{success: boolean}>}
+ * @returns {Promise<{recorded: boolean}>}
  */
 const reportApiStatus = async (api, status, errorMessage) => {
-  const response = await fetch('/api/diagnostics/api-status', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ api, status, errorMessage }),
-  })
-  if (!response.ok) {
+  try {
+    const response = await fetch('/api/diagnostics/api-status', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ api, status, errorMessage }),
+    })
+    return unwrapResponse(response)
+  } catch {
     // Silently fail - don't break the app if status reporting fails
-    return { success: false }
+    return { recorded: false }
   }
-  return response.json()
 }
 
 const apiService = {

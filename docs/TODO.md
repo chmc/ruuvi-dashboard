@@ -288,21 +288,40 @@
 
 ---
 
-### 13. Standardize API Response Envelope
+### 13. Standardize API Response Envelope [COMPLETED]
 
 **Problem:** Inconsistent API response formats
 
 **Tasks:**
-- [ ] Create `server/utils/apiResponse.js` helper
-- [ ] Add tests for response helper
-- [ ] Update all routes to use standard envelope
-- [ ] Update frontend to handle new format
-- [ ] Update all API tests
+- [x] Create `server/utils/apiResponse.js` helper
+- [x] Add tests for response helper
+- [x] Update all routes to use standard envelope
+- [x] Update frontend to handle new format
+- [x] Update all API tests
 
-**Files to modify:**
+**Files modified:**
 - `server/utils/apiResponse.js` (new)
-- `server/routes/*.js` (all)
+- `server/utils/apiResponse.test.js` (new)
+- `server/index.js`
+- `server/routes/weather.js`
+- `server/routes/history.js`
+- `server/routes/trends.js`
+- `server/routes/diagnostics.js`
+- `server/routes/weather.test.js`
+- `server/routes/history.test.js`
+- `server/routes/trends.test.js`
+- `server/routes/diagnostics.test.js`
 - `src/services/api.js`
+- `src/services/api.test.js`
+
+**Standard envelope format:**
+```js
+// Success
+{ success: true, data: <any> }
+
+// Error
+{ success: false, error: { message: <string>, code?: <string>, details?: <any> } }
+```
 
 ---
 

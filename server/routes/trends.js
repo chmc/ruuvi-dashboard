@@ -5,6 +5,7 @@
  */
 const express = require('express')
 const { createLogger } = require('../utils/logger')
+const { success, error } = require('../utils/apiResponse')
 const historyDb = require('../services/history/historyDb')
 
 const log = createLogger('routes:trends')
@@ -128,9 +129,9 @@ router.get('/trends', (req, res) => {
     const { macs } = req.query
 
     if (!macs) {
-      return res.status(400).json({
-        error: 'Missing required parameter: macs',
-      })
+      return res
+        .status(400)
+        .json(error('Missing required parameter: macs', 'VALIDATION_ERROR'))
     }
 
     // Parse and normalize MAC addresses
@@ -141,12 +142,12 @@ router.get('/trends', (req, res) => {
     // Calculate trends for each sensor
     const trends = macList.map((mac) => calculateTrend(mac, now))
 
-    return res.json(trends)
-  } catch (error) {
-    log.error({ err: error }, 'Error fetching trends')
-    return res.status(500).json({
-      error: 'Failed to fetch trends data',
-    })
+    return res.json(success(trends))
+  } catch (err) {
+    log.error({ err }, 'Error fetching trends')
+    return res
+      .status(500)
+      .json(error('Failed to fetch trends data', 'INTERNAL_ERROR'))
   }
 })
 

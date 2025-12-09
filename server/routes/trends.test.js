@@ -94,10 +94,11 @@ describe('Trends API Endpoint', () => {
         .query({ macs: 'aa:bb:cc:dd:ee:01,aa:bb:cc:dd:ee:02' })
 
       expect(response.status).toBe(200)
-      expect(response.body).toHaveLength(2)
+      expect(response.body.success).toBe(true)
+      expect(response.body.data).toHaveLength(2)
 
       // Check first sensor - temperature rising (22 - 21 = +1)
-      const sensor1 = response.body.find((t) => t.mac === 'aa:bb:cc:dd:ee:01')
+      const sensor1 = response.body.data.find((t) => t.mac === 'aa:bb:cc:dd:ee:01')
       expect(sensor1).toBeDefined()
       expect(sensor1.temperature.direction).toBe('rising')
       expect(sensor1.temperature.delta).toBeCloseTo(1.0, 1)
@@ -105,7 +106,7 @@ describe('Trends API Endpoint', () => {
       expect(sensor1.humidity.delta).toBeCloseTo(2.0, 1)
 
       // Check second sensor - temperature falling (18 - 19 = -1)
-      const sensor2 = response.body.find((t) => t.mac === 'aa:bb:cc:dd:ee:02')
+      const sensor2 = response.body.data.find((t) => t.mac === 'aa:bb:cc:dd:ee:02')
       expect(sensor2).toBeDefined()
       expect(sensor2.temperature.direction).toBe('falling')
       expect(sensor2.temperature.delta).toBeCloseTo(-1.0, 1)
@@ -183,8 +184,9 @@ describe('Trends API Endpoint', () => {
         .query({ macs: 'aa:bb:cc:dd:ee:ff' })
 
       expect(response.status).toBe(200)
-      expect(response.body[0].temperature.delta).toBeCloseTo(2.5, 1)
-      expect(response.body[0].humidity.delta).toBeCloseTo(5.0, 1)
+      expect(response.body.success).toBe(true)
+      expect(response.body.data[0].temperature.delta).toBeCloseTo(2.5, 1)
+      expect(response.body.data[0].humidity.delta).toBeCloseTo(5.0, 1)
     })
 
     it('should return all configured sensors', async () => {
@@ -207,8 +209,9 @@ describe('Trends API Endpoint', () => {
       })
 
       expect(response.status).toBe(200)
-      expect(response.body).toHaveLength(3)
-      expect(response.body.map((t) => t.mac)).toEqual([
+      expect(response.body.success).toBe(true)
+      expect(response.body.data).toHaveLength(3)
+      expect(response.body.data.map((t) => t.mac)).toEqual([
         'aa:bb:cc:dd:ee:01',
         'aa:bb:cc:dd:ee:02',
         'aa:bb:cc:dd:ee:03',
@@ -252,7 +255,7 @@ describe('Trends API Endpoint', () => {
           .get('/api/ruuvi/trends')
           .query({ macs: 'aa:bb:cc:dd:ee:ff' })
 
-        expect(response.body[0].temperature.direction).toBe(expected)
+        expect(response.body.data[0].temperature.direction).toBe(expected)
       }
     )
 
@@ -276,10 +279,11 @@ describe('Trends API Endpoint', () => {
         .query({ macs: 'aa:bb:cc:dd:ee:ff' })
 
       expect(response.status).toBe(200)
-      expect(response.body[0].temperature.direction).toBe('stable')
-      expect(response.body[0].temperature.delta).toBe(0)
-      expect(response.body[0].humidity.direction).toBe('stable')
-      expect(response.body[0].humidity.delta).toBe(0)
+      expect(response.body.success).toBe(true)
+      expect(response.body.data[0].temperature.direction).toBe('stable')
+      expect(response.body.data[0].temperature.delta).toBe(0)
+      expect(response.body.data[0].humidity.direction).toBe('stable')
+      expect(response.body.data[0].humidity.delta).toBe(0)
     })
 
     it('should handle sensor with no current data', async () => {
@@ -291,17 +295,17 @@ describe('Trends API Endpoint', () => {
         .query({ macs: 'aa:bb:cc:dd:ee:ff' })
 
       expect(response.status).toBe(200)
-      expect(response.body[0].temperature).toBeNull()
-      expect(response.body[0].humidity).toBeNull()
+      expect(response.body.success).toBe(true)
+      expect(response.body.data[0].temperature).toBeNull()
+      expect(response.body.data[0].humidity).toBeNull()
     })
 
     it('should return 400 when no macs provided', async () => {
       const response = await request(app).get('/api/ruuvi/trends')
 
       expect(response.status).toBe(400)
-      expect(response.body).toEqual({
-        error: 'Missing required parameter: macs',
-      })
+      expect(response.body.success).toBe(false)
+      expect(response.body.error.message).toBe('Missing required parameter: macs')
     })
 
     it('should normalize MAC addresses to lowercase', async () => {
@@ -338,9 +342,8 @@ describe('Trends API Endpoint', () => {
         .query({ macs: 'aa:bb:cc:dd:ee:ff' })
 
       expect(response.status).toBe(500)
-      expect(response.body).toEqual({
-        error: 'Failed to fetch trends data',
-      })
+      expect(response.body.success).toBe(false)
+      expect(response.body.error.message).toBe('Failed to fetch trends data')
     })
   })
 })

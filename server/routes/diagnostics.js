@@ -6,6 +6,7 @@
 const express = require('express')
 const fs = require('fs')
 const { createLogger } = require('../utils/logger')
+const { success, error } = require('../utils/apiResponse')
 const historyDb = require('../services/history/historyDb')
 const historyBuffer = require('../services/history/historyBuffer')
 const flushScheduler = require('../services/history/flushScheduler')
@@ -423,12 +424,12 @@ router.get('/diagnostics', (req, res) => {
       dataQuality: getDataQuality(macList),
     }
 
-    return res.json(diagnostics)
-  } catch (error) {
-    log.error({ err: error }, 'Error fetching diagnostics')
-    return res.status(500).json({
-      error: 'Failed to fetch diagnostics data',
-    })
+    return res.json(success(diagnostics))
+  } catch (err) {
+    log.error({ err }, 'Error fetching diagnostics')
+    return res
+      .status(500)
+      .json(error('Failed to fetch diagnostics data', 'INTERNAL_ERROR'))
   }
 })
 
@@ -444,16 +445,17 @@ router.post('/diagnostics/flush', (req, res) => {
     const result = flushScheduler.forceFlush()
     const flushedCount = result?.flushedCount || 0
 
-    return res.json({
-      success: true,
-      flushedCount,
-      message: 'Buffer flushed successfully',
-    })
-  } catch (error) {
-    log.error({ err: error }, 'Error flushing buffer')
-    return res.status(500).json({
-      error: 'Failed to flush buffer',
-    })
+    return res.json(
+      success({
+        flushedCount,
+        message: 'Buffer flushed successfully',
+      })
+    )
+  } catch (err) {
+    log.error({ err }, 'Error flushing buffer')
+    return res
+      .status(500)
+      .json(error('Failed to flush buffer', 'INTERNAL_ERROR'))
   }
 })
 
@@ -473,43 +475,49 @@ const VALID_STATUSES = ['success', 'error']
  * Response: { success: boolean }
  */
 router.post('/diagnostics/api-status', (req, res) => {
-  const { api, status, errorMessage } = req.body
+  const { api, status: statusValue, errorMessage } = req.body
 
   // Validate required fields
   if (!api) {
-    return res.status(400).json({ error: 'Missing required field: api' })
+    return res
+      .status(400)
+      .json(error('Missing required field: api', 'VALIDATION_ERROR'))
   }
-  if (!status) {
-    return res.status(400).json({ error: 'Missing required field: status' })
+  if (!statusValue) {
+    return res
+      .status(400)
+      .json(error('Missing required field: status', 'VALIDATION_ERROR'))
   }
 
   // Validate API name
   if (!VALID_REPORT_APIS.includes(api)) {
-    return res.status(400).json({ error: 'Invalid API name' })
+    return res.status(400).json(error('Invalid API name', 'VALIDATION_ERROR'))
   }
 
   // Validate status
-  if (!VALID_STATUSES.includes(status)) {
-    return res.status(400).json({ error: 'Invalid status' })
+  if (!VALID_STATUSES.includes(statusValue)) {
+    return res.status(400).json(error('Invalid status', 'VALIDATION_ERROR'))
   }
 
   // Get the external API status service
   const externalApiStatusData = getExternalApiStatus()
   if (!externalApiStatusData) {
-    return res.status(500).json({ error: 'External API status not available' })
+    return res
+      .status(500)
+      .json(error('External API status not available', 'INTERNAL_ERROR'))
   }
 
   // Record the status using the externalApiStatus module directly
   // eslint-disable-next-line global-require
   const externalApiStatus = require('../services/externalApiStatus')
 
-  if (status === 'success') {
+  if (statusValue === 'success') {
     externalApiStatus.recordSuccess(api)
   } else {
     externalApiStatus.recordError(api, errorMessage || 'Unknown error')
   }
 
-  return res.json({ success: true })
+  return res.json(success({ recorded: true }))
 })
 
 module.exports = router

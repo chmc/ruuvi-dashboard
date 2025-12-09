@@ -5,6 +5,7 @@
  */
 const express = require('express')
 const { createLogger } = require('../utils/logger')
+const { success, error } = require('../utils/apiResponse')
 const historyDb = require('../services/history/historyDb')
 
 const log = createLogger('routes:history')
@@ -81,9 +82,9 @@ router.get('/history', (req, res) => {
     const { mac, range = '24h' } = req.query
 
     if (!mac) {
-      return res.status(400).json({
-        error: 'Missing required parameter: mac',
-      })
+      return res
+        .status(400)
+        .json(error('Missing required parameter: mac', 'VALIDATION_ERROR'))
     }
 
     // Normalize MAC address to lowercase
@@ -109,12 +110,12 @@ router.get('/history', (req, res) => {
     // Downsample if too many points
     formattedReadings = downsample(formattedReadings, MAX_POINTS)
 
-    return res.json(formattedReadings)
-  } catch (error) {
-    log.error({ err: error }, 'Error fetching history')
-    return res.status(500).json({
-      error: 'Failed to fetch history data',
-    })
+    return res.json(success(formattedReadings))
+  } catch (err) {
+    log.error({ err }, 'Error fetching history')
+    return res
+      .status(500)
+      .json(error('Failed to fetch history data', 'INTERNAL_ERROR'))
   }
 })
 

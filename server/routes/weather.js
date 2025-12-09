@@ -8,6 +8,7 @@ const express = require('express')
 const NodeCache = require('node-cache')
 const fetch = require('node-fetch')
 const { createLogger } = require('../utils/logger')
+const { success, error } = require('../utils/apiResponse')
 const externalApiStatus = require('../services/externalApiStatus')
 
 const log = createLogger('routes:weather')
@@ -126,15 +127,15 @@ router.get('/weather', async (req, res) => {
   try {
     // Check API key first
     if (!process.env.OPENWEATHERMAP_APIKEY) {
-      return res.status(500).json({
-        error: 'OpenWeatherMap API key not configured',
-      })
+      return res
+        .status(500)
+        .json(error('OpenWeatherMap API key not configured', 'CONFIG_ERROR'))
     }
 
     // Check cache first
     const cachedData = cache.get(CACHE_KEY)
     if (cachedData) {
-      return res.json(cachedData)
+      return res.json(success(cachedData))
     }
 
     // Fetch fresh data
@@ -146,17 +147,16 @@ router.get('/weather', async (req, res) => {
     // Record success
     externalApiStatus.recordSuccess('openWeatherMap')
 
-    return res.json(weatherData)
-  } catch (error) {
+    return res.json(success(weatherData))
+  } catch (err) {
     // Record error
-    externalApiStatus.recordError('openWeatherMap', error.message)
+    externalApiStatus.recordError('openWeatherMap', err.message)
 
-    log.error({ err: error }, 'Error fetching weather data')
+    log.error({ err }, 'Error fetching weather data')
 
-    return res.status(502).json({
-      error: 'Failed to fetch weather data',
-      message: error.message,
-    })
+    return res
+      .status(502)
+      .json(error('Failed to fetch weather data', 'EXTERNAL_API_ERROR'))
   }
 })
 

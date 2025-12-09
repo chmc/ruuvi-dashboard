@@ -18,7 +18,7 @@ describe('apiService', () => {
       }
 
       global.fetch.mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(mockData),
+        json: jest.fn().mockResolvedValueOnce({ success: true, data: mockData }),
       })
 
       const result = await apiService.fetchRuuviData()
@@ -31,6 +31,21 @@ describe('apiService', () => {
       global.fetch.mockRejectedValueOnce(new Error('Network error'))
 
       await expect(apiService.fetchRuuviData()).rejects.toThrow('Network error')
+    })
+
+    it('should throw error when API returns error response', async () => {
+      global.fetch.mockResolvedValueOnce({
+        json: jest
+          .fn()
+          .mockResolvedValueOnce({
+            success: false,
+            error: { message: 'Failed to fetch sensor data' },
+          }),
+      })
+
+      await expect(apiService.fetchRuuviData()).rejects.toThrow(
+        'Failed to fetch sensor data'
+      )
     })
   })
 
@@ -72,7 +87,9 @@ describe('apiService', () => {
     it('should fetch weather data from backend proxy', async () => {
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValueOnce(mockWeatherForecast),
+        json: jest
+          .fn()
+          .mockResolvedValueOnce({ success: true, data: mockWeatherForecast }),
       })
 
       const result = await apiService.fetchWeatherData()
@@ -85,7 +102,9 @@ describe('apiService', () => {
     it('should return weather data with expected structure', async () => {
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValueOnce(mockWeatherForecast),
+        json: jest
+          .fn()
+          .mockResolvedValueOnce({ success: true, data: mockWeatherForecast }),
       })
 
       const result = await apiService.fetchWeatherData()
@@ -113,9 +132,10 @@ describe('apiService', () => {
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 502,
-        json: jest
-          .fn()
-          .mockResolvedValueOnce({ message: 'Failed to fetch weather data' }),
+        json: jest.fn().mockResolvedValueOnce({
+          success: false,
+          error: { message: 'Failed to fetch weather data' },
+        }),
       })
 
       await expect(apiService.fetchWeatherData()).rejects.toThrow(
@@ -123,14 +143,18 @@ describe('apiService', () => {
       )
     })
 
-    it('should throw error with HTTP status when backend returns no message', async () => {
+    it('should throw generic error when backend returns no error message', async () => {
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
-        json: jest.fn().mockRejectedValueOnce(new Error('Parse error')),
+        json: jest
+          .fn()
+          .mockResolvedValueOnce({ success: false, error: {} }),
       })
 
-      await expect(apiService.fetchWeatherData()).rejects.toThrow('HTTP 500')
+      await expect(apiService.fetchWeatherData()).rejects.toThrow(
+        'Request failed'
+      )
     })
   })
 
@@ -142,7 +166,9 @@ describe('apiService', () => {
       }
 
       global.fetch.mockResolvedValueOnce({
-        text: jest.fn().mockResolvedValueOnce(JSON.stringify(mockData)),
+        json: jest
+          .fn()
+          .mockResolvedValueOnce({ success: true, data: mockData }),
       })
 
       const result = await apiService.fetchEnergyPrices()
@@ -159,12 +185,17 @@ describe('apiService', () => {
       )
     })
 
-    it('should handle invalid JSON response', async () => {
+    it('should throw error on API failure response', async () => {
       global.fetch.mockResolvedValueOnce({
-        text: jest.fn().mockResolvedValueOnce('invalid json'),
+        json: jest.fn().mockResolvedValueOnce({
+          success: false,
+          error: { message: 'Failed to fetch energy prices' },
+        }),
       })
 
-      await expect(apiService.fetchEnergyPrices()).rejects.toThrow()
+      await expect(apiService.fetchEnergyPrices()).rejects.toThrow(
+        'Failed to fetch energy prices'
+      )
     })
   })
 
@@ -177,7 +208,9 @@ describe('apiService', () => {
       }
 
       global.fetch.mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(mockData),
+        json: jest
+          .fn()
+          .mockResolvedValueOnce({ success: true, data: mockData }),
       })
 
       const result = await apiService.fetchMinMaxTemperatures()
@@ -196,7 +229,9 @@ describe('apiService', () => {
 
     it('should return null when cache is empty', async () => {
       global.fetch.mockResolvedValueOnce({
-        json: jest.fn().mockResolvedValueOnce(null),
+        json: jest
+          .fn()
+          .mockResolvedValueOnce({ success: true, data: null }),
       })
 
       const result = await apiService.fetchMinMaxTemperatures()
@@ -229,7 +264,9 @@ describe('apiService', () => {
     it('should fetch history data for a sensor with default range', async () => {
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValueOnce(mockHistoryData),
+        json: jest
+          .fn()
+          .mockResolvedValueOnce({ success: true, data: mockHistoryData }),
       })
 
       const result = await apiService.fetchHistory('aa:bb:cc:dd:ee:ff')
@@ -243,7 +280,9 @@ describe('apiService', () => {
     it('should fetch history data with specified range', async () => {
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValueOnce(mockHistoryData),
+        json: jest
+          .fn()
+          .mockResolvedValueOnce({ success: true, data: mockHistoryData }),
       })
 
       await apiService.fetchHistory('aa:bb:cc:dd:ee:ff', '7d')
@@ -261,21 +300,24 @@ describe('apiService', () => {
       ).rejects.toThrow('Network error')
     })
 
-    it('should throw error when response is not ok', async () => {
+    it('should throw error when API returns error response', async () => {
       global.fetch.mockResolvedValueOnce({
         ok: false,
-        status: 500,
+        json: jest.fn().mockResolvedValueOnce({
+          success: false,
+          error: { message: 'Failed to fetch history data' },
+        }),
       })
 
       await expect(
         apiService.fetchHistory('aa:bb:cc:dd:ee:ff')
-      ).rejects.toThrow('Failed to fetch history: 500')
+      ).rejects.toThrow('Failed to fetch history data')
     })
 
     it('should return empty array when no data', async () => {
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValueOnce([]),
+        json: jest.fn().mockResolvedValueOnce({ success: true, data: [] }),
       })
 
       const result = await apiService.fetchHistory('aa:bb:cc:dd:ee:ff')
@@ -286,15 +328,16 @@ describe('apiService', () => {
 
   describe('flushBuffer', () => {
     it('should flush buffer and return success response', async () => {
-      const mockResponse = {
-        success: true,
+      const mockData = {
         flushedCount: 25,
         message: 'Buffer flushed successfully',
       }
 
       global.fetch.mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValueOnce(mockResponse),
+        json: jest
+          .fn()
+          .mockResolvedValueOnce({ success: true, data: mockData }),
       })
 
       const result = await apiService.flushBuffer()
@@ -305,16 +348,17 @@ describe('apiService', () => {
           'Content-Type': 'application/json',
         },
       })
-      expect(result).toEqual(mockResponse)
+      expect(result).toEqual(mockData)
     })
 
     it('should throw error when response is not ok', async () => {
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
-        json: jest
-          .fn()
-          .mockResolvedValueOnce({ error: 'Failed to flush buffer' }),
+        json: jest.fn().mockResolvedValueOnce({
+          success: false,
+          error: { message: 'Failed to flush buffer' },
+        }),
       })
 
       await expect(apiService.flushBuffer()).rejects.toThrow(
@@ -328,14 +372,17 @@ describe('apiService', () => {
       await expect(apiService.flushBuffer()).rejects.toThrow('Network error')
     })
 
-    it('should handle error response without error message', async () => {
+    it('should throw generic error when API returns error without message', async () => {
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
-        json: jest.fn().mockRejectedValueOnce(new Error('Parse error')),
+        json: jest.fn().mockResolvedValueOnce({
+          success: false,
+          error: {},
+        }),
       })
 
-      await expect(apiService.flushBuffer()).rejects.toThrow('Unknown error')
+      await expect(apiService.flushBuffer()).rejects.toThrow('Request failed')
     })
   })
 })
