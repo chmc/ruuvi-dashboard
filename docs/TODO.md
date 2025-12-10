@@ -101,7 +101,7 @@ describe('getEnergyPricesFromApi()', () => {
 
 ---
 
-#### Task 1.2: Add timeout to weather.js fetch
+#### [x] Task 1.2: Add timeout to weather.js fetch
 
 **RED Phase** - Write failing test first:
 ```javascript
