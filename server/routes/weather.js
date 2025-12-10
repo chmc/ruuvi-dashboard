@@ -23,6 +23,9 @@ const CACHE_KEY = 'weather'
 const DEFAULT_LAT = 60.1695
 const DEFAULT_LON = 24.9355
 
+/** @type {number} Timeout duration for API requests in milliseconds */
+const FETCH_TIMEOUT_MS = 10000
+
 /**
  * Convert Unix timestamp to local date string
  * @param {number} unixTimestamp - Unix timestamp in seconds
@@ -101,15 +104,27 @@ const fetchWeatherFromApi = async () => {
 
   const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${DEFAULT_LAT}&lon=${DEFAULT_LON}&units=metric&appid=${apiKey}`
 
-  const response = await fetch(url)
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
 
-  if (!response.ok) {
-    const errorMessage = `HTTP ${response.status}: ${response.statusText}`
-    throw new Error(errorMessage)
+  try {
+    const response = await fetch(url, {
+      signal: controller.signal,
+    })
+
+    if (!response.ok) {
+      const errorMessage = `HTTP ${response.status}: ${response.statusText}`
+      throw new Error(errorMessage)
+    }
+
+    const json = await response.json()
+    return transformWeatherData(json)
+  } catch (error) {
+    log.error({ err: error }, 'fetchWeatherFromApi failed')
+    throw error
+  } finally {
+    clearTimeout(timeoutId)
   }
-
-  const json = await response.json()
-  return transformWeatherData(json)
 }
 
 /**

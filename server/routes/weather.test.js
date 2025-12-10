@@ -95,10 +95,12 @@ describe('Weather API Endpoint', () => {
       expect(response.status).toBe(200)
       expect(response.body.success).toBe(true)
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('api.openweathermap.org/data/2.5/forecast')
+        expect.stringContaining('api.openweathermap.org/data/2.5/forecast'),
+        expect.objectContaining({ signal: expect.any(Object) })
       )
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('appid=test-api-key')
+        expect.stringContaining('appid=test-api-key'),
+        expect.objectContaining({ signal: expect.any(Object) })
       )
     })
 
@@ -226,8 +228,14 @@ describe('Weather API Endpoint', () => {
 
       await request(app).get('/api/weather')
 
-      expect(fetch).toHaveBeenCalledWith(expect.stringContaining('lat='))
-      expect(fetch).toHaveBeenCalledWith(expect.stringContaining('lon='))
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('lat='),
+        expect.objectContaining({ signal: expect.any(Object) })
+      )
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('lon='),
+        expect.objectContaining({ signal: expect.any(Object) })
+      )
     })
 
     it('should request metric units', async () => {
@@ -239,8 +247,63 @@ describe('Weather API Endpoint', () => {
       await request(app).get('/api/weather')
 
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('units=metric')
+        expect.stringContaining('units=metric'),
+        expect.objectContaining({ signal: expect.any(Object) })
       )
+    })
+  })
+
+  describe('Timeout behavior', () => {
+    it('should timeout after 10 seconds when OpenWeatherMap is unresponsive', async () => {
+      // Arrange - mock fetch to simulate abort error when signal is aborted
+      const abortError = new Error('The operation was aborted')
+      abortError.name = 'AbortError'
+
+      fetch.mockRejectedValueOnce(abortError)
+
+      // Act
+      const response = await request(app).get('/api/weather')
+
+      // Assert - should return 502 error due to timeout/abort
+      expect(response.status).toBe(502)
+      expect(response.body.success).toBe(false)
+
+      // Verify fetch was called with an AbortSignal
+      expect(fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ signal: expect.any(Object) })
+      )
+    })
+
+    it('should pass AbortSignal to fetch for timeout control', async () => {
+      // Arrange
+      let capturedOptions = null
+      const mockWeatherResponse = {
+        list: [
+          {
+            dt_txt: '2023-10-24 12:00:00',
+            dt: 1698148800,
+            main: { temp: 18.2 },
+            wind: { speed: 4.0 },
+            weather: [{ icon: '02d' }],
+          },
+        ],
+      }
+
+      fetch.mockImplementation((url, options) => {
+        capturedOptions = options
+        return Promise.resolve({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockWeatherResponse),
+        })
+      })
+
+      // Act
+      await request(app).get('/api/weather')
+
+      // Assert - verify that fetch is called with signal option
+      expect(capturedOptions).toBeDefined()
+      expect(capturedOptions.signal).toBeInstanceOf(AbortSignal)
     })
   })
 
