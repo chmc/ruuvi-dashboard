@@ -161,4 +161,72 @@ describe('energyPricesService', () => {
       expect(status.energyPrices.errorMessage).toBeTruthy()
     })
   })
+
+  describe('allowUpdateEnergyPrices edge cases', () => {
+    beforeAll(() => {
+      jest.useFakeTimers()
+    })
+
+    afterAll(() => {
+      jest.useRealTimers()
+    })
+
+    beforeEach(() => {
+      jest.clearAllMocks()
+      externalApiStatus.reset()
+    })
+
+    it('should fetch new prices when exactly 30 minutes have passed after 12:00 and no tomorrow prices exist', async () => {
+      // Arrange
+      // Current time: 13:30 (after 12:00)
+      // Last update: 13:00 (exactly 30 minutes = 0.5 hours ago)
+      // This tests the edge case where hoursDifference === 0.5
+      // With the bug (hoursDifference > 0.5), this would NOT trigger an update
+      // With the fix (hoursDifference >= 0.5), this SHOULD trigger an update
+      jest.setSystemTime(new Date('2023-10-27T13:30:00'))
+
+      const apiResponseJson = `
+      [{
+        "Rank": 1,
+        "DateTime": "2023-10-27T13:00:00+03:00",
+        "PriceNoTax": 0.0500,
+        "PriceWithTax": 0.0620
+      }]`
+
+      /** @type {EnergyPrices} */
+      const energyPrices = {
+        updatedAt: new Date('2023-10-27T13:00:00'), // Exactly 30 minutes ago
+        todayEnergyPrices: {
+          updatedAt: new Date('2023-10-27T13:00:00'),
+          pricesForDate: '2023-10-27',
+          data: [
+            {
+              date: new Date('2023-10-27T13:00:00'),
+              price: 0.05,
+              hour: 13,
+            },
+          ],
+        },
+        tomorrowEnergyPrices: undefined, // No tomorrow prices - should trigger update
+      }
+
+      jest.spyOn(storage, 'loadOrDefault').mockResolvedValue(undefined)
+      jest.spyOn(storage, 'save').mockImplementation(jest.fn)
+      const getEnergyPricesFromApiSpy = jest.spyOn(
+        energyPricesFromApi,
+        'getEnergyPricesFromApi'
+      )
+      getEnergyPricesFromApiSpy.mockResolvedValue(apiResponseJson)
+
+      // Act
+      await energyPricesService.getEnergyPrices(energyPrices)
+
+      // Assert
+      // The API should be called because:
+      // 1. It's after 12:00 (13:30)
+      // 2. At least 30 minutes have passed (exactly 0.5 hours)
+      // 3. No tomorrow prices exist
+      expect(getEnergyPricesFromApiSpy).toHaveBeenCalledTimes(1)
+    })
+  })
 })

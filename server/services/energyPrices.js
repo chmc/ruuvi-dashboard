@@ -190,7 +190,7 @@ const isCloseToTomorrowPrices = (
 ) => {
   if (
     currentDateObject.getHours() > 12 &&
-    hoursDifference > 0.5 &&
+    hoursDifference >= 0.5 &&
     !energyPrices.tomorrowEnergyPrices
   ) {
     return true
