@@ -56,7 +56,7 @@ pnpm test -- --testPathPattern="your-test-file" --watch
 - `server/routes/weather.js`
 - `src/services/api.js`
 
-#### Task 1.1: Add timeout to energyPricesFromApi.js
+#### [x] Task 1.1: Add timeout to energyPricesFromApi.js
 
 **RED Phase** - Write failing test first:
 ```javascript
