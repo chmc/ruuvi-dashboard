@@ -435,6 +435,87 @@ describe('usePollingData', () => {
     })
   })
 
+  describe('callback stability', () => {
+    it('should not reset interval when onError callback reference changes', async () => {
+      // This test verifies that changing onError callback doesn't reset the polling interval
+      const fetchFn = jest.fn().mockResolvedValue({ data: 'test' })
+
+      const { rerender } = renderHook(
+        ({ onError }) => usePollingData(fetchFn, { interval: 10000, onError }),
+        { initialProps: { onError: jest.fn() } }
+      )
+
+      await waitFor(() => {
+        expect(fetchFn).toHaveBeenCalledTimes(1)
+      })
+
+      // Rerender with new callback reference multiple times
+      rerender({ onError: jest.fn() })
+      rerender({ onError: jest.fn() })
+      rerender({ onError: jest.fn() })
+
+      // Advance time by full interval
+      await act(async () => {
+        jest.advanceTimersByTime(10000)
+      })
+
+      // Should be called again - interval shouldn't have been reset
+      expect(fetchFn).toHaveBeenCalledTimes(2)
+    })
+
+    it('should not reset interval when onSuccess callback reference changes', async () => {
+      const fetchFn = jest.fn().mockResolvedValue({ data: 'test' })
+
+      const { rerender } = renderHook(
+        ({ onSuccess }) =>
+          usePollingData(fetchFn, { interval: 10000, onSuccess }),
+        { initialProps: { onSuccess: jest.fn() } }
+      )
+
+      await waitFor(() => {
+        expect(fetchFn).toHaveBeenCalledTimes(1)
+      })
+
+      // Rerender with new callback reference multiple times
+      rerender({ onSuccess: jest.fn() })
+      rerender({ onSuccess: jest.fn() })
+      rerender({ onSuccess: jest.fn() })
+
+      // Advance time by full interval
+      await act(async () => {
+        jest.advanceTimersByTime(10000)
+      })
+
+      // Should be called again - interval shouldn't have been reset
+      expect(fetchFn).toHaveBeenCalledTimes(2)
+    })
+
+    it('should not reset interval when transform function reference changes', async () => {
+      const fetchFn = jest.fn().mockResolvedValue({ value: 1 })
+
+      const { rerender } = renderHook(
+        ({ transform }) =>
+          usePollingData(fetchFn, { interval: 10000, transform }),
+        { initialProps: { transform: (d) => d } }
+      )
+
+      await waitFor(() => {
+        expect(fetchFn).toHaveBeenCalledTimes(1)
+      })
+
+      // Rerender with new transform reference
+      rerender({ transform: (d) => ({ ...d, extra: true }) })
+
+      // Advance time by full interval
+      await act(async () => {
+        jest.advanceTimersByTime(10000)
+      })
+
+      // Should be called again
+      expect(fetchFn).toHaveBeenCalledTimes(2)
+    })
+  })
+
   describe('initialData option', () => {
     it('should use initialData before first fetch completes', () => {
       const fetchFn = jest.fn().mockImplementation(

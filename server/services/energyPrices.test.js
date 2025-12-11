@@ -176,6 +176,113 @@ describe('energyPricesService', () => {
       externalApiStatus.reset()
     })
 
+    it('should fetch new prices when date changes (midnight rollover)', async () => {
+      // Arrange
+      // Current time: Dec 11 at 00:30 UTC (just after midnight)
+      // Today prices stored with pricesForDate = Dec 10 (yesterday!)
+      // Last update: Dec 10 at 23:30 UTC (1 hour ago - less than 4 hour threshold)
+      // BUG: Without date check, update won't trigger because:
+      //   - Objects exist (isEnergyPricesObjectOrtodayMissing = false)
+      //   - Not after 12:00 (isCloseToTomorrowPrices = false)
+      //   - Less than 4 hours since update (isCurrentPricesTooOld = false)
+      // FIX: Should trigger update because pricesForDate doesn't match current date
+      // NOTE: Using UTC times (Z suffix) to avoid timezone issues in tests
+      jest.setSystemTime(new Date('2023-12-11T00:30:00Z'))
+
+      const apiResponseJson = `
+      [{
+        "Rank": 1,
+        "DateTime": "2023-12-11T00:00:00Z",
+        "PriceNoTax": 0.0500,
+        "PriceWithTax": 0.0620
+      }]`
+
+      /** @type {EnergyPrices} */
+      const energyPrices = {
+        updatedAt: new Date('2023-12-10T23:30:00Z'), // 1 hour ago
+        todayEnergyPrices: {
+          updatedAt: new Date('2023-12-10T23:30:00Z'),
+          pricesForDate: '2023-12-10', // YESTERDAY! Should trigger update
+          data: [
+            {
+              date: new Date('2023-12-10T12:00:00Z'),
+              price: 0.05,
+              hour: 12,
+            },
+          ],
+        },
+        tomorrowEnergyPrices: {
+          updatedAt: new Date('2023-12-10T23:30:00Z'),
+          pricesForDate: '2023-12-11', // This is now "today"
+          data: [
+            {
+              date: new Date('2023-12-11T00:00:00Z'),
+              price: 0.06,
+              hour: 0,
+            },
+          ],
+        },
+      }
+
+      jest.spyOn(storage, 'loadOrDefault').mockResolvedValue(undefined)
+      jest.spyOn(storage, 'save').mockImplementation(jest.fn)
+      const getEnergyPricesFromApiSpy = jest.spyOn(
+        energyPricesFromApi,
+        'getEnergyPricesFromApi'
+      )
+      getEnergyPricesFromApiSpy.mockResolvedValue(apiResponseJson)
+
+      // Act
+      await energyPricesService.getEnergyPrices(energyPrices)
+
+      // Assert
+      // The API should be called because stored pricesForDate (Dec 10)
+      // doesn't match current date (Dec 11)
+      expect(getEnergyPricesFromApiSpy).toHaveBeenCalledTimes(1)
+    })
+
+    it('should NOT fetch new prices when pricesForDate matches current date and within 4 hour threshold', async () => {
+      // Arrange
+      // Current time: Dec 11 at 10:30 UTC
+      // Today prices stored with correct pricesForDate = Dec 11
+      // Last update: Dec 11 at 08:00 UTC (2.5 hours ago - less than 4 hour threshold)
+      // Should NOT trigger update - everything is fresh
+      // NOTE: Using UTC times (Z suffix) to avoid timezone issues in tests
+      jest.setSystemTime(new Date('2023-12-11T10:30:00Z'))
+
+      /** @type {EnergyPrices} */
+      const energyPrices = {
+        updatedAt: new Date('2023-12-11T08:00:00Z'), // 2.5 hours ago
+        todayEnergyPrices: {
+          updatedAt: new Date('2023-12-11T08:00:00Z'),
+          pricesForDate: '2023-12-11', // Correct date
+          data: [
+            {
+              date: new Date('2023-12-11T10:00:00Z'),
+              price: 0.05,
+              hour: 10,
+            },
+          ],
+        },
+        tomorrowEnergyPrices: undefined,
+      }
+
+      jest.spyOn(storage, 'loadOrDefault').mockResolvedValue(undefined)
+      jest.spyOn(storage, 'save').mockImplementation(jest.fn)
+      const getEnergyPricesFromApiSpy = jest.spyOn(
+        energyPricesFromApi,
+        'getEnergyPricesFromApi'
+      )
+      getEnergyPricesFromApiSpy.mockResolvedValue('[]')
+
+      // Act
+      await energyPricesService.getEnergyPrices(energyPrices)
+
+      // Assert
+      // API should NOT be called - date matches and within threshold
+      expect(getEnergyPricesFromApiSpy).not.toHaveBeenCalled()
+    })
+
     it('should fetch new prices when exactly 30 minutes have passed after 12:00 and no tomorrow prices exist', async () => {
       // Arrange
       // Current time: 13:30 (after 12:00)

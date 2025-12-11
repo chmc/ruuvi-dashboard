@@ -47,19 +47,36 @@ const usePollingData = (fetchFn, options) => {
   const isFirstFetch = useRef(true)
   const intervalRef = useRef(null)
 
+  // Use refs for callbacks to avoid effect re-runs when callbacks change
+  // This prevents the interval from being reset on every render
+  const fetchFnRef = useRef(fetchFn)
+  const transformRef = useRef(transform)
+  const onSuccessRef = useRef(onSuccess)
+  const onErrorRef = useRef(onError)
+
+  // Update refs on every render to always use latest callbacks
+  useEffect(() => {
+    fetchFnRef.current = fetchFn
+    transformRef.current = transform
+    onSuccessRef.current = onSuccess
+    onErrorRef.current = onError
+  })
+
   const doFetch = useCallback(async () => {
     try {
-      const result = await fetchFn()
-      const transformedData = transform ? transform(result) : result
+      const result = await fetchFnRef.current()
+      const transformedData = transformRef.current
+        ? transformRef.current(result)
+        : result
       setData(transformedData)
       setError(null)
-      if (onSuccess) {
-        onSuccess(transformedData)
+      if (onSuccessRef.current) {
+        onSuccessRef.current(transformedData)
       }
     } catch (err) {
       setError(err.message)
-      if (onError) {
-        onError(err)
+      if (onErrorRef.current) {
+        onErrorRef.current(err)
       }
     } finally {
       if (isFirstFetch.current) {
@@ -67,7 +84,7 @@ const usePollingData = (fetchFn, options) => {
         isFirstFetch.current = false
       }
     }
-  }, [fetchFn, transform, onSuccess, onError])
+  }, []) // No dependencies - uses refs
 
   const refetch = useCallback(async () => {
     await doFetch()

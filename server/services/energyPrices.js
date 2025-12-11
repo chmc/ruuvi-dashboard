@@ -120,18 +120,44 @@ const getTodayAndTomorrowDates = () => {
 }
 
 /**
+ * Check if stored today's prices are for the wrong date (e.g., after midnight rollover)
+ * @param {EnergyPrices} energyPrices
+ * @param {string} currentDate - Format YYYY-MM-DD
+ * @returns {boolean}
+ */
+const isTodayPricesForWrongDate = (energyPrices, currentDate) => {
+  if (!energyPrices?.todayEnergyPrices?.pricesForDate) {
+    return false // No prices to check, will be caught by other conditions
+  }
+  const isWrongDate =
+    energyPrices.todayEnergyPrices.pricesForDate !== currentDate
+  if (isWrongDate) {
+    log.debug(
+      {
+        storedDate: energyPrices.todayEnergyPrices.pricesForDate,
+        currentDate,
+      },
+      'Today prices are for wrong date (midnight rollover detected)'
+    )
+  }
+  return isWrongDate
+}
+
+/**
  * @param {EnergyPrices}  energyPrices
  * @param {Date}          currentDateObject
  * @returns {boolean}
  */
 const allowUpdateEnergyPrices = (energyPrices, currentDateObject) => {
   try {
+    const currentDate = currentDateObject.toISOString().split('T')[0]
     const updatedAt = getUpdatedAtOrMinDate(energyPrices)
     const hoursDifference = calculateHoursDifferenceInDates(updatedAt)
     log.debug({ hoursDifference }, 'Time since last energy prices update')
 
     if (
       isEnergyPricesObjectOrtodayMissing(energyPrices) ||
+      isTodayPricesForWrongDate(energyPrices, currentDate) ||
       isCloseToTomorrowPrices(
         energyPrices,
         currentDateObject,
